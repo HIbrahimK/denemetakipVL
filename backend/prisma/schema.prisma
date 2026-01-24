@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  SCHOOL_ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum ExamType {
+  TYT
+  AYT
+  LGS
+  OZEL
+}
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  logoUrl   String?
+  domain    String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  grades   Grade[]
+  lessons  Lesson[]
+  exams    Exam[]
+  students Student[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  firstName String
+  lastName  String
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student Student?
+  parent  Parent?
+}
+
+model Grade {
+  id       String @id @default(cuid())
+  name     String
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id])
+
+  classes Class[]
+}
+
+model Class {
+  id      String @id @default(cuid())
+  name    String
+  gradeId String
+  grade   Grade  @relation(fields: [gradeId], references: [id])
+
+  students Student[]
+}
+
+model Student {
+  id             String  @id @default(cuid())
+  studentNumber  String?
+  tcNo           String? @unique
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id])
+  classId        String
+  class          Class   @relation(fields: [classId], references: [id])
+  schoolId       String
+  school         School  @relation(fields: [schoolId], references: [id])
+  parentId       String?
+  parent         Parent? @relation(fields: [parentId], references: [id])
+
+  examAttempts ExamAttempt[]
+}
+
+model Parent {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  students Student[]
+}
+
+model Lesson {
+  id        String   @id @default(cuid())
+  name      String
+  examType  ExamType
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+
+  lessonResults ExamLessonResult[]
+
+  @@unique([name, examType, schoolId])
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  title     String
+  type      ExamType
+  publisher String?
+  date      DateTime @default(now())
+  gradeLevel Int?
+  participantCount Int?
+  district  String?
+  city      String?
+  districtParticipantCount Int?
+  cityParticipantCount     Int?
+  generalParticipantCount  Int?
+  generalInfo String?
+  schoolParticipantCount Int?
+  branchParticipantCount Json?
+  
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts ExamAttempt[]
+}
+
+model ExamAttempt {
+  id        String   @id @default(cuid())
+  examId    String
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+
+  lessonResults ExamLessonResult[]
+  scores        ExamScore[]
+
+  @@unique([examId, studentId])
+}
+
+model ExamLessonResult {
+  id        String @id @default(cuid())
+  attemptId String
+  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  lessonId  String
+  lesson    Lesson      @relation(fields: [lessonId], references: [id])
+  
+  correct   Int    @default(0)
+  incorrect Int    @default(0)
+  empty     Int    @default(0)
+  net       Float  @default(0)
+  point     Float  @default(0)
+}
+
+model ExamScore {
+  id        String      @id @default(cuid())
+  attemptId String
+  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  
+  type      String
+  score     Float
+  rankSchool Int?
+  rankClass  Int?
+  rankCity   Int?
+  rankGen    Int?
+}

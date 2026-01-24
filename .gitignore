@@ -1,0 +1,34 @@
+# Common
+node_modules/
+.env
+.env.*
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backend (NestJS/Prisma)
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/template-analysis.txt
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env
+frontend/.env.*.local
+
+# Database
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# OS/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
