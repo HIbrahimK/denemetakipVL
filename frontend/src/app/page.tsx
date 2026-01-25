@@ -1,228 +1,137 @@
 "use client";
-import { useEffect, useState } from "react";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertCircle,
-  BarChart2,
-  ChevronRight,
-  Edit,
-  FileSpreadsheet,
-  MoreHorizontal,
-  Plus,
-  School,
-  Trash2,
-  Users
-} from "lucide-react";
-import { CreateExamModal } from "@/components/create-exam-modal";
-import { EditExamModal } from "@/components/edit-exam-modal";
-import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ArrowRight, School, GraduationCap, Users, ShieldCheck, BarChart2 } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
-  const [exams, setExams] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteType, setDeleteType] = useState<'exam' | 'results' | null>(null);
-  const [editExam, setEditExam] = useState<any>(null);
-
-  const fetchExams = () => {
-    setLoading(true);
-    fetch('http://localhost:3001/exams?schoolId=clxxxx')
-      .then(res => res.json())
-      .then(data => {
-        setExams(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    fetchExams();
-  }, []);
-
-  const handleDelete = async () => {
-    if (!deleteId || !deleteType) return;
-
-    const endpoint = deleteType === 'exam'
-      ? `http://localhost:3001/exams/${deleteId}`
-      : `http://localhost:3001/exams/${deleteId}/results`;
-
-    try {
-      const res = await fetch(endpoint, { method: 'DELETE' });
-      if (res.ok) {
-        fetchExams();
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setDeleteId(null);
-      setDeleteType(null);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <School className="h-6 w-6 text-white" />
-            </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Deneme Takip</h1>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] flex flex-col transition-colors duration-300 overflow-hidden relative font-sans">
+
+      {/* Modern Background Gradient Mesh */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] dark:bg-indigo-500/20"></div>
+        <div className="absolute bottom-[-20%] left-[-10%] w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[120px] dark:bg-emerald-500/20"></div>
+      </div>
+
+      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8 py-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-xl shadow-indigo-600/20 transform rotate-3">
+            <School className="h-6 w-6 text-white" />
           </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-              {/* Info */}
-            </div>
-          </div>
+          <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Deneme Takip
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="#" className="hidden sm:block text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors">Hakkında</Link>
+          <Link href="#" className="hidden sm:block text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors">İletişim</Link>
+          <ThemeToggle />
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Sınavlar</h2>
-            <p className="text-slate-500 dark:text-slate-400">Tüm deneme sınavlarını buradan yönetebilirsiniz.</p>
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 lg:px-8 py-12">
+
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-sm font-medium mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            Yeni Nesil Okul Yönetim Sistemi
           </div>
-          <CreateExamModal onSuccess={fetchExams} />
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6 leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both delay-100">
+            Öğrenci Başarısını <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
+              Akıllıca Yönetin
+            </span>
+          </h1>
+          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 mb-8 max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both delay-200">
+            Deneme sınavlarını planlayın, sonuçları analiz edin ve öğrenci gelişimini detaylı grafiklerle takip edin. Hepsi tek bir modern panelde.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <p className="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">Yükleniyor...</p>
-          ) : exams.length === 0 ? (
-            <div className="col-span-full text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-              <p className="text-slate-500 dark:text-slate-400">Henüz sınav oluşturulmamış.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both delay-300">
+          {/* School Login Card */}
+          <Link href="/login/school" className="group">
+            <div className="h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-900/20 transition-all duration-300 cursor-pointer relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-bl-[100px] -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="relative z-10 flex flex-col h-full items-start">
+                <div className="bg-indigo-100 dark:bg-indigo-900/50 p-4 rounded-2xl mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 text-indigo-600 dark:text-indigo-400">
+                  <ShieldCheck className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Kurum Girişi</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 flex-1">
+                  Okul yöneticileri ve öğretmenler için yönetim paneli.
+                </p>
+                <div className="flex items-center font-semibold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-2 transition-transform">
+                  Giriş Yap <ArrowRight className="ml-2 h-4 w-4" />
+                </div>
+              </div>
             </div>
-          ) : exams.map((exam) => (
-            <Card key={exam.id} className="group hover:shadow-md transition-all duration-200 border-slate-200 dark:border-slate-800 dark:bg-slate-900">
-              <CardHeader className="relative pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-900 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-700/10 mb-2">
-                      {exam.type}
-                    </span>
-                    <CardTitle className="line-clamp-1 text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {exam.title}
-                    </CardTitle>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                      {new Date(exam.date).toLocaleDateString('tr-TR')}
-                    </p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 text-slate-400 hover:text-indigo-600">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/exams/${exam.id}/results`} className="cursor-pointer">
-                          <BarChart2 className="mr-2 h-4 w-4" /> İstatistikler
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="cursor-pointer" onClick={() => setEditExam(exam)}>
-                        <Edit className="mr-2 h-4 w-4" /> Düzenle
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('results'); }}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Sonuçları Temizle
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('exam'); }}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Sınavı Sil
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between text-sm mb-6">
-                  <div className="flex items-center gap-2">
-                    {exam._count?.attempts > 0 ? (
-                      <>
-                        <Users className="h-4 w-4 text-emerald-600" />
-                        <span className="font-medium text-emerald-600">{exam._count.attempts} Öğrenci Katıldı</span>
-                      </>
-                    ) : (
-                      <>
-                        <FileSpreadsheet className="h-4 w-4 text-amber-500" />
-                        <span className="text-amber-500 font-medium">Sonuç Bekleniyor</span>
-                      </>
-                    )}
-                  </div>
-                </div>
+          </Link>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link href={`/exams/${exam.id}/results`}>
-                      <BarChart2 className="mr-2 h-4 w-4" />
-                      Sonuçlar
-                    </Link>
-                  </Button>
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
-                    <Link href={`/import?examId=${exam.id}`}>
-                      <FileSpreadsheet className="mr-2 h-4 w-4" />
-                      Yükle
-                    </Link>
-                  </Button>
+          {/* Student Login Card */}
+          <Link href="/login/student" className="group">
+            <div className="h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 dark:hover:shadow-emerald-900/20 transition-all duration-300 cursor-pointer relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 dark:bg-emerald-900/20 rounded-bl-[100px] -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="relative z-10 flex flex-col h-full items-start">
+                <div className="bg-emerald-100 dark:bg-emerald-900/50 p-4 rounded-2xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 text-emerald-600 dark:text-emerald-400">
+                  <GraduationCap className="h-8 w-8" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Öğrenci Girişi</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 flex-1">
+                  Sınav sonuçlarını, karneni ve gelişim raporlarını görüntüle.
+                </p>
+                <div className="flex items-center font-semibold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-2 transition-transform">
+                  Giriş Yap <ArrowRight className="ml-2 h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* Parent Login Card */}
+          <Link href="/login/parent" className="group">
+            <div className="h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm hover:shadow-2xl hover:shadow-amber-500/10 dark:hover:shadow-amber-900/20 transition-all duration-300 cursor-pointer relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 dark:bg-amber-900/20 rounded-bl-[100px] -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="relative z-10 flex flex-col h-full items-start">
+                <div className="bg-amber-100 dark:bg-amber-900/50 p-4 rounded-2xl mb-6 group-hover:bg-amber-600 group-hover:text-white transition-colors duration-300 text-amber-600 dark:text-amber-400">
+                  <Users className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Veli Girişi</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 flex-1">
+                  Çocuğunuzun akademik durumunu ve deneme analizlerini takip edin.
+                </p>
+                <div className="flex items-center font-semibold text-amber-600 dark:text-amber-400 group-hover:translate-x-2 transition-transform">
+                  Giriş Yap <ArrowRight className="ml-2 h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
+
+        <div className="mt-20 w-full max-w-4xl mx-auto opacity-60">
+          <div className="flex items-center justify-center gap-8 md:gap-16 grayscale">
+            <div className="flex items-center gap-2 font-bold text-xl text-slate-400">
+              <School className="h-6 w-6" /> MEB
+            </div>
+            <div className="flex items-center gap-2 font-bold text-xl text-slate-400">
+              <BarChart2 className="h-6 w-6" /> E-Okul
+            </div>
+            <div className="flex items-center gap-2 font-bold text-xl text-slate-400">
+              <ShieldCheck className="h-6 w-6" /> ÖSYM
+            </div>
+          </div>
+        </div>
+
       </main>
 
-      <EditExamModal
-        exam={editExam}
-        open={!!editExam}
-        onOpenChange={(open) => !open && setEditExam(null)}
-        onSuccess={fetchExams}
-      />
-
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteType === 'exam'
-                ? "Bu sınavı ve tüm bağlı verilerini kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz."
-                : "Bu sınava ait yüklenmiş tüm öğrenci sonuçlarını silmek üzeresiniz. Sınav kaydı kalacaktır."
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
-              Evet, Sil
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <footer className="relative z-10 border-t border-slate-200 dark:border-slate-800 py-8">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+          &copy; 2026 Deneme Takip Sistemi. Tüm hakları saklıdır.
+        </div>
+      </footer>
     </div>
-  );
+  )
 }

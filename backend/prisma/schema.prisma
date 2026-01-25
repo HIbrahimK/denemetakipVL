@@ -35,6 +35,10 @@ model School {
   lessons  Lesson[]
   exams    Exam[]
   students Student[]
+  classes  Class[]
+  attempts ExamAttempt[]
+  lessonResults ExamLessonResult[]
+  scores   ExamScore[]
 }
 
 model User {
@@ -51,6 +55,7 @@ model User {
 
   student Student?
   parent  Parent?
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Grade {
@@ -63,10 +68,12 @@ model Grade {
 }
 
 model Class {
-  id      String @id @default(cuid())
-  name    String
-  gradeId String
-  grade   Grade  @relation(fields: [gradeId], references: [id])
+  id       String @id @default(cuid())
+  name     String
+  gradeId  String
+  grade    Grade  @relation(fields: [gradeId], references: [id])
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id])
 
   students Student[]
 }
@@ -143,6 +150,9 @@ model ExamAttempt {
   lessonResults ExamLessonResult[]
   scores        ExamScore[]
 
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
+
   @@unique([examId, studentId])
 }
 
@@ -158,6 +168,9 @@ model ExamLessonResult {
   empty     Int    @default(0)
   net       Float  @default(0)
   point     Float  @default(0)
+
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
 }
 
 model ExamScore {
@@ -171,4 +184,20 @@ model ExamScore {
   rankClass  Int?
   rankCity   Int?
   rankGen    Int?
+
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+
+  @@index([token])
+  @@index([userId])
 }

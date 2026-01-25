@@ -1,0 +1,170 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+    BarChart2,
+    BookOpen,
+    GraduationCap,
+    LayoutDashboard,
+    LogOut,
+    Menu,
+    MessageSquare,
+    Settings,
+    Users,
+    FileSpreadsheet,
+    Search,
+    School,
+    X,
+    Bell
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const pathname = usePathname();
+
+    useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            setUser(JSON.parse(userStr));
+        }
+    }, []);
+
+    const menuItems = [
+        { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+        { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
+        { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+        { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
+        { name: "Veri Yükle", href: "/dashboard/import", icon: FileSpreadsheet },
+        { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
+    ];
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+    };
+
+    return (
+        <div className="flex h-screen bg-[#1e1e2d] text-slate-100 overflow-hidden font-sans">
+
+            {/* Mobile Sidebar Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside
+                className={`fixed lg:static top-0 left-0 z-50 h-full w-72 bg-[#1e1e2d] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    }`}
+            >
+                {/* Logo Area */}
+                <div className="flex items-center gap-3 px-8 py-8">
+                    <div className="bg-white/10 p-2 rounded-xl">
+                        <School className="h-6 w-6 text-white" />
+                    </div>
+                    <span className="text-xl font-bold tracking-tight">Deneme Takip</span>
+                    <Button variant="ghost" size="icon" className="lg:hidden ml-auto" onClick={() => setSidebarOpen(false)}>
+                        <X className="h-5 w-5" />
+                    </Button>
+                </div>
+
+                {/* User Profile (Visual Style) */}
+                <div className="px-8 mb-8 text-center">
+                    <div className="relative inline-block">
+                        <Avatar className="h-20 w-20 border-4 border-[#2b2b40] shadow-xl">
+                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || 'User'}`} />
+                            <AvatarFallback className="bg-indigo-500 text-white text-xl">
+                                {user?.firstName?.charAt(0) || "A"}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute bottom-0 right-0 h-5 w-5 bg-emerald-500 border-4 border-[#1e1e2d] rounded-full"></div>
+                    </div>
+                    <h3 className="mt-4 font-semibold text-lg">{user?.firstName} {user?.lastName}</h3>
+                    <p className="text-slate-400 text-sm">Okul Yöneticisi</p>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+                    {menuItems.map((item) => {
+                        const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${isActive
+                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                                    }`}
+                                onClick={() => setSidebarOpen(false)}
+                            >
+                                <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
+                                {item.name}
+                            </Link>
+                        );
+                    })}
+                </nav>
+
+                {/* Bottom Actions */}
+                <div className="p-4 mt-auto">
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-3 w-full rounded-2xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                        <LogOut className="h-5 w-5" />
+                        Çıkış Yap
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area - Rounded Container */}
+            <div className="flex-1 flex flex-col h-full relative lg:py-4 lg:pr-4 overflow-hidden">
+                <div className="flex-1 bg-[#F3F4F6] dark:bg-slate-950 lg:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl relative">
+
+                    {/* Topbar */}
+                    <header className="h-20 px-8 flex items-center justify-between flex-shrink-0 bg-transparent">
+                        <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="icon" className="lg:hidden text-slate-500" onClick={() => setSidebarOpen(true)}>
+                                <Menu className="h-6 w-6" />
+                            </Button>
+                            <div className="hidden md:flex relative w-96">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <Input
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Sınav, öğrenci veya sınıf ara..."
+                                    className="pl-10 bg-white border-transparent shadow-sm hover:bg-white focus:bg-white rounded-full transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="icon" className="relative text-slate-500 hover:bg-white/50 rounded-full">
+                                <Bell className="h-5 w-5" />
+                                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"></span>
+                            </Button>
+                            <ThemeToggle />
+                        </div>
+                    </header>
+
+                    {/* Scrollable Page Content */}
+                    <main className="flex-1 overflow-y-auto px-8 pb-8 pt-2 scrollbar-hide">
+                        {children}
+                    </main>
+
+                </div>
+            </div>
+        </div>
+    );
+}

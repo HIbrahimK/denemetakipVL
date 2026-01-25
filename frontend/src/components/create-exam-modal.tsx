@@ -23,6 +23,10 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
         setLoading(true);
 
         const formData = new FormData(e.currentTarget);
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const schoolId = user?.schoolId || "";
+
         const data = {
             title: formData.get("title"),
             publisher: formData.get("publisher"),
@@ -33,7 +37,7 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
             cityParticipantCount: parseInt(formData.get("cityParticipantCount") as string) || 0,
             districtParticipantCount: parseInt(formData.get("districtParticipantCount") as string) || 0,
             generalInfo: formData.get("generalInfo"),
-            schoolId: "clxxxx", // This should be dynamic based on the logged-in user's school
+            schoolId: schoolId,
         };
 
         try {

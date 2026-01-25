@@ -56,7 +56,11 @@ export class ImportService {
                     });
                     if (!studentClass) {
                         studentClass = await tx.class.create({
-                            data: { name: `${gradeName}-${branchName}`, gradeId: grade.id }
+                            data: {
+                                name: `${gradeName}-${branchName}`,
+                                gradeId: grade.id,
+                                schoolId,
+                            }
                         });
                     }
 
@@ -97,7 +101,7 @@ export class ImportService {
 
                         student = await tx.student.create({
                             data: {
-                                studentNumber,
+                                studentNumber: studentNumber,
                                 userId: studentUser.id,
                                 schoolId,
                                 classId: studentClass.id,

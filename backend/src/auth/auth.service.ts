@@ -1,4 +1,294 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
+import * as bcrypt from 'bcrypt';
+import { LoginDto, StudentLoginDto, RegisterDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/password-reset.dto';
+import { JwtPayload } from './auth.strategy';
+import * as crypto from 'crypto';
 
 @Injectable()
-export class AuthService {}
+export class AuthService {
+    constructor(
+        private prisma: PrismaService,
+        private jwtService: JwtService,
+        private emailService: EmailService,
+    ) { }
+
+    // School Admin / Teacher login with email
+    async loginSchool(loginDto: LoginDto) {
+        const user = await this.prisma.user.findUnique({
+            where: { email: loginDto.email },
+            include: { school: true },
+        });
+
+        if (!user || !['SCHOOL_ADMIN', 'TEACHER', 'SUPER_ADMIN'].includes(user.role)) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        const isPasswordValid = await this.comparePassword(loginDto.password, user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        return this.generateToken(user);
+    }
+
+    // Student login with studentNumber
+    async loginStudent(loginDto: StudentLoginDto) {
+        const student = await this.prisma.student.findFirst({
+            where: { studentNumber: loginDto.studentNumber },
+            include: {
+                user: {
+                    include: { school: true },
+                },
+            },
+        });
+
+        if (!student || student.user.role !== 'STUDENT') {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        const isPasswordValid = await this.comparePassword(loginDto.password, student.user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        return this.generateToken(student.user);
+    }
+
+    // Parent login with student number
+    async loginParent(loginDto: StudentLoginDto) {
+        // Find student by student number first
+        const student = await this.prisma.student.findFirst({
+            where: { studentNumber: loginDto.studentNumber },
+            include: {
+                parent: {
+                    include: {
+                        user: {
+                            include: { school: true },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!student || !student.parent || student.parent.user.role !== 'PARENT') {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        const user = student.parent.user;
+        const isPasswordValid = await this.comparePassword(loginDto.password, user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        return this.generateToken(user);
+    }
+
+    // Register new user
+    async register(registerDto: RegisterDto) {
+        const existingUser = await this.prisma.user.findUnique({
+            where: { email: registerDto.email },
+        });
+
+        if (existingUser) {
+            throw new ConflictException('User already exists');
+        }
+
+        const hashedPassword = await this.hashPassword(registerDto.password);
+
+        const user = await this.prisma.user.create({
+            data: {
+                email: registerDto.email,
+                password: hashedPassword,
+                firstName: registerDto.firstName,
+                lastName: registerDto.lastName,
+                role: registerDto.role,
+                schoolId: registerDto.schoolId,
+            },
+            include: { school: true },
+        });
+
+        // If student, create student record
+        if (registerDto.role === 'STUDENT' && registerDto.classId) {
+            await this.prisma.student.create({
+                data: {
+                    userId: user.id,
+                    schoolId: registerDto.schoolId,
+                    classId: registerDto.classId,
+                    studentNumber: registerDto.studentNumber,
+                    tcNo: registerDto.tcNo,
+                },
+            });
+        }
+
+        // If parent, create parent record
+        if (registerDto.role === 'PARENT') {
+            await this.prisma.parent.create({
+                data: {
+                    userId: user.id,
+                },
+            });
+        }
+
+        return this.generateToken(user);
+    }
+
+    // Forgot Password - Initiate reset
+    async forgotPassword(email: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            // Don't reveal if user exists
+            return { message: 'If user exists, email sent' };
+        }
+
+        // Generate random token
+        const token = crypto.randomBytes(32).toString('hex');
+        // Hash token for database
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+        // Save token to database
+        await this.prisma.passwordResetToken.create({
+            data: {
+                token: hashedToken,
+                userId: user.id,
+                expiresAt: new Date(Date.now() + 3600000), // 1 hour
+            },
+        });
+
+        // Send email
+        await this.emailService.sendPasswordResetEmail(user.email, token);
+
+        return { message: 'If user exists, email sent' };
+    }
+
+    // Reset Password - Complete reset
+    async resetPassword(resetDto: ResetPasswordDto) {
+        // Hash provided token to compare with database
+        const hashedToken = crypto.createHash('sha256').update(resetDto.token).digest('hex');
+
+        const resetToken = await this.prisma.passwordResetToken.findUnique({
+            where: { token: hashedToken },
+            include: { user: true },
+        });
+
+        if (!resetToken) {
+            throw new BadRequestException('Invalid or expired token');
+        }
+
+        if (resetToken.used || resetToken.expiresAt < new Date()) {
+            throw new BadRequestException('Invalid or expired token');
+        }
+
+        // Hash new password
+        const hashedPassword = await this.hashPassword(resetDto.newPassword);
+
+        // Update user password
+        await this.prisma.user.update({
+            where: { id: resetToken.userId },
+            data: { password: hashedPassword },
+        });
+
+        // Mark token as used
+        await this.prisma.passwordResetToken.update({
+            where: { id: resetToken.id },
+            data: { used: true },
+        });
+
+        // Clean up old tokens for this user
+        await this.prisma.passwordResetToken.deleteMany({
+            where: {
+                userId: resetToken.userId,
+                OR: [
+                    { used: true },
+                    { expiresAt: { lt: new Date() } }
+                ]
+            },
+        });
+
+        return { message: 'Password reset successful' };
+    }
+
+    // Validate reset token
+    async validateResetToken(token: string) {
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+        const resetToken = await this.prisma.passwordResetToken.findUnique({
+            where: { token: hashedToken },
+        });
+
+        if (!resetToken || resetToken.used || resetToken.expiresAt < new Date()) {
+            throw new BadRequestException('Invalid or expired token');
+        }
+
+        return { valid: true };
+    }
+
+    // Get current user
+    async getMe(userId: string) {
+        return this.prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                school: true,
+                student: {
+                    include: {
+                        class: {
+                            include: {
+                                grade: true,
+                            },
+                        },
+                    },
+                },
+                parent: {
+                    include: {
+                        students: {
+                            include: {
+                                user: true,
+                                class: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    // Hash password
+    async hashPassword(password: string): Promise<string> {
+        const salt = await bcrypt.genSalt(10);
+        return bcrypt.hash(password, salt);
+    }
+
+    // Compare password
+    async comparePassword(plain: string, hashed: string): Promise<boolean> {
+        return bcrypt.compare(plain, hashed);
+    }
+
+    // Generate JWT token
+    private generateToken(user: any) {
+        const payload: JwtPayload = {
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+            schoolId: user.schoolId,
+        };
+
+        return {
+            access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                schoolId: user.schoolId,
+                school: user.school,
+            },
+        };
+    }
+}

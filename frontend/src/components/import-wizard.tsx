@@ -49,8 +49,12 @@ export function ImportWizard() {
         formData.append("examId", examId);
         formData.append("examType", exam?.type || "TYT");
 
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const schoolId = user?.schoolId || "";
+
         try {
-            const response = await fetch(`http://localhost:3001/import/validate?schoolId=clxxxx`, {
+            const response = await fetch(`http://localhost:3001/import/validate?schoolId=${schoolId}`, {
                 method: "POST",
                 body: formData,
             });
@@ -85,8 +89,12 @@ export function ImportWizard() {
         if (!importData.length || !examId) return;
 
         setUploading(true);
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const schoolId = user?.schoolId || "";
+
         try {
-            const response = await fetch(`http://localhost:3001/import/confirm?schoolId=clxxxx`, {
+            const response = await fetch(`http://localhost:3001/import/confirm?schoolId=${schoolId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -138,6 +146,13 @@ export function ImportWizard() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="min-h-[200px] flex flex-col justify-center">
+                {error && (
+                    <div className="mb-6 rounded-lg bg-red-50 p-4 flex items-center gap-3 text-red-700 border border-red-100 animate-in fade-in slide-in-from-top-1">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <div className="text-sm font-medium">{error}</div>
+                    </div>
+                )}
+
                 {exam && (
                     <div className="mb-6 rounded-lg bg-indigo-50 p-4 flex items-center gap-3 text-indigo-700 border border-indigo-100">
                         <Info className="h-5 w-5" />
@@ -320,14 +335,14 @@ export function ImportWizard() {
                 ) : (
                     <div className="w-full space-y-3">
                         <Button className="w-full bg-slate-900 hover:bg-slate-800" asChild>
-                            <Link href="/">Anasayfaya Dön</Link>
+                            <Link href="/dashboard">Anasayfaya Dön</Link>
                         </Button>
                         <div className="grid grid-cols-2 gap-3">
                             <Button variant="outline" className="w-full" onClick={() => { setStep(1); setFile(null); }}>
                                 Yeni Yükleme Yap
                             </Button>
                             <Button variant="outline" className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50" asChild>
-                                <Link href={`/exams/${examId}/results`}>Sınav İstatistikleri</Link>
+                                <Link href={`/dashboard/exams/${examId}/results`}>Sınav İstatistikleri</Link>
                             </Button>
                         </div>
                     </div>
