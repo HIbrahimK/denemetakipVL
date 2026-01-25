@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static top-0 left-0 z-50 h-full w-72 bg-[#1e1e2d] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                className={`no-print fixed lg:static top-0 left-0 z-50 h-full w-72 bg-[#1e1e2d] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
                 {/* Logo Area */}
@@ -132,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="flex-1 bg-[#F3F4F6] dark:bg-slate-950 lg:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl relative">
 
                     {/* Topbar */}
-                    <header className="h-20 px-8 flex items-center justify-between flex-shrink-0 bg-transparent">
+                    <header className="no-print h-20 px-8 flex items-center justify-between flex-shrink-0 bg-transparent">
                         <div className="flex items-center gap-4">
                             <Button variant="ghost" size="icon" className="lg:hidden text-slate-500" onClick={() => setSidebarOpen(true)}>
                                 <Menu className="h-6 w-6" />

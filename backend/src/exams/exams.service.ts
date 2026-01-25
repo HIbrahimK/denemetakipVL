@@ -157,7 +157,14 @@ export class ExamsService {
             score: a.scores.length > 0 ? a.scores[0].score : 0,
             net: a.lessonResults.reduce((acc, curr) => acc + curr.net, 0),
             // Add lesson specific nets if needed for dynamic columns
-            lessons: a.lessonResults.reduce((acc, curr) => ({ ...acc, [curr.lesson.name]: curr.net }), {})
+            lessons: a.lessonResults.reduce((acc, curr) => ({
+                ...acc,
+                [curr.lesson.name]: {
+                    net: curr.net,
+                    correct: curr.correct,
+                    incorrect: curr.incorrect
+                }
+            }), {})
         })).sort((a, b) => b.score - a.score);
 
         return {
