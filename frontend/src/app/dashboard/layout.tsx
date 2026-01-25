@@ -43,7 +43,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
         { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
         { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
-        { name: "Veri Yükle", href: "/dashboard/import", icon: FileSpreadsheet },
         { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
     ];
 
@@ -104,8 +103,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${isActive
-                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-                                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                                    : "text-slate-400 hover:text-white hover:bg-white/5"
                                     }`}
                                 onClick={() => setSidebarOpen(false)}
                             >
@@ -144,12 +143,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Sınav, öğrenci veya sınıf ara..."
-                                    className="pl-10 bg-white border-transparent shadow-sm hover:bg-white focus:bg-white rounded-full transition-all"
+                                    className="pl-10 bg-white border-transparent shadow-sm hover:bg-white focus:bg-white rounded-full transition-all text-slate-800 dark:text-slate-100"
                                 />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
                             <Button variant="ghost" size="icon" className="relative text-slate-500 hover:bg-white/50 rounded-full">
                                 <Bell className="h-5 w-5" />
                                 <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"></span>

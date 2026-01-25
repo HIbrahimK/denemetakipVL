@@ -229,7 +229,7 @@ export function ImportWizard() {
                                     {importData.map((row, idx) => {
                                         const isRowInvalid = !row.isValid;
                                         return (
-                                            <tr key={idx} className={`border-b border-slate-100 ${!row.selected ? 'opacity-50 grayscale' : isRowInvalid ? 'bg-red-50' : 'hover:bg-slate-50'}`}>
+                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-800 ${!row.selected ? 'opacity-50 grayscale' : isRowInvalid ? 'bg-red-50 dark:bg-red-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                                                 <td className="p-2 text-center">
                                                     <input
                                                         type="checkbox"

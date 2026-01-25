@@ -72,9 +72,6 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex gap-3">
-                    <Button variant="outline" className="rounded-full border-slate-300 dark:border-slate-700">
-                        Rapor İndir
-                    </Button>
                     <Button asChild className="rounded-full bg-slate-900 hover:bg-slate-800 text-white px-6 shadow-lg shadow-slate-900/20">
                         <Link href="/dashboard/exams">
                             <Plus className="mr-2 h-4 w-4" />
@@ -233,7 +230,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors group">
+                                <Link href="/dashboard/exams" key={i} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors group">
                                     <div className="bg-indigo-50 dark:bg-indigo-900/40 p-3 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
                                         <FileSpreadsheet className="h-5 w-5" />
                                     </div>
@@ -244,7 +241,7 @@ export default function DashboardPage() {
                                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>

@@ -84,7 +84,7 @@ export default function ExamResultsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="hidden sm:flex" disabled>
+                    <Button variant="outline" size="sm" className="hidden sm:flex text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" disabled>
                         <Download className="mr-2 h-4 w-4" /> PDF İndir
                     </Button>
                 </div>
