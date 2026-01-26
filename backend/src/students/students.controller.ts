@@ -1,0 +1,85 @@
+import {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Put,
+    Param,
+    Delete,
+    UseGuards,
+    Query,
+    UseInterceptors,
+    UploadedFile,
+    Request,
+} from '@nestjs/common';
+import { StudentsService } from './students.service';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+
+@ApiTags('Students')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('students')
+export class StudentsController {
+    constructor(private readonly studentsService: StudentsService) { }
+
+    @Get('filters')
+    @ApiOperation({ summary: 'Filtreleme için sınıf ve şubeleri getir' })
+    getFilters(@Request() req) {
+        return this.studentsService.getFilters(req.user.schoolId);
+    }
+
+    @Get()
+    @ApiOperation({ summary: 'Tüm öğrencileri listele' })
+    findAll(
+        @Request() req,
+        @Query('gradeId') gradeId?: string,
+        @Query('classId') classId?: string,
+        @Query('search') search?: string,
+    ) {
+        return this.studentsService.findAll(req.user.schoolId, { gradeId, classId, search });
+    }
+
+    @Post()
+    @ApiOperation({ summary: 'Yeni öğrenci ekle' })
+    create(@Request() req, @Body() createStudentDto: CreateStudentDto) {
+        return this.studentsService.create(req.user.schoolId, createStudentDto);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Öğrenci güncelle' })
+    update(
+        @Request() req,
+        @Param('id') id: string,
+        @Body() updateStudentDto: UpdateStudentDto,
+    ) {
+        return this.studentsService.update(id, req.user.schoolId, updateStudentDto);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Öğrenci sil' })
+    remove(@Request() req, @Param('id') id: string) {
+        return this.studentsService.remove(id, req.user.schoolId);
+    }
+
+    @Post(':id/change-password')
+    @ApiOperation({ summary: 'Öğrenci şifresini değiştir' })
+    changePassword(
+        @Request() req,
+        @Param('id') id: string,
+        @Body() changePasswordDto: ChangePasswordDto,
+    ) {
+        return this.studentsService.changePassword(id, req.user.schoolId, changePasswordDto);
+    }
+
+    @Post('import')
+    @UseInterceptors(FileInterceptor('file'))
+    @ApiOperation({ summary: 'Excelden toplu öğrenci içe aktar' })
+    import(@Request() req, @UploadedFile() file: Express.Multer.File) {
+        return this.studentsService.importFromExcel(req.user.schoolId, file.buffer);
+    }
+}

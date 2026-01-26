@@ -129,7 +129,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Main Content Area - Rounded Container */}
             <div className="flex-1 flex flex-col h-full relative lg:py-4 lg:pr-4 overflow-hidden">
-                <div className="flex-1 bg-[#F3F4F6] dark:bg-slate-950 lg:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl relative">
+                <div className="flex-1 bg-[#F3F4F6] dark:bg-slate-950 text-slate-900 dark:text-slate-50 lg:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl relative">
 
                     {/* Topbar */}
                     <header className="no-print h-20 px-8 flex items-center justify-between flex-shrink-0 bg-transparent">

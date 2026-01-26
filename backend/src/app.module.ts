@@ -7,13 +7,15 @@ import { SchoolsModule } from './schools/schools.module';
 import { ImportModule } from './import/import.module';
 import { QueueModule } from './queue/queue.module';
 import { ExamsModule } from './exams/exams.module';
+import { StudentsModule } from './students/students.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{
-      ttl: 900000, // 15 minutes
-      limit: 100, // 100 requests per 15 min
+      ttl: 60000,
+      limit: 100,
     }]),
     PrismaModule,
     AuthModule,
@@ -21,6 +23,8 @@ import { ExamsModule } from './exams/exams.module';
     ImportModule,
     QueueModule,
     ExamsModule,
+    StudentsModule,
+    UsersModule,
   ],
 })
 export class AppModule { }
