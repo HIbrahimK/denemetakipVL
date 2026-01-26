@@ -6,11 +6,14 @@ export interface ParsedExamRow {
     studentNumber: string;
     name?: string;
     class?: string;
+    grade?: string; // Çıkarılan sınıf seviyesi (9, 10, 11, 12)
+    section?: string; // Çıkarılan şube (A, B, C, SÖZ, SAY, EA vb)
     lessons: Record<string, { correct?: number; incorrect?: number; net?: number; point?: number }>;
     scores: Record<string, number>;
     ranks: Record<string, number>; // Sıralamalar burada tutulacak
     isValid: boolean;
     errorReason: string[];
+    validationStatus?: 'valid' | 'invalid_number' | 'duplicate_in_file' | 'duplicate_in_exam' | 'not_registered';
 }
 
 // --- DERS SIRALAMALARI (Sablon Dosyaları İçin) ---
@@ -127,6 +130,42 @@ const LGS_COLUMN_MAP = {
 
 @Injectable()
 export class ExcelParsingService {
+    /**
+     * Sınıf bilgisini (örn: "11/B", "12-Mezun", "12A") grade ve section'a ayırır
+     * Örnekler:
+     * - "9-A" -> grade: "9", section: "A"
+     * - "10/B" -> grade: "10", section: "B"
+     * - "11-SÖZ" -> grade: "11", section: "SÖZ"
+     * - "12-Mezun" -> grade: "12", section: "Mezun"
+     * - "12A" -> grade: "12", section: "A"
+     * - "5" -> grade: "5", section: "A" (varsayılan)
+     */
+    private parseGradeAndSection(classText?: string): { grade: string; section: string } {
+        if (!classText) return { grade: 'Diğer', section: 'A' };
+        
+        classText = classText.trim();
+        
+        // Regex: İlk sayıları (grade) ve geri kalanını (section) ayır
+        // Sayılar: 5-12 arasında geçerli
+        const match = classText.match(/^(\d+)[\-\/\s]*(.*)$/);
+        
+        if (match) {
+            const grade = match[1];
+            let section = match[2]?.trim() || 'A';
+            
+            // Sınıf seviyesi validasyonu (5-12 arası)
+            if (grade && /^\d+$/.test(grade)) {
+                const gradeNum = parseInt(grade, 10);
+                if (gradeNum >= 5 && gradeNum <= 12) {
+                    return { grade, section: section || 'A' };
+                }
+            }
+        }
+        
+        // Eğer format parçalanamazsa, tüm string section olur
+        return { grade: 'Diğer', section: classText };
+    }
+
     async parseExcel(buffer: Buffer, examType?: string): Promise<ParsedExamRow[]> {
         const workbook = new ExcelJS.Workbook();
         const stream = new Readable();
@@ -201,6 +240,11 @@ export class ExcelParsingService {
                 isValid: true,
                 errorReason: []
             };
+
+            // Grade ve section'ı ayır
+            const { grade, section } = this.parseGradeAndSection(rowData.class);
+            rowData.grade = grade;
+            rowData.section = section;
 
             if (!/^\d+$/.test(studentNumber)) {
                 rowData.isValid = false;

@@ -16,6 +16,8 @@ import {
     Table as TableIcon,
     Users,
     ArrowUpDown,
+    ArrowUp,
+    ArrowDown,
     FileSpreadsheet,
     StretchHorizontal,
     Filter
@@ -55,7 +57,9 @@ export default function ExamResultsPage() {
             fetch(`http://localhost:3001/exams/${params.id}/statistics`)
                 .then(res => res.json())
                 .then(data => {
-                    setStats(data);
+                    // Sınav tipini belirle
+                    const updatedData = { ...data, examType: data.examType || 'TYT' };
+                    setStats(updatedData);
                     setLoading(false);
                 })
                 .catch(err => console.error(err));
@@ -85,10 +89,25 @@ export default function ExamResultsPage() {
 
         if (sortConfig) {
             students.sort((a: any, b: any) => {
-                let aValue = a[sortConfig.key];
-                let bValue = b[sortConfig.key];
-                if (typeof aValue === 'string') aValue = aValue.toLowerCase();
-                if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+                let aValue, bValue;
+                
+                // AYT puan türlerine göre değerleri al
+                if (sortConfig.key === 'sayScore') {
+                    aValue = a.scores?.find((s: any) => s.type === 'SAY')?.score || 0;
+                    bValue = b.scores?.find((s: any) => s.type === 'SAY')?.score || 0;
+                } else if (sortConfig.key === 'eaScore') {
+                    aValue = a.scores?.find((s: any) => s.type === 'EA')?.score || 0;
+                    bValue = b.scores?.find((s: any) => s.type === 'EA')?.score || 0;
+                } else if (sortConfig.key === 'sozScore') {
+                    aValue = a.scores?.find((s: any) => s.type === 'SÖZ')?.score || 0;
+                    bValue = b.scores?.find((s: any) => s.type === 'SÖZ')?.score || 0;
+                } else {
+                    aValue = a[sortConfig.key];
+                    bValue = b[sortConfig.key];
+                    if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+                    if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+                }
+                
                 if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -103,6 +122,15 @@ export default function ExamResultsPage() {
             direction = 'desc';
         }
         setSortConfig({ key, direction });
+    };
+
+    const getSortIcon = (key: string) => {
+        if (!sortConfig || sortConfig.key !== key) {
+            return <ArrowUpDown className="h-4 w-4 ml-1 inline opacity-50" />;
+        }
+        return sortConfig.direction === 'asc' ? 
+            <ArrowUp className="h-4 w-4 ml-1 inline" /> : 
+            <ArrowDown className="h-4 w-4 ml-1 inline" />;
     };
 
     const toggleBranch = (branchName: string) => {
@@ -287,7 +315,7 @@ export default function ExamResultsPage() {
             </div>
 
             {/* Overview Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className={`grid ${stats.examType === 'AYT' ? 'grid-cols-3 lg:grid-cols-3' : 'grid-cols-2 lg:grid-cols-4'} gap-4`}>
                 <Card className="print-card">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                         <CardTitle className="text-xs font-medium">Katılım</CardTitle>
@@ -297,33 +325,74 @@ export default function ExamResultsPage() {
                         <div className="text-xl font-bold">{stats.participantCount}</div>
                     </CardContent>
                 </Card>
-                <Card className="print-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                        <CardTitle className="text-xs font-medium">Ort. Puan</CardTitle>
-                        <LayoutDashboard className="h-3 w-3 text-muted-foreground no-print" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 print:text-black">{stats.averageScore.toFixed(2)}</div>
-                    </CardContent>
-                </Card>
-                <Card className="print-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                        <CardTitle className="text-xs font-medium">Ort. Net</CardTitle>
-                        <BarChart3 className="h-3 w-3 text-muted-foreground no-print" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">{stats.averageNet.toFixed(2)}</div>
-                    </CardContent>
-                </Card>
-                <Card className="print-card">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                        <CardTitle className="text-xs font-medium">1. Öğrenci</CardTitle>
-                        <Users className="h-3 w-3 text-muted-foreground no-print" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-sm font-bold truncate">{filteredStudents.length > 0 ? filteredStudents[0].name : '-'}</div>
-                    </CardContent>
-                </Card>
+                
+                {stats.examType === 'AYT' ? (
+                    <>
+                        <Card className="print-card">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                                <CardTitle className="text-xs font-medium">Ort. SAY</CardTitle>
+                                <LayoutDashboard className="h-3 w-3 text-muted-foreground no-print" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 print:text-black">
+                                    {(stats.students.reduce((acc: number, s: any) => acc + (s.scores?.find((sc: any) => sc.type === 'SAY')?.score || 0), 0) / Math.max(stats.students.length, 1)).toFixed(2)}
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="print-card">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                                <CardTitle className="text-xs font-medium">Ort. EA</CardTitle>
+                                <LayoutDashboard className="h-3 w-3 text-muted-foreground no-print" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">
+                                    {(stats.students.reduce((acc: number, s: any) => acc + (s.scores?.find((sc: any) => sc.type === 'EA')?.score || 0), 0) / Math.max(stats.students.length, 1)).toFixed(2)}
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="print-card">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                                <CardTitle className="text-xs font-medium">Ort. SÖZ</CardTitle>
+                                <LayoutDashboard className="h-3 w-3 text-muted-foreground no-print" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xl font-bold text-orange-600 dark:text-orange-400 print:text-black">
+                                    {(stats.students.reduce((acc: number, s: any) => acc + (s.scores?.find((sc: any) => sc.type === 'SÖZ')?.score || 0), 0) / Math.max(stats.students.length, 1)).toFixed(2)}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                ) : (
+                    <>
+                        <Card className="print-card">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                                <CardTitle className="text-xs font-medium">Ort. Puan</CardTitle>
+                                <LayoutDashboard className="h-3 w-3 text-muted-foreground no-print" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400 print:text-black">{stats.averageScore.toFixed(2)}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className="print-card">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                                <CardTitle className="text-xs font-medium">Ort. Net</CardTitle>
+                                <BarChart3 className="h-3 w-3 text-muted-foreground no-print" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 print:text-black">{stats.averageNet.toFixed(2)}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className="print-card">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                                <CardTitle className="text-xs font-medium">1. Öğrenci</CardTitle>
+                                <Users className="h-3 w-3 text-muted-foreground no-print" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-sm font-bold truncate">{filteredStudents.length > 0 ? filteredStudents[0].name : '-'}</div>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
             </div>
 
             {/* Table */}
@@ -331,12 +400,20 @@ export default function ExamResultsPage() {
                 <CardContent className="p-0">
                     <div className="max-h-[70vh] overflow-auto relative print:max-h-none print:overflow-visible">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 z-20 shadow-sm print:static print:bg-slate-100">
+                            <thead className="bg-slate-100 dark:bg-slate-800 shadow-sm print:bg-slate-100">
                                 <tr>
-                                    <th className="p-3 text-left w-12 cursor-pointer" onClick={() => handleSort('idx')}>Sıra</th>
-                                    <th className="p-3 text-left w-20 cursor-pointer" onClick={() => handleSort('studentNumber')}>No</th>
-                                    <th className="p-3 text-left min-w-[150px] cursor-pointer" onClick={() => handleSort('name')}>İsim</th>
-                                    <th className="p-3 text-left w-20 cursor-pointer" onClick={() => handleSort('className')}>Sınıf</th>
+                                    <th className="p-3 text-left w-12 cursor-pointer" onClick={() => handleSort('idx')}>
+                                        <div className="flex items-center gap-1">Sıra {getSortIcon('idx')}</div>
+                                    </th>
+                                    <th className="p-3 text-left w-20 cursor-pointer" onClick={() => handleSort('studentNumber')}>
+                                        <div className="flex items-center gap-1">No {getSortIcon('studentNumber')}</div>
+                                    </th>
+                                    <th className="p-3 text-left min-w-[150px] cursor-pointer" onClick={() => handleSort('name')}>
+                                        <div className="flex items-center gap-1">İsim {getSortIcon('name')}</div>
+                                    </th>
+                                    <th className="p-3 text-left w-20 cursor-pointer" onClick={() => handleSort('className')}>
+                                        <div className="flex items-center gap-1">Sınıf {getSortIcon('className')}</div>
+                                    </th>
                                     {stats.lessonStats.map((l: any) => (
                                         viewMode === 'detailed' ? (
                                             <th key={l.name} className="p-3 text-center border-l dark:border-slate-700 min-w-[100px]">
@@ -351,8 +428,65 @@ export default function ExamResultsPage() {
                                             <th key={l.name} className="p-3 text-center hidden md:table-cell">{l.name}</th>
                                         )
                                     ))}
-                                    <th className="p-3 text-right cursor-pointer border-l dark:border-slate-700" onClick={() => handleSort('net')}>Net</th>
-                                    <th className="p-3 text-right cursor-pointer" onClick={() => handleSort('score')}>Puan</th>
+                                    <th className="p-3 text-right cursor-pointer border-l dark:border-slate-700" onClick={() => handleSort('net')}>
+                                        <div className="flex items-center justify-end gap-1">Net {getSortIcon('net')}</div>
+                                    </th>
+                                    
+                                    {/* Puan Türleri */}
+                                    {stats.examType === 'AYT' ? (
+                                        <>
+                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[100px] cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('sayScore')}>
+                                                <div className="text-[10px] uppercase font-bold">SAY {getSortIcon('sayScore')}</div>
+                                                <div className="text-[8px] text-slate-500">Puan</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">İlçe</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">İl</div>
+                                            </th>
+                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">Genel</div>
+                                            </th>
+                                            
+                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[100px] cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('eaScore')}>
+                                                <div className="text-[10px] uppercase font-bold">EA {getSortIcon('eaScore')}</div>
+                                                <div className="text-[8px] text-slate-500">Puan</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">İlçe</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">İl</div>
+                                            </th>
+                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">Genel</div>
+                                            </th>
+                                            
+                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[100px] cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('sozScore')}>
+                                                <div className="text-[10px] uppercase font-bold">SÖZ {getSortIcon('sozScore')}</div>
+                                                <div className="text-[8px] text-slate-500">Puan</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">İlçe</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">İl</div>
+                                            </th>
+                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
+                                                <div className="text-[8px] uppercase">Genel</div>
+                                            </th>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <th className="p-3 text-right cursor-pointer border-l dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('score')}>
+                                                <div>Puan {getSortIcon('score')}</div>
+                                            </th>
+                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700">İlçe</th>
+                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700">İl</th>
+                                            <th className="p-3 text-center border-l dark:border-slate-700">Genel</th>
+                                        </>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -380,7 +514,68 @@ export default function ExamResultsPage() {
                                             );
                                         })}
                                         <td className="p-3 text-right font-bold text-emerald-600 dark:text-emerald-500 border-l dark:border-slate-800">{student.net.toFixed(2)}</td>
-                                        <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400">{student.score.toFixed(3)}</td>
+                                        
+                                        {/* Puanlar ve Sıralamalar */}
+                                        {stats.examType === 'AYT' ? (
+                                            <>
+                                                {/* SAY Puanı ve Sıralamaları */}
+                                                <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.score.toFixed(3) || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.rankCity || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.rankSchool || '-'}
+                                                </td>
+                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.rankGen || '-'}
+                                                </td>
+
+                                                {/* EA Puanı ve Sıralamaları */}
+                                                <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'EA')?.score.toFixed(3) || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'EA')?.rankCity || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'EA')?.rankSchool || '-'}
+                                                </td>
+                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'EA')?.rankGen || '-'}
+                                                </td>
+
+                                                {/* SÖZ Puanı ve Sıralamaları */}
+                                                <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.score.toFixed(3) || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankCity || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankSchool || '-'}
+                                                </td>
+                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankGen || '-'}
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
+                                                    {student.scores?.[0]?.score.toFixed(3) || student.score?.toFixed(3) || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.[0]?.rankCity || '-'}
+                                                </td>
+                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.[0]?.rankSchool || '-'}
+                                                </td>
+                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                    {student.scores?.[0]?.rankGen || '-'}
+                                                </td>
+                                            </>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>

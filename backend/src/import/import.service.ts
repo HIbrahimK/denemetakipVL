@@ -32,15 +32,8 @@ export class ImportService {
                     const tcNo = row.tcNo;
 
                     // 1. Manage Grade & Class
-                    let gradeName = 'Diğer';
-                    let branchName = 'A';
-
-                    if (row.class) {
-                        const match = row.class.match(/^(\d+)/);
-                        if (match) gradeName = match[1];
-                        const branchMatch = row.class.match(/[a-zA-Z]/g); // Simple heuristic
-                        if (branchMatch) branchName = branchMatch.pop() || 'A';
-                    }
+                    let gradeName = row.grade || 'Diğer';
+                    let branchName = row.section || 'A';
 
                     let grade = await tx.grade.findFirst({
                         where: { name: gradeName, schoolId }
@@ -175,15 +168,31 @@ export class ImportService {
 
                     if (row.scores) {
                         for (const [scoreType, scoreVal] of Object.entries(row.scores)) {
+                            // AYT'de sıralamalar "SAY Sınıf", "SAY Okul" şeklinde kaydedilir
+                            // Diğer türlerde "Sınıf", "Okul" şeklinde kaydedilir
+                            let rankClass, rankSchool, rankCity, rankGen;
+                            
+                            if (examType === 'AYT') {
+                                rankClass = row.ranks[`${scoreType} Sınıf`] || null;
+                                rankSchool = row.ranks[`${scoreType} Okul`] || null;
+                                rankCity = row.ranks[`${scoreType} İlçe`] || null;
+                                rankGen = row.ranks[`${scoreType} Genel`] || null;
+                            } else {
+                                rankClass = row.ranks['Sınıf'] || row.ranks['Sınıf Derece'] || null;
+                                rankSchool = row.ranks['Okul'] || row.ranks['Kurum'] || row.ranks['Okul Derece'] || null;
+                                rankCity = row.ranks['İlçe'] || row.ranks['İl'] || row.ranks['İl Derece'] || null;
+                                rankGen = row.ranks['Genel'] || row.ranks['Genel Derece'] || null;
+                            }
+
                             await tx.examScore.create({
                                 data: {
                                     attemptId: attempt.id,
                                     type: scoreType,
                                     score: Number(scoreVal),
-                                    rankClass: row.ranks['Sınıf'] || row.ranks['Sınıf Derece'] || null,
-                                    rankSchool: row.ranks['Okul'] || row.ranks['Kurum'] || row.ranks['Okul Derece'] || null,
-                                    rankCity: row.ranks['İl'] || row.ranks['İl Derece'] || null,
-                                    rankGen: row.ranks['Genel'] || row.ranks['Genel Derece'] || null,
+                                    rankClass: rankClass ? Number(rankClass) : null,
+                                    rankSchool: rankSchool ? Number(rankSchool) : null,
+                                    rankCity: rankCity ? Number(rankCity) : null,
+                                    rankGen: rankGen ? Number(rankGen) : null,
                                 }
                             });
                         }
@@ -201,8 +210,13 @@ export class ImportService {
     async validateImport(file: Buffer, examId: string, schoolId: string, examType: string): Promise<ParsedExamRow[]> {
         try {
             const rawRows = await this.excelParser.parseExcel(file, examType);
+            const exam = await this.prisma.exam.findUnique({ where: { id: examId } });
 
-            // Additional Validation: Check for duplicates within the file
+            if (!exam) {
+                throw new Error('Sınav bulunamadı');
+            }
+
+            // Dosya içindeki mükerrer kontrol
             const studentNumberCounts = new Map<string, number>();
             rawRows.forEach(r => {
                 if (r.studentNumber) {
@@ -210,10 +224,65 @@ export class ImportService {
                 }
             });
 
+            // Sınava zaten kayıtlı öğrenciler
+            const existingAttempts = await this.prisma.examAttempt.findMany({
+                where: { examId },
+                include: { student: true }
+            });
+            const existingStudentNumbers = new Set(existingAttempts.map(a => a.student.studentNumber));
+
+            // Sistemde kayıtlı öğrenciler
+            const systemStudentNumbers = new Set(
+                (await this.prisma.student.findMany({
+                    where: { schoolId },
+                    select: { studentNumber: true }
+                })).map(s => s.studentNumber)
+            );
+
+            // Her satırı valide et
             for (const row of rawRows) {
-                if (studentNumberCounts.get(row.studentNumber)! > 1) {
+                const { studentNumber } = row;
+                
+                // 1. Öğrenci numarası format kontrolü
+                if (!studentNumber || studentNumber === '0' || studentNumber === '*' || studentNumber === '?' || !/^\d+$/.test(studentNumber)) {
                     row.isValid = false;
-                    row.errorReason.push('Dosya içinde mükerrer öğrenci numarası.');
+                    row.validationStatus = 'invalid_number';
+                    if (!row.errorReason.includes('Geçersiz numara formatı')) {
+                        row.errorReason.push('Geçersiz numara formatı (0, *, ?, yazı)');
+                    }
+                    continue;
+                }
+
+                // 2. Dosya içinde mükerrer kontrol
+                if (studentNumberCounts.get(studentNumber)! > 1) {
+                    row.isValid = false;
+                    row.validationStatus = 'duplicate_in_file';
+                    if (!row.errorReason.includes('Dosya içinde mükerrer')) {
+                        row.errorReason.push('Dosya içinde mükerrer öğrenci numarası');
+                    }
+                    continue;
+                }
+
+                // 3. Bu sınava zaten kayıtlı mı?
+                if (existingStudentNumbers.has(studentNumber)) {
+                    row.isValid = false;
+                    row.validationStatus = 'duplicate_in_exam';
+                    if (!row.errorReason.includes('Sınava zaten kayıtlı')) {
+                        row.errorReason.push('Bu öğrenci sınava zaten kayıtlı (veriler güncellenecek)');
+                    }
+                    continue;
+                }
+
+                // 4. Sistemde kayıtlı değilse bilgilendir
+                if (!systemStudentNumbers.has(studentNumber)) {
+                    row.validationStatus = 'not_registered';
+                    if (!row.errorReason.includes('Sistemde kayıtlı değil')) {
+                        row.errorReason.push('Sistemde kayıtlı değil (yeni öğrenci oluşturulacak)');
+                    }
+                    // Fakat bu durumda isValid = true kalır, çünkü sistem yeni öğrenci ekleyebilir
+                } else {
+                    // Sistemde var ve mükerrer değil = Valid
+                    row.validationStatus = 'valid';
                 }
             }
 

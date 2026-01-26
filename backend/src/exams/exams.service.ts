@@ -155,6 +155,7 @@ export class ExamsService {
             name: `${a.student.user?.firstName || ''} ${a.student.user?.lastName || ''}`.trim(), // Need to include user in query above if not present
             className: a.student.class?.name,
             score: a.scores.length > 0 ? a.scores[0].score : 0,
+            scores: a.scores, // Include all scores (SAY, EA, SÖZ for AYT)
             net: a.lessonResults.reduce((acc, curr) => acc + curr.net, 0),
             // Add lesson specific nets if needed for dynamic columns
             lessons: a.lessonResults.reduce((acc, curr) => ({
@@ -170,6 +171,7 @@ export class ExamsService {
         return {
             examTitle: exam.title,
             examDate: exam.date,
+            examType: exam.type,
             participantCount: totalAttempts,
             averageNet,
             averageScore,

@@ -117,7 +117,26 @@ export function ImportWizard() {
     const updateStudentNumber = (index: number, value: string) => {
         const newData = [...importData];
         newData[index].studentNumber = value;
-        newData[index].isValid = value && value !== '0' && value !== '*';
+        
+        // Numara formatını kontrol et
+        const isValidNumber = value && value !== '0' && value !== '*' && value !== '?' && /^\d+$/.test(value);
+        
+        if (isValidNumber) {
+            // Numara geçerliyse status'unu kontrol et
+            newData[index].isValid = true;
+            if (newData[index].validationStatus === 'invalid_number') {
+                // Geçersiz_number statüsünü kaldır, ama diğer statuslar kalabilir
+                newData[index].validationStatus = 'valid';
+            }
+            newData[index].errorReason = newData[index].errorReason.filter(
+                (r: string) => !r.includes('Geçersiz numara') && !r.includes('formatı')
+            );
+        } else {
+            newData[index].isValid = false;
+            newData[index].validationStatus = 'invalid_number';
+            newData[index].errorReason = ['Geçersiz numara formatı (0, *, ?, yazı)'];
+        }
+        
         setImportData(newData);
     };
 
@@ -228,8 +247,37 @@ export function ImportWizard() {
                                 <tbody>
                                     {importData.map((row, idx) => {
                                         const isRowInvalid = !row.isValid;
+                                        const status = row.validationStatus || 'valid';
+                                        
+                                        // Renk kodlaması
+                                        let rowBgColor = 'hover:bg-slate-50 dark:hover:bg-slate-800';
+                                        let statusBadgeColor = '';
+                                        let statusIcon = null;
+                                        let statusText = '';
+                                        
+                                        if (status === 'invalid_number') {
+                                            rowBgColor = 'bg-red-100 dark:bg-red-900/20';
+                                            statusBadgeColor = 'text-red-600';
+                                            statusText = 'Geçersiz Numara';
+                                        } else if (status === 'duplicate_in_exam') {
+                                            rowBgColor = 'bg-orange-100 dark:bg-orange-900/20';
+                                            statusBadgeColor = 'text-orange-600';
+                                            statusText = 'Güncellenecek';
+                                        } else if (status === 'duplicate_in_file') {
+                                            rowBgColor = 'bg-red-100 dark:bg-red-900/20';
+                                            statusBadgeColor = 'text-red-600';
+                                            statusText = 'Dosya İçinde Mükerrer';
+                                        } else if (status === 'not_registered') {
+                                            rowBgColor = 'bg-blue-100 dark:bg-blue-900/20';
+                                            statusBadgeColor = 'text-blue-600';
+                                            statusText = 'Yeni Kayıt';
+                                        } else {
+                                            statusBadgeColor = 'text-emerald-600';
+                                            statusText = 'Hazır';
+                                        }
+                                        
                                         return (
-                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-800 ${!row.selected ? 'opacity-50 grayscale' : isRowInvalid ? 'bg-red-50 dark:bg-red-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-800 ${rowBgColor} ${!row.selected ? 'opacity-65' : ''}`}>
                                                 <td className="p-2 text-center">
                                                     <input
                                                         type="checkbox"
@@ -245,7 +293,7 @@ export function ImportWizard() {
                                                     <Input
                                                         value={row.studentNumber || ''}
                                                         onChange={(e) => updateStudentNumber(idx, e.target.value)}
-                                                        className={`h-8 w-20 text-xs ${isRowInvalid && !row.studentNumber ? 'border-red-300 focus-visible:ring-red-500' : ''}`}
+                                                        className={`h-8 w-20 text-xs ${status === 'invalid_number' ? 'border-red-300 focus-visible:ring-red-500' : ''}`}
                                                     />
                                                 </td>
                                                 <td className="p-2">
@@ -267,13 +315,21 @@ export function ImportWizard() {
                                                     {row.class}
                                                 </td>
                                                 <td className="p-2">
-                                                    {isRowInvalid ? (
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-600 uppercase">
-                                                            <AlertCircle className="h-3 w-3" /> {row.errorReason?.join(', ')}
+                                                    {isRowInvalid && status !== 'not_registered' && status !== 'duplicate_in_exam' ? (
+                                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase ${statusBadgeColor}`}>
+                                                            <AlertCircle className="h-3 w-3" /> {statusText}
+                                                        </span>
+                                                    ) : status === 'not_registered' ? (
+                                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase ${statusBadgeColor}`}>
+                                                            <Info className="h-3 w-3" /> {statusText}
+                                                        </span>
+                                                    ) : status === 'duplicate_in_exam' ? (
+                                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase ${statusBadgeColor}`}>
+                                                            <AlertCircle className="h-3 w-3" /> {statusText}
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase">
-                                                            <CheckCircle2 className="h-3 w-3" /> Hazır
+                                                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase ${statusBadgeColor}`}>
+                                                            <CheckCircle2 className="h-3 w-3" /> {statusText}
                                                         </span>
                                                     )}
                                                 </td>
@@ -295,12 +351,17 @@ export function ImportWizard() {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="bg-amber-50 rounded-lg p-3 border border-amber-100 flex gap-3 text-amber-800">
-                            <AlertCircle className="h-5 w-5 shrink-0" />
-                            <p className="text-xs leading-relaxed">
-                                <strong>Bilgi:</strong> Kırmızı satırlar hatalı verileri gösterir. Öğrenci numaralarını düzeltebilirsiniz.
-                                Numarası sistemde kayıtlı olmayan öğrenciler için varsayılan olarak <strong>1234</strong> şifresi atanacaktır.
-                            </p>
+                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-100 flex gap-3 text-blue-800">
+                            <Info className="h-5 w-5 shrink-0" />
+                            <div className="text-xs leading-relaxed space-y-2">
+                                <p><strong>Durum açıklamaları:</strong></p>
+                                <ul className="space-y-1 ml-4 list-disc">
+                                    <li><strong className="text-red-600">Kırmızı:</strong> Hatalı numara formatı (0, *, ?, yazı vb) - lütfen düzeltin</li>
+                                    <li><strong className="text-orange-600">Turuncu:</strong> Bu öğrenci sınava zaten kayıtlı - verileri güncellenecek</li>
+                                    <li><strong className="text-blue-600">Mavi:</strong> Sistemde kayıtlı değil - yeni öğrenci oluşturulacak (şifre: 1234)</li>
+                                    <li><strong className="text-emerald-600">Yeşil:</strong> Hazır ve kaydedilebilir</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 )}
