@@ -14,18 +14,21 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
 @Controller('users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
     @Get()
-    @ApiOperation({ summary: 'Kullanıcıları listele (Yönetici/Öğretmen)' })
+    @ApiOperation({ summary: 'Kullanıcıları listele (Yönetici)' })
     findAll(
         @Request() req,
         @Query('role') role?: Role,

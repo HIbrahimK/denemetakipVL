@@ -65,6 +65,7 @@ export function middleware(request: NextRequest) {
                 '/dashboard/exams/edit',
                 '/dashboard/import',
                 '/dashboard/settings',
+                '/dashboard/users',
             ];
 
             const isBlockedPath = blockedTeacherPaths.some(path => 

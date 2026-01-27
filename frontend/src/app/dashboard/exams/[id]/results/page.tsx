@@ -54,15 +54,28 @@ export default function ExamResultsPage() {
 
     useEffect(() => {
         if (params.id) {
-            fetch(`http://localhost:3001/exams/${params.id}/statistics`)
-                .then(res => res.json())
+            const token = localStorage.getItem('token');
+            fetch(`http://localhost:3001/exams/${params.id}/statistics`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to fetch statistics');
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     // Sınav tipini belirle
                     const updatedData = { ...data, examType: data.examType || 'TYT' };
                     setStats(updatedData);
                     setLoading(false);
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error(err);
+                    setLoading(false);
+                });
         }
     }, [params.id]);
 
@@ -77,7 +90,7 @@ export default function ExamResultsPage() {
     }, [stats]);
 
     const filteredStudents = useMemo(() => {
-        if (!stats) return [];
+        if (!stats || !stats.students || !Array.isArray(stats.students)) return [];
         let students = [...stats.students];
 
         if (searchTerm) {

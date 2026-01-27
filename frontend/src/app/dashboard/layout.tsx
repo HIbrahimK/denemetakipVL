@@ -61,7 +61,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ];
         }
 
-        // Admin/Teacher menu - full access
+        // Teacher menu - limited access (no users, no settings)
+        if (role === 'TEACHER') {
+            return [
+                { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+                { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+                { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
+                { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
+            ];
+        }
+
+        // Admin menu - full access
         return [
             { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
             { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },

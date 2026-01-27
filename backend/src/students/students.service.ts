@@ -210,6 +210,81 @@ export class StudentsService {
         return { success: true };
     }
 
+    async bulkDelete(studentIds: string[], schoolId: string) {
+        // Verify all students belong to this school
+        const students = await this.prisma.student.findMany({
+            where: {
+                id: { in: studentIds },
+                schoolId,
+            },
+            select: { id: true, userId: true },
+        });
+
+        if (students.length !== studentIds.length) {
+            throw new NotFoundException('Bazı öğrenciler bulunamadı veya farklı okula ait');
+        }
+
+        const userIds = students.map(s => s.userId);
+
+        // Delete students and their users in transaction
+        await this.prisma.$transaction([
+            this.prisma.student.deleteMany({
+                where: { id: { in: studentIds } },
+            }),
+            this.prisma.user.deleteMany({
+                where: { id: { in: userIds } },
+            }),
+        ]);
+
+        return { success: true, count: students.length, message: `${students.length} öğrenci silindi` };
+    }
+
+    async bulkTransfer(studentIds: string[], schoolId: string, gradeName: string, className: string) {
+        // Verify all students belong to this school
+        const students = await this.prisma.student.findMany({
+            where: {
+                id: { in: studentIds },
+                schoolId,
+            },
+        });
+
+        if (students.length !== studentIds.length) {
+            throw new NotFoundException('Bazı öğrenciler bulunamadı veya farklı okula ait');
+        }
+
+        // Find or create grade
+        let grade = await this.prisma.grade.findFirst({
+            where: { name: gradeName, schoolId },
+        });
+        if (!grade) {
+            grade = await this.prisma.grade.create({
+                data: { name: gradeName, schoolId },
+            });
+        }
+
+        // Find or create class
+        let studentClass = await this.prisma.class.findFirst({
+            where: { name: className, gradeId: grade.id, schoolId },
+        });
+        if (!studentClass) {
+            studentClass = await this.prisma.class.create({
+                data: { name: className, gradeId: grade.id, schoolId },
+            });
+        }
+
+        // Update all students
+        await this.prisma.student.updateMany({
+            where: { id: { in: studentIds } },
+            data: { classId: studentClass.id },
+        });
+
+        return { 
+            success: true, 
+            count: students.length, 
+            message: `${students.length} öğrenci ${gradeName} ${className} sınıfına aktarıldı` 
+        };
+    }
+
     async changePassword(id: string, schoolId: string, dto: ChangePasswordDto) {
         const student = await this.findOne(id, schoolId);
         const hashedPassword = await bcrypt.hash(dto.newPassword, 10);

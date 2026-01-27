@@ -128,22 +128,60 @@ Authorization: Bearer <teacher_token>
 GET http://localhost:3001/students/STUDENT_ID/exams
 Authorization: Bearer <teacher_token>
 # Expected: 200 OK
+
+# Try to access users list (SHOULD FAIL - 403)
+GET http://localhost:3001/users
+Authorization: Bearer <teacher_token>
+# Expected: 403 Forbidden
+
+# Try to change admin password (SHOULD FAIL - 403)
+POST http://localhost:3001/users/ADMIN_ID/change-password
+Authorization: Bearer <teacher_token>
+# Expected: 403 Forbidden
+
+# Try to change student password (SHOULD SUCCEED)
+POST http://localhost:3001/students/STUDENT_ID/change-password
+Authorization: Bearer <teacher_token>
+# Expected: 200 OK
 ```
 
 #### Frontend Route Tests
 1. Login as teacher at: `http://localhost:3000/login/school`
-2. Navigate to: `http://localhost:3000/dashboard/exams`
+2. Check menu - should NOT see:
+   - "Kullanıcılar" (Users)
+   - "Ayarlar" (Settings)
+3. Should see:
+   - "Genel Bakış" (Dashboard)
+   - "Sınavlar" (Exams)
+   - "Sonuçlar" (Results)
+   - "Öğrenciler" (Students)
+   - "Profilim" (Profile)
+4. Navigate to: `http://localhost:3000/dashboard/exams`
    - **Expected**: SUCCESS - Can view exam list
-3. Navigate to: `http://localhost:3000/dashboard/exams/EXAM_ID/results`
+   - **Expected**: "Yeni Sınav" button is HIDDEN
+   - **Expected**: Edit/Delete options in dropdown are HIDDEN
+   - **Expected**: Can view exam statistics
+5. Try to navigate to: `http://localhost:3000/dashboard/exams/new`
+   - **Expected**: Redirect to `/dashboard/exams`
+6. Navigate to: `http://localhost:3000/dashboard/exams/EXAM_ID/results`
    - **Expected**: SUCCESS - Can view all student results
-4. Try to navigate to: `http://localhost:3000/dashboard/exams/new`
+7. Navigate to: `http://localhost:3000/dashboard/students`
+   - **Expected**: SUCCESS - Can view student list
+   - **Expected**: "Yeni Öğrenci" button is HIDDEN
+   - **Expected**: "Excel'den Yükle" button is HIDDEN
+   - **Expected**: Edit/Delete options in dropdown are HIDDEN
+   - **Expected**: CAN see "Öğrenci Şifresi Değiştir" option
+   - **Expected**: CAN see "Veli Şifresi Değiştir" option
+8. Try to navigate to: `http://localhost:3000/dashboard/students/new`
    - **Expected**: Redirect to `/dashboard/exams`
-5. Try to navigate to: `http://localhost:3000/dashboard/students/new`
+9. Try to navigate to: `http://localhost:3000/dashboard/users`
    - **Expected**: Redirect to `/dashboard/exams`
-6. Try to navigate to: `http://localhost:3000/dashboard/import`
-   - **Expected**: Redirect to `/dashboard/exams`
-7. Try to navigate to: `http://localhost:3000/dashboard/settings`
-   - **Expected**: Redirect to `/dashboard/exams`
+10. Try to navigate to: `http://localhost:3000/dashboard/settings`
+    - **Expected**: Redirect to `/dashboard/exams`
+11. Navigate to: `http://localhost:3000/dashboard/profile`
+    - **Expected**: SUCCESS - Can view and edit own profile
+    - **Expected**: Can change own password
+    - **Expected**: Can change own avatar
 
 ### Test 3: Admin Full Access
 
@@ -210,14 +248,39 @@ GET http://localhost:3001/students/me/exams
 - `backend/src/schools/schools.controller.ts` - Added authentication to GET endpoints
 - `backend/src/students/students.controller.ts` - Pass user to service for ownership check
 - `backend/src/students/students.service.ts` - Added ownership validation logic
+- `backend/src/users/users.controller.ts` - Added admin-only restriction (teachers blocked)
 
 ### Frontend
-- `frontend/src/middleware.ts` - NEW: Route protection middleware
+- `frontend/src/middleware.ts` - NEW: Route protection middleware (added /users to blocked paths)
 - `frontend/src/lib/auth.ts` - NEW: Auth utility functions with cookie support
 - `frontend/src/app/login/school/page.tsx` - Use auth utility
 - `frontend/src/app/login/student/page.tsx` - Use auth utility
 - `frontend/src/app/login/parent/page.tsx` - Use auth utility
-- `frontend/src/app/dashboard/layout.tsx` - Use clearUserData utility
+- `frontend/src/app/dashboard/layout.tsx` - Separate menu for teachers (hide users/settings), use clearUserData utility
+- `frontend/src/app/dashboard/exams/page.tsx` - Hide new exam button and edit/delete for teachers
+- `frontend/src/app/dashboard/students/page.tsx` - Hide add/import buttons and edit/delete for teachers (keep password change)
+
+## Access Control Matrix
+
+| Action | Student | Teacher | Admin |
+|--------|---------|---------|-------|
+| View own results | ✅ | N/A | N/A |
+| View other students' results | ❌ | ✅ | ✅ |
+| View exam list | ❌ | ✅ (read-only) | ✅ |
+| View exam statistics | ❌ | ✅ | ✅ |
+| Create/edit exams | ❌ | ❌ | ✅ |
+| Delete exams | ❌ | ❌ | ✅ |
+| Import exam data | ❌ | ❌ | ✅ |
+| View students list | ❌ | ✅ | ✅ |
+| Add/edit students | ❌ | ❌ | ✅ |
+| Delete students | ❌ | ❌ | ✅ |
+| Change student passwords | ❌ | ✅ | ✅ |
+| Change parent passwords | ❌ | ✅ | ✅ |
+| Access users management | ❌ | ❌ | ✅ |
+| Change admin/teacher passwords | ❌ | ❌ | ✅ |
+| Access settings | ❌ | ❌ | ✅ |
+| Access own profile | ✅ | ✅ | ✅ |
+| Change own password | ✅ | ✅ | ✅ |
 
 ## Important Notes
 

@@ -21,6 +21,7 @@ import {
     Trash2,
     Key,
     FileUp,
+    Users,
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -30,11 +31,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AddStudentModal } from "@/components/students/add-student-modal";
 import { EditStudentModal } from "@/components/students/edit-student-modal";
 import { ChangePasswordModal } from "@/components/students/change-password-modal";
 import { ChangeParentPasswordModal } from "@/components/students/change-parent-password-modal";
 import { ImportStudentsModal } from "@/components/students/import-students-modal";
+import { BulkTransferModal } from "@/components/students/bulk-transfer-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     AlertDialog,
@@ -54,6 +57,12 @@ export default function StudentsPage() {
     const [search, setSearch] = useState("");
     const [selectedGrade, setSelectedGrade] = useState("");
     const [selectedClass, setSelectedClass] = useState("");
+    const [userRole, setUserRole] = useState<string>('');
+
+    // Selection state
+    const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+    const [isBulkTransferOpen, setIsBulkTransferOpen] = useState(false);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
     // Modals
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -67,6 +76,7 @@ export default function StudentsPage() {
         setLoading(true);
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const token = localStorage.getItem("token");
+        setUserRole(user.role || '');
 
         try {
             // Fetch filters
@@ -97,6 +107,47 @@ export default function StudentsPage() {
     useEffect(() => {
         fetchData();
     }, [search, selectedGrade, selectedClass]);
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            const allIds = new Set(students.map(s => s.id));
+            setSelectedStudents(allIds);
+        } else {
+            setSelectedStudents(new Set());
+        }
+    };
+
+    const handleSelectStudent = (studentId: string, checked: boolean) => {
+        const newSelected = new Set(selectedStudents);
+        if (checked) {
+            newSelected.add(studentId);
+        } else {
+            newSelected.delete(studentId);
+        }
+        setSelectedStudents(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch("http://localhost:3001/students/bulk-delete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ studentIds: Array.from(selectedStudents) }),
+            });
+
+            if (res.ok) {
+                setSelectedStudents(new Set());
+                setIsBulkDeleteOpen(false);
+                fetchData();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const handleDelete = async () => {
         if (!deleteId) return;
@@ -136,19 +187,50 @@ export default function StudentsPage() {
                     </h2>
                     <p className="text-slate-500">Okulunuzdaki öğrencileri yönetin ve kaydedin.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button variant="outline" className="gap-2 border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsImportOpen(true)}>
-                        <FileUp className="h-4 w-4" />
-                        Excel'den Yükle
-                    </Button>
-                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-600/20" onClick={() => setIsAddOpen(true)}>
-                        <Plus className="h-4 w-4" />
-                        Yeni Öğrenci
-                    </Button>
-                </div>
+                {userRole !== 'TEACHER' && (
+                    <div className="flex items-center gap-3">
+                        <Button variant="outline" className="gap-2 border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsImportOpen(true)}>
+                            <FileUp className="h-4 w-4" />
+                            Excel'den Yükle
+                        </Button>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-600/20" onClick={() => setIsAddOpen(true)}>
+                            <Plus className="h-4 w-4" />
+                            Yeni Öğrenci
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                {/* Bulk Actions Bar */}
+                {selectedStudents.size > 0 && userRole !== 'TEACHER' && (
+                    <div className="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-between">
+                        <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
+                            {selectedStudents.size} öğrenci seçildi
+                        </span>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => setIsBulkTransferOpen(true)}
+                            >
+                                <Users className="h-4 w-4" />
+                                Sınıf Değiştir
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                className="gap-2"
+                                onClick={() => setIsBulkDeleteOpen(true)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Toplu Sil
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="relative col-span-2">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -187,6 +269,14 @@ export default function StudentsPage() {
                     <Table>
                         <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
                             <TableRow>
+                                {userRole !== 'TEACHER' && (
+                                    <TableHead className="w-[50px]">
+                                        <Checkbox
+                                            checked={students.length > 0 && selectedStudents.size === students.length}
+                                            onCheckedChange={handleSelectAll}
+                                        />
+                                    </TableHead>
+                                )}
                                 <TableHead className="w-[80px] text-slate-600 dark:text-slate-400 font-semibold">Profil</TableHead>
                                 <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Öğrenci Bilgileri</TableHead>
                                 <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Sınıf/Şube</TableHead>
@@ -197,19 +287,27 @@ export default function StudentsPage() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-10 text-slate-500">
-                                        Yükleniyor...
+                                    <TableCell colSpan={userRole !== 'TEACHER' ? 6 : 5} className="text-center py-10 text-slate-500">
+                                        Yüklüyor...
                                     </TableCell>
                                 </TableRow>
                             ) : students.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-10 text-slate-500">
+                                    <TableCell colSpan={userRole !== 'TEACHER' ? 6 : 5} className="text-center py-10 text-slate-500">
                                         Öğrenci bulunamadı.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 students.map((student) => (
                                     <TableRow key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                        {userRole !== 'TEACHER' && (
+                                            <TableCell>
+                                                <Checkbox
+                                                    checked={selectedStudents.has(student.id)}
+                                                    onCheckedChange={(checked) => handleSelectStudent(student.id, checked as boolean)}
+                                                />
+                                            </TableCell>
+                                        )}
                                         <TableCell>
                                             <Avatar className="h-10 w-10 border-2 border-indigo-200 dark:border-indigo-800">
                                                 <AvatarImage src={getStudentAvatarUrl(student)} />
@@ -253,18 +351,22 @@ export default function StudentsPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-56">
-                                                    <DropdownMenuItem onClick={() => setEditStudent(student)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Düzenle
-                                                    </DropdownMenuItem>
+                                                    {userRole !== 'TEACHER' && (
+                                                        <DropdownMenuItem onClick={() => setEditStudent(student)}>
+                                                            <Edit className="mr-2 h-4 w-4" /> Düzenle
+                                                        </DropdownMenuItem>
+                                                    )}
                                                     <DropdownMenuItem onClick={() => setPasswordStudent(student)}>
                                                         <Key className="mr-2 h-4 w-4" /> Öğrenci Şifresi Değiştir
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => setParentPasswordStudent(student)} className="text-purple-600">
                                                         <Key className="mr-2 h-4 w-4" /> Veli Şifresi Değiştir
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-600" onClick={() => setDeleteId(student.id)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" /> Sil
-                                                    </DropdownMenuItem>
+                                                    {userRole !== 'TEACHER' && (
+                                                        <DropdownMenuItem className="text-red-600" onClick={() => setDeleteId(student.id)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Sil
+                                                        </DropdownMenuItem>
+                                                    )}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -326,6 +428,36 @@ export default function StudentsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Bulk Delete Dialog */}
+            <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Toplu Öğrenci Silme</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {selectedStudents.size} öğrenciyi ve tüm verilerini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                        <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleBulkDelete}>
+                            Evet, {selectedStudents.size} Öğrenciyi Sil
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Bulk Transfer Modal */}
+            <BulkTransferModal
+                isOpen={isBulkTransferOpen}
+                onClose={() => setIsBulkTransferOpen(false)}
+                onSuccess={() => {
+                    setSelectedStudents(new Set());
+                    fetchData();
+                }}
+                selectedCount={selectedStudents.size}
+                studentIds={Array.from(selectedStudents)}
+            />
         </div>
     );
 }

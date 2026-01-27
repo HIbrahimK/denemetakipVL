@@ -50,7 +50,15 @@ export default function SettingsPage() {
         if (!user.schoolId) return;
 
         try {
-            const res = await fetch(`http://localhost:3001/schools/${user.schoolId}`);
+            const token = localStorage.getItem('token');
+            const res = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (!res.ok) {
+                throw new Error('Failed to fetch school data');
+            }
             const data = await res.json();
             setSchool(data);
             setFormData({

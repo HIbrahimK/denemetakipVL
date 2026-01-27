@@ -66,6 +66,23 @@ export class StudentsController {
         return this.studentsService.remove(id, req.user.schoolId);
     }
 
+    @Post('bulk-delete')
+    @ApiOperation({ summary: 'Toplu öğrenci sil' })
+    bulkDelete(@Request() req, @Body('studentIds') studentIds: string[]) {
+        return this.studentsService.bulkDelete(studentIds, req.user.schoolId);
+    }
+
+    @Post('bulk-transfer')
+    @ApiOperation({ summary: 'Toplu sınıf değiştir' })
+    bulkTransfer(
+        @Request() req,
+        @Body('studentIds') studentIds: string[],
+        @Body('gradeName') gradeName: string,
+        @Body('className') className: string,
+    ) {
+        return this.studentsService.bulkTransfer(studentIds, req.user.schoolId, gradeName, className);
+    }
+
     @Post(':id/change-password')
     @ApiOperation({ summary: 'Öğrenci şifresini değiştir' })
     changePassword(

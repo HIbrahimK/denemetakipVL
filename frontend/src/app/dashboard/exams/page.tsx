@@ -47,9 +47,11 @@ export default function ExamsPage() {
     const [gradeFilter, setGradeFilter] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [userRole, setUserRole] = useState<string>('');
 
     const fetchExams = () => {
         const userStr = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
         if (!userStr) {
             window.location.href = '/';
             return;
@@ -57,13 +59,30 @@ export default function ExamsPage() {
 
         const user = JSON.parse(userStr);
         const schoolId = user.schoolId;
+        setUserRole(user.role || '');
 
         if (!schoolId) return;
 
         setLoading(true);
-        fetch(`http://localhost:3001/exams?schoolId=${schoolId}`)
-            .then(res => res.json())
+        fetch(`http://localhost:3001/exams?schoolId=${schoolId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Failed to fetch exams');
+                }
+                return res.json();
+            })
             .then(data => {
+                // Ensure data is an array
+                if (!Array.isArray(data)) {
+                    console.error('Expected array but got:', data);
+                    setExams([]);
+                    setLoading(false);
+                    return;
+                }
                 const sorted = [...data].sort((a, b) => {
                     const aDate = new Date(a.createdAt || a.date || 0).getTime();
                     const bDate = new Date(b.createdAt || b.date || 0).getTime();
@@ -74,6 +93,7 @@ export default function ExamsPage() {
             })
             .catch(err => {
                 console.error(err);
+                setExams([]);
                 setLoading(false);
             });
     };
@@ -136,7 +156,7 @@ export default function ExamsPage() {
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Sınavlar</h2>
                     <p className="text-slate-500 dark:text-slate-400">Tüm deneme sınavlarını buradan yönetebilirsiniz.</p>
                 </div>
-                <CreateExamModal onSuccess={fetchExams} />
+                {userRole !== 'TEACHER' && <CreateExamModal onSuccess={fetchExams} />}
             </div>
 
             {/* Filters */}
@@ -239,16 +259,20 @@ export default function ExamsPage() {
                                                 <BarChart2 className="mr-2 h-4 w-4" /> İstatistikler
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="cursor-pointer" onClick={() => setEditExam(exam)}>
-                                            <Edit className="mr-2 h-4 w-4" /> Düzenle
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('results'); }}>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Sonuçları Temizle
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('exam'); }}>
-                                            <Trash2 className="mr-2 h-4 w-4" /> Sınavı Sil
-                                        </DropdownMenuItem>
+                                        {userRole !== 'TEACHER' && (
+                                            <>
+                                                <DropdownMenuItem className="cursor-pointer" onClick={() => setEditExam(exam)}>
+                                                    <Edit className="mr-2 h-4 w-4" /> Düzenle
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('results'); }}>
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Sonuçları Temizle
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('exam'); }}>
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Sınavı Sil
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
