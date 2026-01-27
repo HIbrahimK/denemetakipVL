@@ -115,9 +115,9 @@ export default function ExamDetailPage() {
                 const classAverage = classBranch?.avgScore || schoolAverage;
 
                 // Calculate lesson averages (school and class)
-                const lessonAverages = statsData.lessonStats.map((lesson: any) => {
+                const lessonAverages = statsData.lessonStats?.map((lesson: any) => {
                     // Calculate class average for this lesson
-                    const studentsInClass = statsData.students.filter((s: any) => s.className === studentClassName);
+                    const studentsInClass = statsData.students?.filter((s: any) => s.className === studentClassName) || [];
                     const classLessonNets = studentsInClass
                         .map((s: any) => {
                             const lessonData = s.lessons?.[lesson.name];
@@ -134,7 +134,7 @@ export default function ExamDetailPage() {
                         schoolAvg: lesson.avgNet,
                         classAvg: classAvgNet,
                     };
-                });
+                }) || [];
 
                 setExamStats({
                     schoolAverage,

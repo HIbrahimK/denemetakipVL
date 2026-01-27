@@ -43,6 +43,7 @@ export function middleware(request: NextRequest) {
             const allowedStudentPaths = [
                 '/dashboard/student/profile',
                 '/dashboard/student/results',
+                '/dashboard/profile',
             ];
 
             const isAllowedPath = allowedStudentPaths.some(path => 
