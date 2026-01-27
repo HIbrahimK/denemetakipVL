@@ -33,7 +33,9 @@ import { Badge } from "@/components/ui/badge";
 import { AddStudentModal } from "@/components/students/add-student-modal";
 import { EditStudentModal } from "@/components/students/edit-student-modal";
 import { ChangePasswordModal } from "@/components/students/change-password-modal";
+import { ChangeParentPasswordModal } from "@/components/students/change-parent-password-modal";
 import { ImportStudentsModal } from "@/components/students/import-students-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -58,6 +60,7 @@ export default function StudentsPage() {
     const [isImportOpen, setIsImportOpen] = useState(false);
     const [editStudent, setEditStudent] = useState<any>(null);
     const [passwordStudent, setPasswordStudent] = useState<any>(null);
+    const [parentPasswordStudent, setParentPasswordStudent] = useState<any>(null);
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const fetchData = async () => {
@@ -109,6 +112,16 @@ export default function StudentsPage() {
         } finally {
             setDeleteId(null);
         }
+    };
+
+    const getStudentAvatarUrl = (student: any) => {
+        if (student.user.avatarSeed) {
+            const parts = student.user.avatarSeed.split(':');
+            if (parts.length === 2) {
+                return `https://api.dicebear.com/7.x/${parts[0]}/svg?seed=${parts[1]}`;
+            }
+        }
+        return `https://api.dicebear.com/7.x/avataaars/svg?seed=${student.user.firstName}`;
     };
 
     const classesList = filters.find(g => g.id === selectedGrade)?.classes || [];
@@ -198,12 +211,20 @@ export default function StudentsPage() {
                                 students.map((student) => (
                                     <TableRow key={student.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                         <TableCell>
-                                            <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-200 dark:border-indigo-800">
-                                                {student.user.firstName[0]}{student.user.lastName[0]}
-                                            </div>
+                                            <Avatar className="h-10 w-10 border-2 border-indigo-200 dark:border-indigo-800">
+                                                <AvatarImage src={getStudentAvatarUrl(student)} />
+                                                <AvatarFallback className="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold">
+                                                    {student.user.firstName[0]}{student.user.lastName[0]}
+                                                </AvatarFallback>
+                                            </Avatar>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="font-semibold text-slate-900 dark:text-slate-100">{student.user.firstName} {student.user.lastName}</div>
+                                            <a 
+                                                href={`/dashboard/student/results?studentId=${student.id}`}
+                                                className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                                            >
+                                                {student.user.firstName} {student.user.lastName}
+                                            </a>
                                             <div className="text-xs text-slate-500 dark:text-slate-400">{student.user.email}</div>
                                         </TableCell>
                                         <TableCell>
@@ -231,12 +252,15 @@ export default function StudentsPage() {
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuContent align="end" className="w-56">
                                                     <DropdownMenuItem onClick={() => setEditStudent(student)}>
                                                         <Edit className="mr-2 h-4 w-4" /> Düzenle
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => setPasswordStudent(student)}>
-                                                        <Key className="mr-2 h-4 w-4" /> Şifre Değiştir
+                                                        <Key className="mr-2 h-4 w-4" /> Öğrenci Şifresi Değiştir
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setParentPasswordStudent(student)} className="text-purple-600">
+                                                        <Key className="mr-2 h-4 w-4" /> Veli Şifresi Değiştir
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem className="text-red-600" onClick={() => setDeleteId(student.id)}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Sil
@@ -271,6 +295,13 @@ export default function StudentsPage() {
                     student={passwordStudent}
                     open={!!passwordStudent}
                     onOpenChange={(open: boolean) => !open && setPasswordStudent(null)}
+                />
+            )}
+            {parentPasswordStudent && (
+                <ChangeParentPasswordModal
+                    student={parentPasswordStudent}
+                    open={!!parentPasswordStudent}
+                    onOpenChange={(open: boolean) => !open && setParentPasswordStudent(null)}
                 />
             )}
             <ImportStudentsModal

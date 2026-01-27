@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, Users, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { setUserData } from "@/lib/auth";
 
 export default function ParentLoginPage() {
     const router = useRouter();
@@ -33,10 +34,10 @@ export default function ParentLoginPage() {
             }
 
             const data = await res.json();
-            localStorage.setItem('token', data.access_token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            setUserData(data.user, data.access_token);
 
-            router.push('/dashboard');
+            // Redirect parent to child's results page
+            router.push('/dashboard/parent/results');
         } catch (err: any) {
             setError(err.message || 'Bir hata oluştu.');
         } finally {

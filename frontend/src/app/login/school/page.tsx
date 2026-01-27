@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Loader2, School, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { setUserData } from "@/lib/auth";
 
 export default function SchoolLoginPage() {
     const router = useRouter();
@@ -34,8 +35,7 @@ export default function SchoolLoginPage() {
             }
 
             const data = await res.json();
-            localStorage.setItem('token', data.access_token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            setUserData(data.user, data.access_token);
 
             // Redirect to dashboard (yeni tasarım)
             router.push('/dashboard');

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download, Upload } from "lucide-react";
 
 interface EditExamModalProps {
     exam: any;
@@ -17,6 +17,7 @@ interface EditExamModalProps {
 export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<any>({});
+    const [answerKeyFile, setAnswerKeyFile] = useState<File | null>(null);
 
     useEffect(() => {
         if (exam) {
@@ -61,7 +62,19 @@ export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamM
             });
 
             if (response.ok) {
+                // Upload answer key if provided
+                if (answerKeyFile) {
+                    const fileFormData = new FormData();
+                    fileFormData.append('file', answerKeyFile);
+                    
+                    await fetch(`http://localhost:3001/exams/${exam.id}/upload-answer-key`, {
+                        method: "POST",
+                        body: fileFormData,
+                    });
+                }
+                
                 onOpenChange(false);
+                setAnswerKeyFile(null);
                 onSuccess();
             }
         } catch (error) {
@@ -156,6 +169,48 @@ export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamM
                         <div className="space-y-2">
                             <Label htmlFor="edit-generalInfo text-slate-900 dark:text-slate-200">Genel Bilgiler</Label>
                             <Input id="edit-generalInfo" name="generalInfo" value={formData.generalInfo} onChange={handleChange} />
+                        </div>
+                        
+                        {/* Answer Key Section */}
+                        <div className="space-y-2">
+                            <Label>Cevap Anahtarı</Label>
+                            {exam.answerKeyUrl ? (
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2"
+                                        onClick={() => window.open(`http://localhost:3001${exam.answerKeyUrl}`, '_blank')}
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Mevcut Cevap Anahtarını İndir
+                                    </Button>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-slate-500">Cevap anahtarı yüklenmemiş.</p>
+                            )}
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                                    onChange={(e) => setAnswerKeyFile(e.target.files?.[0] || null)}
+                                    className="cursor-pointer"
+                                />
+                                {answerKeyFile && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setAnswerKeyFile(null)}
+                                    >
+                                        Temizle
+                                    </Button>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                Yeni cevap anahtarı yüklemek için dosya seçin.
+                            </p>
                         </div>
                     </div>
                     <DialogFooter>

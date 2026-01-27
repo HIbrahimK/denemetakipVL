@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface CreateExamModalProps {
@@ -15,6 +15,7 @@ interface CreateExamModalProps {
 export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [answerKeyFile, setAnswerKeyFile] = useState<File | null>(null);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -50,7 +51,20 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
 
             if (response.ok) {
                 const exam = await response.json();
+                
+                // Upload answer key if provided
+                if (answerKeyFile) {
+                    const fileFormData = new FormData();
+                    fileFormData.append('file', answerKeyFile);
+                    
+                    await fetch(`http://localhost:3001/exams/${exam.id}/upload-answer-key`, {
+                        method: "POST",
+                        body: fileFormData,
+                    });
+                }
+                
                 setOpen(false);
+                setAnswerKeyFile(null);
                 if (onSuccess) {
                     onSuccess();
                 } else {
@@ -139,6 +153,33 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
                         <div className="space-y-2">
                             <Label htmlFor="generalInfo">Genel Bilgiler</Label>
                             <Input id="generalInfo" name="generalInfo" placeholder="Sınav hakkında ek notlar..." />
+                        </div>
+                        
+                        {/* Answer Key Upload */}
+                        <div className="space-y-2">
+                            <Label htmlFor="answerKey">Cevap Anahtarı (İsteğe Bağlı)</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="answerKey"
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls"
+                                    onChange={(e) => setAnswerKeyFile(e.target.files?.[0] || null)}
+                                    className="cursor-pointer"
+                                />
+                                {answerKeyFile && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setAnswerKeyFile(null)}
+                                    >
+                                        Temizle
+                                    </Button>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                PDF, JPG, JPEG, PNG veya Excel formatında dosya yükleyebilirsiniz.
+                            </p>
                         </div>
                     </div>
                     <DialogFooter>

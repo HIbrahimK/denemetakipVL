@@ -1,8 +1,13 @@
-import { Controller, Post, UploadedFile, UseInterceptors, Body, Query } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, Body, Query, UseGuards } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImportService } from './import.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('import')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SCHOOL_ADMIN')
 export class ImportController {
     constructor(private readonly importService: ImportService) { }
 

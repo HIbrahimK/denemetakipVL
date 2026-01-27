@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class ExamsService {
@@ -201,5 +203,53 @@ export class ExamsService {
         return this.prisma.examAttempt.deleteMany({
             where: { examId: id },
         });
+    }
+
+    async uploadAnswerKey(examId: string, file: Express.Multer.File) {
+        if (!file) {
+            throw new Error('No file provided');
+        }
+
+        // Validate file type
+        const allowedMimeTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+        ];
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            throw new Error('Invalid file type. Only PDF, JPG, JPEG, PNG, and Excel files are allowed.');
+        }
+
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(process.cwd(), 'uploads', 'answer-keys');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const ext = path.extname(file.originalname);
+        const filename = `${examId}_${timestamp}${ext}`;
+        const filepath = path.join(uploadsDir, filename);
+
+        // Save file
+        fs.writeFileSync(filepath, file.buffer);
+
+        // Update exam with answer key URL
+        const answerKeyUrl = `/uploads/answer-keys/${filename}`;
+        await this.prisma.exam.update({
+            where: { id: examId },
+            data: { answerKeyUrl },
+        });
+
+        return {
+            success: true,
+            answerKeyUrl,
+            message: 'Answer key uploaded successfully',
+        };
     }
 }

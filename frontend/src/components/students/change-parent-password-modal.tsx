@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function ChangePasswordModal({ student, open, onOpenChange }: any) {
+export function ChangeParentPasswordModal({ student, open, onOpenChange }: any) {
     const [loading, setLoading] = useState(false);
     const [newPassword, setNewPassword] = useState("");
 
@@ -18,7 +18,7 @@ export function ChangePasswordModal({ student, open, onOpenChange }: any) {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch(`http://localhost:3001/students/${student.id}/change-password`, {
+            const res = await fetch(`http://localhost:3001/students/${student.id}/change-parent-password`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -42,14 +42,14 @@ export function ChangePasswordModal({ student, open, onOpenChange }: any) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px]">
                 <DialogHeader>
-                    <DialogTitle>Şifre Değiştir</DialogTitle>
+                    <DialogTitle>Veli Şifresi Değiştir</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <p className="text-sm text-slate-500">
-                        <span className="font-semibold text-slate-900">{student?.user.firstName} {student?.user.lastName}</span> isimli öğrenci için yeni şifre belirleyin.
+                        <span className="font-semibold text-slate-900 dark:text-white">{student?.user.firstName} {student?.user.lastName}</span> isimli öğrencinin velisi için yeni şifre belirleyin.
                     </p>
                     <div className="space-y-2">
-                        <Label htmlFor="newPassword">Yeni Şifre</Label>
+                        <Label htmlFor="newPassword">Yeni Veli Şifresi</Label>
                         <Input
                             id="newPassword"
                             type="password"
@@ -58,11 +58,14 @@ export function ChangePasswordModal({ student, open, onOpenChange }: any) {
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                         />
+                        <p className="text-xs text-slate-500">
+                            Bu şifre, veli giriş sayfasında kullanılacaktır.
+                        </p>
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>İptal</Button>
-                        <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                            {loading ? "Kaydediliyor..." : "Şifreyi Güncelle"}
+                        <Button type="submit" disabled={loading} className="bg-purple-600 hover:bg-purple-700 text-white">
+                            {loading ? "Kaydediliyor..." : "Veli Şifresini Güncelle"}
                         </Button>
                     </DialogFooter>
                 </form>

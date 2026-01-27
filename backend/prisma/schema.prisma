@@ -55,6 +55,7 @@ model User {
   role      Role     @default(STUDENT)
   firstName String
   lastName  String
+  avatarSeed String?
   schoolId  String
   school    School   @relation(fields: [schoolId], references: [id])
   createdAt DateTime @default(now())
@@ -137,6 +138,7 @@ model Exam {
   generalInfo String?
   schoolParticipantCount Int?
   branchParticipantCount Json?
+  answerKeyUrl String?
   
   schoolId  String
   school    School   @relation(fields: [schoolId], references: [id])

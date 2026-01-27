@@ -269,6 +269,55 @@ export class AuthService {
         return bcrypt.compare(plain, hashed);
     }
 
+    // Change password for logged-in user
+    async changePassword(userId: string, currentPassword: string, newPassword: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        // Verify current password
+        const isPasswordValid = await this.comparePassword(currentPassword, user.password);
+        if (!isPasswordValid) {
+            throw new UnauthorizedException('Current password is incorrect');
+        }
+
+        // Hash and update new password
+        const hashedPassword = await this.hashPassword(newPassword);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword },
+        });
+
+        return { message: 'Password changed successfully' };
+    }
+
+    // Update avatar seed
+    async updateAvatar(userId: string, avatarSeed: string) {
+        const user = await this.prisma.user.update({
+            where: { id: userId },
+            data: { avatarSeed },
+            include: { school: true },
+        });
+
+        return {
+            message: 'Avatar updated successfully',
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                schoolId: user.schoolId,
+                avatarSeed: user.avatarSeed,
+                school: user.school,
+            },
+        };
+    }
+
     // Generate JWT token
     private generateToken(user: any) {
         const payload: JwtPayload = {
@@ -287,6 +336,7 @@ export class AuthService {
                 lastName: user.lastName,
                 role: user.role,
                 schoolId: user.schoolId,
+                avatarSeed: user.avatarSeed,
                 school: user.school,
             },
         };

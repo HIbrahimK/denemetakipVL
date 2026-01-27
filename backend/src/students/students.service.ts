@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import * as ExcelJS from 'exceljs';
@@ -222,6 +222,34 @@ export class StudentsService {
         return { success: true };
     }
 
+    async changeParentPassword(id: string, schoolId: string, dto: ChangePasswordDto) {
+        const student = await this.findOne(id, schoolId);
+        
+        // Check if student has a parent
+        if (!student.parentId) {
+            throw new NotFoundException('Bu öğrencinin velisi bulunamadı');
+        }
+
+        // Get parent user
+        const parent = await this.prisma.parent.findUnique({
+            where: { id: student.parentId },
+            include: { user: true },
+        });
+
+        if (!parent) {
+            throw new NotFoundException('Veli bulunamadı');
+        }
+
+        // Update parent password
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: parent.userId },
+            data: { password: hashedPassword },
+        });
+
+        return { success: true, message: 'Veli şifresi başarıyla değiştirildi' };
+    }
+
     async importFromExcel(schoolId: string, buffer: Buffer) {
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(buffer as any);
@@ -282,4 +310,157 @@ export class StudentsService {
 
         return grades;
     }
+
+    async getStudentExamHistory(studentId: string, schoolId: string, requestingUser?: any) {
+        // Authorization check: Students can only access their own data
+        if (requestingUser) {
+            const isStudent = requestingUser.role === 'STUDENT';
+            const isOwnData = requestingUser.student?.id === studentId;
+            const isTeacherOrAdmin = ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(requestingUser.role);
+            
+            if (isStudent && !isOwnData) {
+                throw new ForbiddenException('Öğrenciler sadece kendi sonuçlarını görüntüleyebilir');
+            }
+            
+            if (!isStudent && !isTeacherOrAdmin) {
+                throw new ForbiddenException('Bu kaynağa erişim yetkiniz yok');
+            }
+        }
+
+        // Get student with class info to determine grade level
+        const student = await this.prisma.student.findUnique({
+            where: { id: studentId },
+            include: {
+                class: {
+                    include: {
+                        grade: true,
+                    },
+                },
+                examAttempts: {
+                    include: {
+                        exam: true,
+                        lessonResults: {
+                            include: {
+                                lesson: true,
+                            },
+                        },
+                        scores: true,
+                    },
+                    orderBy: {
+                        exam: {
+                            date: 'desc',
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!student) {
+            throw new NotFoundException('Öğrenci bulunamadı');
+        }
+
+        // Extract grade level number from grade name (e.g., "5. Sınıf" -> 5)
+        const gradeName = student.class.grade.name;
+        const gradeLevel = parseInt(gradeName.match(/\d+/)?.[0] || '0');
+
+        // Get all exams for this school and grade level to find missed exams
+        const allSchoolExams = await this.prisma.exam.findMany({
+            where: {
+                schoolId,
+                // Only get exams for the same grade level
+                gradeLevel: gradeLevel > 0 ? gradeLevel : undefined,
+            },
+            include: {
+                attempts: {
+                    where: {
+                        studentId,
+                    },
+                },
+            },
+            orderBy: {
+                date: 'desc',
+            },
+        });
+
+        // Find exams student didn't take
+        const missedExams = allSchoolExams
+            .filter(exam => exam.attempts.length === 0)
+            .map(exam => ({
+                id: exam.id,
+                title: exam.title,
+                date: exam.date,
+                type: exam.type,
+                publisher: exam.publisher,
+            }));
+
+        // Process exam attempts
+        const examHistory = student.examAttempts.map(attempt => {
+            // Calculate total net
+            const totalNet = attempt.lessonResults.reduce((sum, lr) => sum + lr.net, 0);
+
+            // Group lesson results by lesson name
+            const lessonResults = attempt.lessonResults.map(lr => ({
+                lessonName: lr.lesson.name,
+                correct: lr.correct,
+                incorrect: lr.incorrect,
+                empty: lr.empty,
+                net: lr.net,
+                point: lr.point,
+            }));
+
+            // Process scores with rankings
+            const scores = attempt.scores.map(score => ({
+                type: score.type,
+                score: score.score,
+                rankSchool: score.rankSchool,
+                rankClass: score.rankClass,
+                rankCity: score.rankCity,
+                rankGen: score.rankGen,
+            }));
+
+            return {
+                attemptId: attempt.id,
+                examId: attempt.exam.id,
+                examTitle: attempt.exam.title,
+                examDate: attempt.exam.date,
+                examType: attempt.exam.type,
+                publisher: attempt.exam.publisher,
+                answerKeyUrl: attempt.exam.answerKeyUrl,
+                totalNet,
+                lessonResults,
+                scores,
+            };
+        });
+
+        // Calculate statistics
+        const totalExams = examHistory.length;
+        const highestScore = examHistory.length > 0
+            ? Math.max(...examHistory.flatMap(e => e.scores.map(s => s.score)))
+            : 0;
+
+        // Calculate average rankings (school rank)
+        const schoolRanks = examHistory.flatMap(e => 
+            e.scores.map(s => s.rankSchool).filter(r => r !== null)
+        );
+        const avgSchoolRank = schoolRanks.length > 0
+            ? Math.round(schoolRanks.reduce((a, b) => a + (b || 0), 0) / schoolRanks.length)
+            : null;
+
+        return {
+            studentInfo: {
+                id: student.id,
+                studentNumber: student.studentNumber,
+                className: student.class.name,
+                gradeName: student.class.grade.name,
+            },
+            statistics: {
+                totalExams,
+                highestScore,
+                avgSchoolRank,
+            },
+            examHistory,
+            missedExams,
+        };
+    }
 }
+

@@ -9,6 +9,7 @@ import { QueueModule } from './queue/queue.module';
 import { ExamsModule } from './exams/exams.module';
 import { StudentsModule } from './students/students.module';
 import { UsersModule } from './users/users.module';
+import { ParentsModule } from './parents/parents.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
     ExamsModule,
     StudentsModule,
     UsersModule,
+    ParentsModule,
   ],
 })
 export class AppModule { }

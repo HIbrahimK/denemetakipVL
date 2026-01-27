@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { clearUserData } from "@/lib/auth";
 import {
     BarChart2,
     BookOpen,
@@ -17,7 +18,8 @@ import {
     Search,
     School,
     X,
-    Bell
+    Bell,
+    UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -37,18 +39,68 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }, []);
 
-    const menuItems = [
-        { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
-        { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
-        { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
-        { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
-        { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
-        { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
-    ];
+    // Dynamic menu based on role
+    const getMenuItems = () => {
+        if (!user) return [];
+        
+        const { role } = user;
+
+        // Student menu - only results
+        if (role === 'STUDENT') {
+            return [
+                { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
+            ];
+        }
+
+        // Parent menu - only child results
+        if (role === 'PARENT') {
+            return [
+                { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
+                { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
+            ];
+        }
+
+        // Admin/Teacher menu - full access
+        return [
+            { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+            { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
+            { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
+            { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
+        ];
+    };
+
+    const menuItems = getMenuItems();
+
+    const getRoleLabel = () => {
+        if (!user) return "";
+        const roleLabels: Record<string, string> = {
+            SCHOOL_ADMIN: "Okul Yöneticisi",
+            TEACHER: "Öğretmen",
+            STUDENT: "Öğrenci",
+            PARENT: "Veli",
+            SUPER_ADMIN: "Süper Admin"
+        };
+        return roleLabels[user.role] || user.role;
+    };
+
+    const getAvatarUrl = () => {
+        if (!user) return '';
+        
+        if (user.avatarSeed) {
+            const parts = user.avatarSeed.split(':');
+            if (parts.length === 2) {
+                return `https://api.dicebear.com/7.x/${parts[0]}/svg?seed=${parts[1]}`;
+            }
+        }
+        
+        return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || 'User'}`;
+    };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        clearUserData();
         window.location.href = '/';
     };
 
@@ -83,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="px-8 mb-8 text-center">
                     <div className="relative inline-block">
                         <Avatar className="h-20 w-20 border-4 border-[#2b2b40] shadow-xl">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || 'User'}`} />
+                            <AvatarImage src={getAvatarUrl()} />
                             <AvatarFallback className="bg-indigo-500 text-white text-xl">
                                 {user?.firstName?.charAt(0) || "A"}
                             </AvatarFallback>
@@ -91,7 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <div className="absolute bottom-0 right-0 h-5 w-5 bg-emerald-500 border-4 border-[#1e1e2d] rounded-full"></div>
                     </div>
                     <h3 className="mt-4 font-semibold text-lg">{user?.firstName} {user?.lastName}</h3>
-                    <p className="text-slate-400 text-sm">Okul Yöneticisi</p>
+                    <p className="text-slate-400 text-sm">{getRoleLabel()}</p>
                 </div>
 
                 {/* Navigation */}

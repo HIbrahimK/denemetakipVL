@@ -76,10 +76,36 @@ export class StudentsController {
         return this.studentsService.changePassword(id, req.user.schoolId, changePasswordDto);
     }
 
+    @Post(':id/change-parent-password')
+    @ApiOperation({ summary: 'Öğrencinin veli şifresini değiştir' })
+    changeParentPassword(
+        @Request() req,
+        @Param('id') id: string,
+        @Body() changePasswordDto: ChangePasswordDto,
+    ) {
+        return this.studentsService.changeParentPassword(id, req.user.schoolId, changePasswordDto);
+    }
+
     @Post('import')
     @UseInterceptors(FileInterceptor('file'))
     @ApiOperation({ summary: 'Excelden toplu öğrenci içe aktar' })
     import(@Request() req, @UploadedFile() file: Express.Multer.File) {
         return this.studentsService.importFromExcel(req.user.schoolId, file.buffer);
+    }
+
+    @Get('me/exams')
+    @ApiOperation({ summary: 'Öğrencinin tüm deneme sonuçlarını getir' })
+    getMyExams(@Request() req) {
+        const studentId = req.user.student?.id;
+        if (!studentId) {
+            throw new Error('Student not found in user context');
+        }
+        return this.studentsService.getStudentExamHistory(studentId, req.user.schoolId, req.user);
+    }
+
+    @Get(':id/exams')
+    @ApiOperation({ summary: 'Belirli bir öğrencinin deneme sonuçlarını getir (Admin/Öğretmen)' })
+    getStudentExams(@Request() req, @Param('id') studentId: string) {
+        return this.studentsService.getStudentExamHistory(studentId, req.user.schoolId, req.user);
     }
 }

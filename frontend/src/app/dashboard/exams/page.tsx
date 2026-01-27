@@ -12,7 +12,8 @@ import {
     FileSpreadsheet,
     MoreHorizontal,
     Trash2,
-    Users
+    Users,
+    Download
 } from "lucide-react";
 import { CreateExamModal } from "@/components/create-exam-modal";
 import { EditExamModal } from "@/components/edit-exam-modal";
@@ -279,10 +280,20 @@ export default function ExamsPage() {
                                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
                                     <Link href={`/dashboard/import?examId=${exam.id}`}>
                                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                        Yükle
+                                        Veri Yükle
                                     </Link>
                                 </Button>
                             </div>
+                            {exam.answerKeyUrl && (
+                                <Button
+                                    variant="outline"
+                                    className="w-full mt-3 gap-2"
+                                    onClick={() => window.open(`http://localhost:3001${exam.answerKeyUrl}`, '_blank')}
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Cevap Anahtarı
+                                </Button>
+                            )}
                         </CardContent>
                     </Card>
                 ))}
