@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clearUserData } from "@/lib/auth";
 import { useSchool } from "@/contexts/school-context";
 import {
@@ -31,8 +31,10 @@ import { GlobalSearch } from "@/components/global-search";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [unreadCount, setUnreadCount] = useState(0);
     const { schoolName, schoolLogo } = useSchool();
     const pathname = usePathname();
+    const router = useRouter();
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
@@ -41,6 +43,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             setUser(userData);
         }
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetchUnreadCount();
+            
+            // Set up SSE for real-time notifications
+            const token = localStorage.getItem("token");
+            const eventSource = new EventSource(
+                `http://localhost:3001/messages/stream?token=${token}`
+            );
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                setUnreadCount(data.count);
+            };
+
+            eventSource.onerror = () => {
+                eventSource.close();
+                // Fallback to polling
+                const interval = setInterval(fetchUnreadCount, 30000);
+                return () => clearInterval(interval);
+            };
+
+            return () => {
+                eventSource.close();
+            };
+        }
+    }, [user]);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(
+                "http://localhost:3001/messages/unread-count",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                setUnreadCount(data.count);
+            }
+        } catch (error) {
+            console.error("Error fetching unread count:", error);
+        }
+    };
 
     // Dynamic menu based on role
     const getMenuItems = () => {
@@ -52,6 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (role === 'STUDENT') {
             return [
                 { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -60,6 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (role === 'PARENT') {
             return [
                 { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
+                { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -72,6 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
                 { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
+                { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -80,9 +134,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return [
             { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
             { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
-            { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
             { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
+            { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
@@ -229,9 +283,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
 
                         <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
-                            <Button variant="ghost" size="icon" className="relative text-slate-500 hover:bg-white/50 rounded-full">
-                                <Bell className="h-5 w-5" />
-                                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"></span>
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="relative text-slate-500 hover:bg-white/50 rounded-full"
+                                onClick={() => router.push('/dashboard/messages')}
+                            >
+                                <Bell className={`h-5 w-5 ${unreadCount > 0 ? 'animate-pulse' : ''}`} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-2 right-2 h-5 w-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center animate-bounce">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
                             </Button>
                             <ThemeToggle />
                         </div>

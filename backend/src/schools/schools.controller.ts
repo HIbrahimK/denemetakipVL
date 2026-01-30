@@ -36,6 +36,20 @@ export class SchoolsController {
         return this.schoolsService.promoteGrades(id);
     }
 
+    @Get(':id/grades')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('SCHOOL_ADMIN', 'TEACHER', 'PARENT')
+    async getGrades(@Param('id') id: string) {
+        return this.schoolsService.getGrades(id);
+    }
+
+    @Get(':id/grades/:gradeId/classes')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('SCHOOL_ADMIN', 'TEACHER', 'PARENT')
+    async getClasses(@Param('id') id: string, @Param('gradeId') gradeId: string) {
+        return this.schoolsService.getClasses(id, gradeId);
+    }
+
     @UseGuards(JwtAuthGuard)
     @Post(':id/backup')
     async backupData(@Param('id') id: string) {

@@ -38,6 +38,84 @@ export class SchoolsService {
         return { message: 'Sınıf atlatma işlemi başarıyla tamamlandı.' };
     }
 
+    async getGrades(schoolId: string) {
+        const grades = await this.prisma.grade.findMany({
+            where: { schoolId },
+            orderBy: { name: 'asc' },
+            include: {
+                _count: {
+                    select: { classes: true }
+                }
+            }
+        });
+
+        // Eğer grade yoksa veya standart grade'ler yoksa, oluştur
+        if (grades.length === 0 || !this.hasStandardGrades(grades)) {
+            await this.createStandardGrades(schoolId);
+            return this.prisma.grade.findMany({
+                where: { schoolId },
+                orderBy: { name: 'asc' },
+                include: {
+                    _count: {
+                        select: { classes: true }
+                    }
+                }
+            });
+        }
+
+        return grades;
+    }
+
+    async getClasses(schoolId: string, gradeId: string) {
+        return this.prisma.class.findMany({
+            where: {
+                schoolId,
+                gradeId,
+            },
+            orderBy: { name: 'asc' },
+            include: {
+                _count: {
+                    select: { students: true }
+                }
+            }
+        });
+    }
+
+    private hasStandardGrades(grades: any[]): boolean {
+        const standardGradeNames = ['5', '6', '7', '8', '9', '10', '11', '12'];
+        const existingNames = grades.map(g => g.name);
+        return standardGradeNames.every(name => existingNames.includes(name));
+    }
+
+    private async createStandardGrades(schoolId: string) {
+        const standardGrades = [
+            { name: '5', schoolId },
+            { name: '6', schoolId },
+            { name: '7', schoolId },
+            { name: '8', schoolId },
+            { name: '9', schoolId },
+            { name: '10', schoolId },
+            { name: '11', schoolId },
+            { name: '12', schoolId },
+        ];
+
+        // Mevcut grade'leri kontrol et, sadece yokları ekle
+        for (const grade of standardGrades) {
+            const existing = await this.prisma.grade.findFirst({
+                where: {
+                    schoolId,
+                    name: grade.name,
+                }
+            });
+
+            if (!existing) {
+                await this.prisma.grade.create({
+                    data: grade,
+                });
+            }
+        }
+    }
+
     async getBackups(schoolId: string) {
         return this.prisma.backup.findMany({
             where: { schoolId },

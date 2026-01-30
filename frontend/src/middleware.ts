@@ -47,11 +47,12 @@ export function middleware(request: NextRequest) {
 
         // Student access restrictions
         if (role === 'STUDENT') {
-            // Students can only access their profile and results pages
+            // Students can only access their profile, results, and messages pages
             const allowedStudentPaths = [
                 '/dashboard/student/profile',
                 '/dashboard/student/results',
                 '/dashboard/profile',
+                '/dashboard/messages',
             ];
 
             const isAllowedPath = allowedStudentPaths.some(path => 
@@ -85,9 +86,32 @@ export function middleware(request: NextRequest) {
                 return NextResponse.redirect(new URL('/dashboard/exams', request.url));
             }
 
-            // Teachers can access reports
-            if (pathname.startsWith('/dashboard/reports')) {
+            // Teachers can access reports and messages
+            if (pathname.startsWith('/dashboard/reports') || pathname.startsWith('/dashboard/messages')) {
                 return NextResponse.next();
+            }
+        }
+
+        // Parent access restrictions
+        if (role === 'PARENT') {
+            // Parents can only access their profile, students, messages, and student results pages
+            const allowedParentPaths = [
+                '/dashboard/parent/profile',
+                '/dashboard/parent/students',
+                '/dashboard/parent/results',
+                '/dashboard/student/results', // Allow parents to view their students' results
+                '/dashboard/profile',
+                '/dashboard/messages',
+            ];
+
+            const isAllowedPath = allowedParentPaths.some(path => 
+                pathname.startsWith(path)
+            );
+
+            // Block access to all other dashboard routes
+            if (!isAllowedPath) {
+                // Redirect to parent students page if accessing unauthorized routes
+                return NextResponse.redirect(new URL('/dashboard/parent/students', request.url));
             }
         }
 

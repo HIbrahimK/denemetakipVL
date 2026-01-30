@@ -46,6 +46,7 @@ model School {
   lessonResults ExamLessonResult[]
   scores   ExamScore[]
   backups  Backup[]
+  messages Message[]
 }
 
 model User {
@@ -64,6 +65,10 @@ model User {
   student Student?
   parent  Parent?
   passwordResetTokens PasswordResetToken[]
+  sentMessages        Message[] @relation("SentMessages")
+  receivedMessages    MessageRecipient[] @relation("ReceivedMessages")
+  messageDrafts       MessageDraft[] @relation("MessageDrafts")
+  sentReplies         MessageReply[] @relation("SentReplies")
 }
 
 model Grade {
@@ -73,6 +78,7 @@ model Grade {
   school   School @relation(fields: [schoolId], references: [id])
 
   classes Class[]
+  targetedMessages Message[]
 }
 
 model Class {
@@ -84,6 +90,7 @@ model Class {
   school   School @relation(fields: [schoolId], references: [id])
 
   students Student[]
+  targetedMessages Message[]
 }
 
 model Student {
@@ -219,5 +226,176 @@ model Backup {
   school    School   @relation(fields: [schoolId], references: [id])
   createdAt DateTime @default(now())
 
+  @@index([schoolId])
+}
+
+enum MessageType {
+  DIRECT
+  BROADCAST
+  SCHEDULED
+}
+
+enum MessageCategory {
+  GENERAL
+  EXAM
+  URGENT
+  ANNOUNCEMENT
+}
+
+enum MessageStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  DELETED
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  subject     String
+  body        String   @db.Text
+  type        MessageType @default(DIRECT)
+  category    MessageCategory @default(GENERAL)
+  status      MessageStatus @default(SENT)
+  
+  // For broadcasts
+  targetRoles Json?    // ["STUDENT", "PARENT"]
+  targetGradeId String?  // Grade ID for grade-wide messages
+  targetGrade   Grade?   @relation(fields: [targetGradeId], references: [id])
+  targetClassId String?  // Class ID for class-wide messages
+  targetClass   Class?   @relation(fields: [targetClassId], references: [id])
+  
+  // Scheduling
+  scheduledFor DateTime?
+  sentAt      DateTime?
+  
+  // Approval workflow
+  requiresApproval Boolean @default(false)
+  approvedBy      String?
+  approvedAt      DateTime?
+  
+  // Reply settings
+  allowReplies    Boolean @default(true)
+  
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
+  
+  recipients  MessageRecipient[]
+  attachments MessageAttachment[]
+  replies     MessageReply[]
+  
+  @@index([schoolId, sentAt])
+  @@index([senderId, status])
+  @@index([status, scheduledFor])
+  @@index([deletedAt])
+}
+
+model MessageRecipient {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  deliveredAt DateTime @default(now())
+  deletedAt   DateTime? // Soft delete by recipient
+  isFavorite  Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([messageId, recipientId])
+  @@index([recipientId, isRead])
+  @@index([recipientId, deletedAt])
+}
+
+model MessageReply {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User     @relation("SentReplies", fields: [senderId], references: [id], onDelete: Cascade)
+  body        String   @db.Text
+  
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?
+  
+  @@index([messageId, createdAt])
+}
+
+model MessageAttachment {
+  id          String   @id @default(cuid())
+  messageId   String
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  filename    String
+  fileUrl     String
+  fileSize    Int      // in bytes
+  mimeType    String
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([messageId])
+}
+
+model MessageDraft {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation("MessageDrafts", fields: [userId], references: [id], onDelete: Cascade)
+  
+  subject     String?
+  body        String?  @db.Text
+  category    MessageCategory @default(GENERAL)
+  
+  targetRoles Json?
+  targetGradeId String?
+  targetClassId String?
+  recipientIds  Json?  // Array of recipient user IDs for direct messages
+  
+  allowReplies Boolean @default(true)
+  
+  schoolId    String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId, schoolId])
+}
+
+model MessageTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  body        String   @db.Text
+  category    MessageCategory
+  
+  schoolId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([schoolId])
+}
+
+model MessageSettings {
+  id                    String   @id @default(cuid())
+  schoolId              String   @unique
+  
+  maxCharacterLimit     Int      @default(1000)
+  autoDeleteDays        Int      @default(30)
+  requireTeacherApproval Boolean @default(false)
+  enableEmailNotifications Boolean @default(true)
+  enablePushNotifications  Boolean @default(true)
+  reminderAfterDays     Int      @default(3)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
   @@index([schoolId])
 }
