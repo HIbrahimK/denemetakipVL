@@ -16,10 +16,15 @@ import {
     List,
     Download,
     ArrowUpCircle,
+    Image as ImageIcon,
+    Loader2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useSchool } from "@/contexts/school-context";
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
     const [school, setSchool] = useState<any>(null);
     const [formData, setFormData] = useState({
         name: "",
@@ -30,6 +35,8 @@ export default function SettingsPage() {
         studentLoginType: "studentNumber",
     });
     const [backups, setBackups] = useState<any[]>([]);
+    const { toast } = useToast();
+    const { refreshSchoolData } = useSchool();
 
     const fetchBackups = async () => {
         const token = localStorage.getItem("token");
@@ -79,6 +86,130 @@ export default function SettingsPage() {
         fetchBackups();
     }, []);
 
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            toast({
+                title: "Hata",
+                description: "Lütfen bir resim dosyası seçin.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast({
+                title: "Hata",
+                description: "Dosya boyutu 5MB'dan küçük olmalıdır.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        setUploadingLogo(true);
+        const token = localStorage.getItem("token");
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+        try {
+            // Resize and compress image before upload
+            const img = new Image();
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                img.src = e.target?.result as string;
+            };
+
+            img.onload = async () => {
+                // Create canvas to resize image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    toast({
+                        title: "Hata",
+                        description: "Canvas oluşturulamadı.",
+                        variant: "destructive"
+                    });
+                    setUploadingLogo(false);
+                    return;
+                }
+
+                // Calculate new dimensions (max 512x512)
+                let width = img.width;
+                let height = img.height;
+                const maxSize = 512;
+
+                if (width > height) {
+                    if (width > maxSize) {
+                        height = (height * maxSize) / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width = (width * maxSize) / height;
+                        height = maxSize;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw and compress
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to base64 with compression
+                const base64 = canvas.toDataURL('image/jpeg', 0.85);
+
+                const res = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ logoUrl: base64 }),
+                });
+
+                if (res.ok) {
+                    const updated = await res.json();
+                    setSchool(updated);
+                    
+                    // Update localStorage to refresh logo in dashboard
+                    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                    storedUser.school = { logoUrl: base64, name: updated.name };
+                    localStorage.setItem("user", JSON.stringify(storedUser));
+                    
+                    // Trigger school data refresh
+                    refreshSchoolData();
+                    
+                    toast({
+                        title: "Başarılı",
+                        description: "Logo başarıyla güncellendi.",
+                    });
+                } else {
+                    toast({
+                        title: "Hata",
+                        description: "Logo yüklenirken bir hata oluştu.",
+                        variant: "destructive"
+                    });
+                }
+                setUploadingLogo(false);
+            };
+
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: "Hata",
+                description: "Logo yüklenirken bir hata oluştu.",
+                variant: "destructive"
+            });
+            setUploadingLogo(false);
+        }
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -98,9 +229,33 @@ export default function SettingsPage() {
             if (res.ok) {
                 const updated = await res.json();
                 setSchool(updated);
+                
+                // Update user school name in localStorage
+                const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+                storedUser.school = { ...storedUser.school, name: updated.name };
+                localStorage.setItem("user", JSON.stringify(storedUser));
+                
+                // Trigger school data refresh
+                refreshSchoolData();
+                
+                toast({
+                    title: "Başarılı",
+                    description: "Ayarlar başarıyla kaydedildi.",
+                });
+            } else {
+                toast({
+                    title: "Hata",
+                    description: "Ayarlar kaydedilirken bir hata oluştu.",
+                    variant: "destructive"
+                });
             }
         } catch (error) {
             console.error(error);
+            toast({
+                title: "Hata",
+                description: "Ayarlar kaydedilirken bir hata oluştu.",
+                variant: "destructive"
+            });
         } finally {
             setLoading(false);
         }
@@ -184,41 +339,59 @@ export default function SettingsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <h2 className="text-3xl font-bold flex items-center gap-3">
                         <SettingsIcon className="h-8 w-8 text-indigo-600" />
                         Okul Ayarları
                     </h2>
-                    <p className="text-slate-500">Okul bilgilerini ve sistem parametrelerini buradan yönetin.</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Okul bilgilerini ve sistem parametrelerini buradan yönetin.</p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Sol Taraf: Okul Ayarları */}
-                <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 shadow-lg rounded-xl overflow-hidden">
-                    <CardHeader className="bg-[#17a2b8] text-white py-4">
-                        <CardTitle className="text-lg font-semibold uppercase tracking-wider">Okul Ayarları</CardTitle>
+                <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 shadow-sm">
+                    <CardHeader className="border-b border-slate-200 dark:border-slate-800">
+                        <CardTitle className="text-lg font-semibold">Okul Bilgileri</CardTitle>
+                        <CardDescription>Okul bilgilerini ve giriş ayarlarını düzenleyin</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-8 space-y-8">
+                    <CardContent className="pt-6 space-y-6">
                         <form onSubmit={handleSave} className="space-y-6">
                             {/* Logo Yükleme */}
-                            <div className="flex flex-col items-start gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-24 w-24 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden p-2">
-                                        {school?.logoUrl ? (
-                                            <img src={school.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                            <div className="space-y-3">
+                                <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Okul Logosu</Label>
+                                <div className="flex items-center gap-6">
+                                    <div className="relative h-24 w-24 rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center border-2 border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
+                                        {uploadingLogo ? (
+                                            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+                                        ) : school?.logoUrl ? (
+                                            <img src={school.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain p-2" />
                                         ) : (
-                                            <img src="https://api.dicebear.com/7.x/initials/svg?seed=School" alt="Default Logo" className="opacity-20" />
+                                            <ImageIcon className="h-10 w-10 text-slate-300" />
                                         )}
                                     </div>
-                                    <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Okul Logosunu Yükleyin:</Label>
-                                </div>
-                                <div className="flex w-full">
-                                    <div className="flex-1 border border-slate-200 dark:border-slate-700 rounded-l-md px-3 py-2 text-sm text-slate-500 bg-white dark:bg-slate-950">
-                                        Dosya Seçin
+                                    <div className="flex-1 space-y-2">
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">Logo yükleyin (PNG, JPG, max 2MB)</p>
+                                        <label className="inline-block">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleLogoUpload}
+                                                disabled={uploadingLogo}
+                                                className="hidden"
+                                                id="logo-upload"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                disabled={uploadingLogo}
+                                                onClick={() => document.getElementById('logo-upload')?.click()}
+                                                className="gap-2"
+                                            >
+                                                <Upload className="h-4 w-4" />
+                                                Logo Yükle
+                                            </Button>
+                                        </label>
                                     </div>
-                                    <Button type="button" variant="secondary" className="rounded-l-none rounded-r-md bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-l-0 border-slate-200 dark:border-slate-700">
-                                        Browse
-                                    </Button>
                                 </div>
                             </div>
 
@@ -302,42 +475,58 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            <Button disabled={loading} className="w-24 bg-[#28a745] hover:bg-[#218838] text-white font-semibold rounded-md border-none h-10">
-                                Kaydet
-                            </Button>
+                            <div className="flex justify-end pt-4">
+                                <Button disabled={loading} type="submit" className="px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg h-11 shadow-md gap-2">
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Kaydediliyor...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="h-4 w-4" />
+                                            Ayarları Kaydet
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </form>
                     </CardContent>
                 </Card>
 
                 {/* Sağ Taraf: Sistem İşlemleri */}
-                <div className="space-y-8">
+                <div className="space-y-6">
                     {/* Sınıf Atlatma */}
-                    <Card className="border-slate-200 dark:border-slate-800 shadow-lg rounded-xl overflow-hidden">
-                        <CardHeader className="bg-[#17a2b8] text-white py-3">
-                            <CardTitle className="text-md font-medium">Sınıf Atlatma</CardTitle>
+                    <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+                        <CardHeader className="border-b border-slate-200 dark:border-slate-800">
+                            <CardTitle className="text-base font-semibold">Sınıf Atlatma</CardTitle>
+                            <CardDescription className="text-xs">Tüm öğrencileri bir üst sınıfa taşı</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6">
-                            <Button className="w-full bg-[#dc3545] hover:bg-[#c82333] text-white font-medium h-12 rounded-md gap-2" onClick={handlePromote}>
+                            <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium h-11 rounded-lg gap-2 shadow-sm" onClick={handlePromote} disabled>
                                 <ArrowUpCircle className="h-5 w-5" />
                                 Sınıf Atlama İşlemi
                             </Button>
+                            <p className="text-xs text-slate-500 mt-2 text-center">Yakında aktif olacak</p>
                         </CardContent>
                     </Card>
 
                     {/* Veri Yedekleme */}
-                    <Card className="border-slate-200 dark:border-slate-800 shadow-lg rounded-xl overflow-hidden">
-                        <CardHeader className="bg-[#17a2b8] text-white py-3">
-                            <CardTitle className="text-md font-medium text-center sm:text-left">Veri Yedekleme</CardTitle>
+                    <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
+                        <CardHeader className="border-b border-slate-200 dark:border-slate-800">
+                            <CardTitle className="text-base font-semibold">Veri Yedekleme</CardTitle>
+                            <CardDescription className="text-xs">Sistem verilerini yedekle ve geri yükle</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
-                            <Button className="w-full bg-[#ffc107] hover:bg-[#e0a800] text-slate-900 font-bold h-10 rounded-md gap-2 shadow-sm" onClick={handleBackup}>
+                            <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium h-11 rounded-lg gap-2 shadow-sm" onClick={handleBackup} disabled>
                                 <Database className="h-4 w-4" />
-                                Tüm Verileri Yedekle
+                                Yedek Oluştur
                             </Button>
+                            <p className="text-xs text-slate-500 text-center">Yakında aktif olacak</p>
 
-                            <div className="pt-4 space-y-3">
+                            <div className="pt-4 space-y-3 hidden">
                                 <div className="flex items-center justify-between">
-                                    <Label className="font-bold text-slate-800 dark:text-slate-200 text-sm">Alınan Yedekler</Label>
+                                    <Label className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Alınan Yedekler</Label>
                                     <Button
                                         variant="ghost"
                                         size="sm"

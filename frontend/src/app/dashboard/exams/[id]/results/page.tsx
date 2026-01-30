@@ -314,6 +314,60 @@ export default function ExamResultsPage() {
         }, 300);
     };
 
+    const handleDownloadExcel = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3001/exams/${params.id}/export/excel`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${stats.examTitle} - Sonuçlar.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } else {
+                console.error('Excel indirme başarısız');
+            }
+        } catch (error) {
+            console.error('Excel indirme hatası:', error);
+        }
+    };
+
+    const handleDownloadPDF = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3001/exams/${params.id}/export/pdf`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${stats.examTitle} - Sonuçlar.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } else {
+                console.error('PDF indirme başarısız');
+            }
+        } catch (error) {
+            console.error('PDF indirme hatası:', error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-10">
@@ -415,17 +469,17 @@ export default function ExamResultsPage() {
                             <span className="hidden sm:inline">{viewMode === 'summary' ? 'Ayrıntılı' : 'Özet'}</span>
                         </Button>
 
-                        <Button variant="outline" size="icon" className="h-9 w-9 flex items-center justify-center sm:hidden text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
+                        <Button variant="outline" size="icon" className="h-9 w-9 flex items-center justify-center sm:hidden text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" onClick={handleDownloadExcel}>
                             <FileSpreadsheet className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" className="h-9 hidden sm:flex text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
+                        <Button variant="outline" size="sm" className="h-9 hidden sm:flex text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" onClick={handleDownloadExcel}>
                             <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel
                         </Button>
 
-                        <Button variant="outline" size="icon" className="h-9 w-9 flex items-center justify-center sm:hidden text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
+                        <Button variant="outline" size="icon" className="h-9 w-9 flex items-center justify-center sm:hidden text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" onClick={handleDownloadPDF}>
                             <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" className="h-9 hidden sm:flex text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700">
+                        <Button variant="outline" size="sm" className="h-9 hidden sm:flex text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700" onClick={handleDownloadPDF}>
                             <Download className="mr-2 h-4 w-4" /> PDF
                         </Button>
 
@@ -803,7 +857,7 @@ export default function ExamResultsPage() {
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} />
                                 <XAxis type="number" />
                                 <YAxis dataKey="name" type="category" width={80} style={{ fontSize: '10px' }} />
-                                <Tooltip />
+                                <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                 <Bar dataKey="avgNet" fill="#4f46e5" radius={[0, 4, 4, 0]} barSize={15} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -817,7 +871,7 @@ export default function ExamResultsPage() {
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="name" style={{ fontSize: '10px' }} />
                                 <YAxis style={{ fontSize: '10px' }} />
-                                <Tooltip />
+                                <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                 <Bar dataKey="avgScore" fill="#ea580c" radius={[4, 4, 0, 0]} maxBarSize={30} />
                             </BarChart>
                         </ResponsiveContainer>

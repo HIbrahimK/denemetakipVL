@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Loader2, User, GraduationCap, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, GraduationCap, AlertCircle, User } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { setUserData } from "@/lib/auth";
+import SchoolLogo from "@/components/school-logo";
 
 export default function StudentLoginPage() {
     const router = useRouter();
@@ -71,14 +72,16 @@ export default function StudentLoginPage() {
                     <ThemeToggle />
                 </div>
 
-                <div className="w-full max-w-md space-y-8">
+                <div className="w-full max-w-md space-y-6">
+                    {/* School Logo and Name */}
+                    <div className="flex flex-col items-center text-center pb-4">
+                        <SchoolLogo className="h-20 w-20" showName={true} nameClassName="text-2xl font-bold text-slate-900 dark:text-white mt-4" />
+                    </div>
+
                     <div className="space-y-2">
                         <Link href="/" className="inline-flex items-center text-sm text-slate-500 hover:text-emerald-600 transition-colors mb-4">
                             <ArrowLeft className="mr-2 h-4 w-4" /> Anasayfaya Dön
                         </Link>
-                        <div className="h-12 w-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4">
-                            <User className="h-6 w-6" />
-                        </div>
                         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Öğrenci Girişi</h2>
                         <p className="text-slate-500 dark:text-slate-400">
                             Öğrenci numaran ve şifren ile giriş yap.

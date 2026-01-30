@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Loader2, School, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, ShieldCheck, School } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { setUserData } from "@/lib/auth";
+import SchoolLogo from "@/components/school-logo";
 
 export default function SchoolLoginPage() {
     const router = useRouter();
@@ -24,23 +25,29 @@ export default function SchoolLoginPage() {
         setError("");
 
         try {
+            console.log('Login attempt:', { email });
             const res = await fetch('http://localhost:3001/auth/login-school', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),
             });
 
+            console.log('Response status:', res.status);
+            const data = await res.json();
+            console.log('Response data:', data);
+
             if (!res.ok) {
-                throw new Error('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+                throw new Error(data.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
             }
 
-            const data = await res.json();
             setUserData(data.user, data.access_token);
+            console.log('User data set, redirecting...');
 
-            // Redirect to dashboard (yeni tasarım)
-            router.push('/dashboard');
+            // Force redirect using window.location
+            window.location.href = '/dashboard';
 
         } catch (err: any) {
+            console.error('Login error:', err);
             setError(err.message || 'Bir hata oluştu.');
         } finally {
             setLoading(false);
@@ -92,7 +99,12 @@ export default function SchoolLoginPage() {
                     <ThemeToggle />
                 </div>
 
-                <div className="w-full max-w-md space-y-8">
+                <div className="w-full max-w-md space-y-6">
+                    {/* School Logo and Name */}
+                    <div className="flex flex-col items-center text-center pb-4">
+                        <SchoolLogo className="h-20 w-20" showName={true} nameClassName="text-2xl font-bold text-slate-900 dark:text-white mt-4" />
+                    </div>
+
                     <div className="space-y-2">
                         <Link href="/" className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 transition-colors mb-4">
                             <ArrowLeft className="mr-2 h-4 w-4" /> Anasayfaya Dön

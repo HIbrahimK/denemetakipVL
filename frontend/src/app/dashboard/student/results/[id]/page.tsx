@@ -49,6 +49,10 @@ interface ExamDetail {
     totalNet: number;
     lessonResults: LessonResult[];
     scores: ExamScore[];
+    schoolParticipantCount: number | null;
+    districtParticipantCount: number | null;
+    cityParticipantCount: number | null;
+    generalParticipantCount: number | null;
 }
 
 interface ExamStats {
@@ -95,6 +99,7 @@ export default function ExamDetailPage() {
                 
                 const exam = data.examHistory.find((e: any) => e.examId === params.id);
                 if (exam) {
+                    console.log('Exam detail with participation counts:', exam);
                     setExamDetail(exam);
                 }
 
@@ -265,6 +270,9 @@ export default function ExamDetailPage() {
                     <CardContent>
                         <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                             {primaryScore?.rankSchool || '-'}
+                            {examDetail.schoolParticipantCount && primaryScore?.rankSchool && (
+                                <span className="text-sm font-normal text-slate-500">/{examDetail.schoolParticipantCount}</span>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -278,6 +286,9 @@ export default function ExamDetailPage() {
                     <CardContent>
                         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                             {primaryScore?.rankGen || '-'}
+                            {examDetail.generalParticipantCount && primaryScore?.rankGen && (
+                                <span className="text-sm font-normal text-slate-500">/{examDetail.generalParticipantCount}</span>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -393,7 +404,7 @@ export default function ExamDetailPage() {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" style={{ fontSize: '12px' }} />
                                     <YAxis style={{ fontSize: '10px' }} />
-                                    <Tooltip />
+                                    <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                     <Bar dataKey="puan" fill="#4f46e5" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -422,7 +433,7 @@ export default function ExamDetailPage() {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" style={{ fontSize: '8px' }} angle={-45} textAnchor="end" height={80} />
                                     <YAxis style={{ fontSize: '10px' }} />
-                                    <Tooltip />
+                                    <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                     <Bar dataKey="benim" fill="#4f46e5" name="Benim" radius={[4, 4, 0, 0]} />
                                     <Bar dataKey="subeOrt" fill="#10b981" name="Şube Ort." radius={[4, 4, 0, 0]} />
                                     <Bar dataKey="okulOrt" fill="#94a3b8" name="Okul Ort." radius={[4, 4, 0, 0]} />
@@ -454,13 +465,34 @@ export default function ExamDetailPage() {
                                         {score.rankSchool && (
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-600 dark:text-slate-400">Okul:</span>
-                                                <span className="font-semibold">{score.rankSchool}</span>
+                                                <span className="font-semibold">
+                                                    {score.rankSchool}
+                                                    {examDetail.schoolParticipantCount && (
+                                                        <span className="text-xs font-normal text-slate-500">/{examDetail.schoolParticipantCount}</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {score.rankCity && (
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-600 dark:text-slate-400">İl:</span>
+                                                <span className="font-semibold">
+                                                    {score.rankCity}
+                                                    {examDetail.cityParticipantCount && (
+                                                        <span className="text-xs font-normal text-slate-500">/{examDetail.cityParticipantCount}</span>
+                                                    )}
+                                                </span>
                                             </div>
                                         )}
                                         {score.rankGen && (
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-600 dark:text-slate-400">Genel:</span>
-                                                <span className="font-semibold">{score.rankGen}</span>
+                                                <span className="font-semibold">
+                                                    {score.rankGen}
+                                                    {examDetail.generalParticipantCount && (
+                                                        <span className="text-xs font-normal text-slate-500">/{examDetail.generalParticipantCount}</span>
+                                                    )}
+                                                </span>
                                             </div>
                                         )}
                                     </div>

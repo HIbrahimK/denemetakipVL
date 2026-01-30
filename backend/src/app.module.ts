@@ -10,6 +10,8 @@ import { ExamsModule } from './exams/exams.module';
 import { StudentsModule } from './students/students.module';
 import { UsersModule } from './users/users.module';
 import { ParentsModule } from './parents/parents.module';
+import { ReportsModule } from './reports/reports.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { ParentsModule } from './parents/parents.module';
     StudentsModule,
     UsersModule,
     ParentsModule,
+    ReportsModule,
+    SearchModule,
   ],
 })
 export class AppModule { }

@@ -23,7 +23,12 @@ export function ImportWizard() {
 
     useEffect(() => {
         if (examId) {
-            fetch(`http://localhost:3001/exams/${examId}`)
+            const token = localStorage.getItem('token');
+            fetch(`http://localhost:3001/exams/${examId}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                }
+            })
                 .then(res => res.json())
                 .then(data => setExam(data))
                 .catch(err => console.error("Failed to fetch exam", err));
@@ -52,10 +57,14 @@ export function ImportWizard() {
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
         const schoolId = user?.schoolId || "";
+        const token = localStorage.getItem('token');
 
         try {
             const response = await fetch(`http://localhost:3001/import/validate?schoolId=${schoolId}`, {
                 method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: formData,
             });
 
@@ -92,11 +101,15 @@ export function ImportWizard() {
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
         const schoolId = user?.schoolId || "";
+        const token = localStorage.getItem('token');
 
         try {
             const response = await fetch(`http://localhost:3001/import/confirm?schoolId=${schoolId}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     data: importData,
                     examId,

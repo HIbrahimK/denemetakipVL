@@ -33,6 +33,12 @@ export class StudentsController {
         return this.studentsService.getFilters(req.user.schoolId);
     }
 
+    @Get(':id')
+    @ApiOperation({ summary: 'Tek öğrenci getir' })
+    findOne(@Request() req, @Param('id') id: string) {
+        return this.studentsService.findOne(id, req.user.schoolId);
+    }
+
     @Get()
     @ApiOperation({ summary: 'Tüm öğrencileri listele' })
     findAll(
@@ -40,8 +46,11 @@ export class StudentsController {
         @Query('gradeId') gradeId?: string,
         @Query('classId') classId?: string,
         @Query('search') search?: string,
+        @Query('schoolId') schoolId?: string,
+        @Query('className') className?: string,
     ) {
-        return this.studentsService.findAll(req.user.schoolId, { gradeId, classId, search });
+        const targetSchoolId = schoolId || req.user.schoolId;
+        return this.studentsService.findAll(targetSchoolId, { gradeId, classId, search, className });
     }
 
     @Post()

@@ -60,6 +60,10 @@ interface ExamAttempt {
     totalNet: number;
     lessonResults: LessonResult[];
     scores: ExamScore[];
+    schoolParticipantCount: number | null;
+    districtParticipantCount: number | null;
+    cityParticipantCount: number | null;
+    generalParticipantCount: number | null;
 }
 
 interface MissedExam {
@@ -73,6 +77,8 @@ interface MissedExam {
 interface StudentData {
     studentInfo: {
         id: string;
+        firstName: string;
+        lastName: string;
         studentNumber: string | null;
         className: string;
         gradeName: string;
@@ -112,6 +118,10 @@ export default function StudentResultsPage() {
                     },
                 });
                 const result = await response.json();
+                console.log('Student exam data:', result);
+                if (result.examHistory && result.examHistory.length > 0) {
+                    console.log('First exam sample:', result.examHistory[0]);
+                }
                 setData(result);
                 setLoading(false);
             } catch (err) {
@@ -234,9 +244,12 @@ export default function StudentResultsPage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        Deneme Sonuçlarım 🎯
+                        Deneme Sonuçlarım <span className="filter-none">🎯</span>
                     </h1>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        {data.studentInfo.firstName} {data.studentInfo.lastName} {data.studentInfo.studentNumber && `(${data.studentInfo.studentNumber})`}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-500">
                         {data.studentInfo.gradeName} - {data.studentInfo.className}
                     </p>
                 </div>
@@ -336,7 +349,7 @@ export default function StudentResultsPage() {
             {/* Lesson Cards */}
             <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    📚 Ders Ortalamaları
+                    <span className="filter-none">📚</span> Ders Ortalamaları
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {lessonAverages.map((lesson, idx) => {
@@ -421,7 +434,7 @@ export default function StudentResultsPage() {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" style={{ fontSize: '10px' }} />
                                     <YAxis style={{ fontSize: '10px' }} />
-                                    <Tooltip />
+                                    <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                     <Line type="monotone" dataKey="net" stroke="#4f46e5" strokeWidth={2} />
                                 </LineChart>
                             </ResponsiveContainer>
@@ -508,12 +521,42 @@ export default function StudentResultsPage() {
                                             </p>
                                         </div>
                                     </div>
-                                    {primaryScore?.rankSchool && (
-                                        <div className="flex items-center justify-between text-xs border-t border-slate-100 dark:border-slate-800 pt-2">
-                                            <span className="text-slate-600 dark:text-slate-400">Okul Sırası:</span>
-                                            <span className="font-semibold">{primaryScore.rankSchool}</span>
-                                        </div>
-                                    )}
+                                    {/* Sıralamalar */}
+                                    <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-2">
+                                        {primaryScore?.rankSchool && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-600 dark:text-slate-400">Okul Sırası:</span>
+                                                <span className="font-semibold">
+                                                    {primaryScore.rankSchool}
+                                                    {exam.schoolParticipantCount && (
+                                                        <span className="text-slate-500">/{exam.schoolParticipantCount}</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {primaryScore?.rankCity && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-600 dark:text-slate-400">İl Sırası:</span>
+                                                <span className="font-semibold">
+                                                    {primaryScore.rankCity}
+                                                    {exam.cityParticipantCount && (
+                                                        <span className="text-slate-500">/{exam.cityParticipantCount}</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {primaryScore?.rankGen && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-600 dark:text-slate-400">Genel Sıra:</span>
+                                                <span className="font-semibold">
+                                                    {primaryScore.rankGen}
+                                                    {exam.generalParticipantCount && (
+                                                        <span className="text-slate-500">/{exam.generalParticipantCount}</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                     {exam.answerKeyUrl && (
                                         <Button
                                             variant="outline"
@@ -547,7 +590,7 @@ export default function StudentResultsPage() {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="date" style={{ fontSize: '10px' }} />
                                 <YAxis style={{ fontSize: '10px' }} />
-                                <Tooltip />
+                                <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                 <Legend />
                                 <Line type="monotone" dataKey="puan" stroke="#4f46e5" strokeWidth={2} name="Puan" />
                             </LineChart>
@@ -565,7 +608,7 @@ export default function StudentResultsPage() {
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="date" style={{ fontSize: '10px' }} />
                                 <YAxis style={{ fontSize: '10px' }} />
-                                <Tooltip />
+                                <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
                                 <Legend />
                                 <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} name="Net" />
                             </LineChart>

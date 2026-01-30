@@ -6,29 +6,31 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UpdateSchoolDto } from './dto/update-school.dto';
 
 @Controller('schools')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class SchoolsController {
     constructor(private schoolsService: SchoolsService) { }
 
+    // Public endpoint for getting default school (for non-logged-in users)
     @Get()
-    @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT')
     async getDefaultSchool() {
         return this.schoolsService.getSchool();
     }
 
     @Get(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT')
     async getSchool(@Param('id') id: string) {
         return this.schoolsService.getSchool(id);
     }
 
     @Put(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('SCHOOL_ADMIN')
     async updateSchool(@Param('id') id: string, @Body() dto: UpdateSchoolDto) {
         return this.schoolsService.updateSchool(id, dto);
     }
 
     @Post(':id/promote')
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('SCHOOL_ADMIN')
     async promoteGrades(@Param('id') id: string) {
         return this.schoolsService.promoteGrades(id);

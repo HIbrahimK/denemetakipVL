@@ -9,28 +9,36 @@ export function middleware(request: NextRequest) {
         pathname.startsWith('/_next') ||
         pathname.startsWith('/api') ||
         pathname.startsWith('/static') ||
-        pathname === '/login' ||
+        pathname.startsWith('/login') ||
         pathname === '/favicon.ico'
     ) {
         return NextResponse.next();
     }
 
-    // Get user from cookie or local storage (we'll check cookie first)
-    const userCookie = request.cookies.get('user');
+    // Get token from cookie and decode it to get user info
+    const tokenCookie = request.cookies.get('token');
     let user = null;
 
-    if (userCookie) {
+    if (tokenCookie) {
         try {
-            user = JSON.parse(userCookie.value);
+            // Decode JWT token (payload is in the middle part)
+            const payload = tokenCookie.value.split('.')[1];
+            const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
+            user = {
+                id: decoded.sub,
+                email: decoded.email,
+                role: decoded.role,
+                schoolId: decoded.schoolId
+            };
         } catch (e) {
-            // Invalid cookie, redirect to login
-            return NextResponse.redirect(new URL('/login', request.url));
+            // Invalid token, redirect to login
+            return NextResponse.redirect(new URL('/login/school', request.url));
         }
     }
 
     // If no user found and trying to access dashboard, redirect to login
     if (!user && pathname.startsWith('/dashboard')) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        return NextResponse.redirect(new URL('/login/school', request.url));
     }
 
     // If user exists, enforce role-based access control
@@ -75,6 +83,11 @@ export function middleware(request: NextRequest) {
 
             if (isBlockedPath) {
                 return NextResponse.redirect(new URL('/dashboard/exams', request.url));
+            }
+
+            // Teachers can access reports
+            if (pathname.startsWith('/dashboard/reports')) {
+                return NextResponse.next();
             }
         }
 

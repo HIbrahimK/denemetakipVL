@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clearUserData } from "@/lib/auth";
+import { useSchool } from "@/contexts/school-context";
 import {
     BarChart2,
     BookOpen,
@@ -25,17 +26,19 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { GlobalSearch } from "@/components/global-search";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const { schoolName, schoolLogo } = useSchool();
     const pathname = usePathname();
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
         if (userStr) {
-            setUser(JSON.parse(userStr));
+            const userData = JSON.parse(userStr);
+            setUser(userData);
         }
     }, []);
 
@@ -68,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
                 { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
                 { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -78,6 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
             { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
             { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
@@ -131,16 +136,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`no-print fixed lg:static top-0 left-0 z-50 h-full w-72 bg-[#1e1e2d] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
-                {/* Logo Area */}
-                <div className="flex items-center gap-3 px-8 py-8">
-                    <div className="bg-white/10 p-2 rounded-xl">
-                        <School className="h-6 w-6 text-white" />
+                {/* Logo Area - Borderless and Clean */}
+                <Link href="/dashboard" className="flex items-start gap-3 px-6 py-6 hover:bg-white/5 transition-colors cursor-pointer" onClick={() => setSidebarOpen(false)}>
+                    <div className="flex items-center justify-center overflow-hidden min-w-[48px] max-w-[48px] mt-1">
+                        {schoolLogo ? (
+                            <img 
+                                src={schoolLogo} 
+                                alt="Logo" 
+                                className="h-12 w-12 object-contain drop-shadow-lg" 
+                            />
+                        ) : (
+                            <img 
+                                src="/LOGO.png" 
+                                alt="Deneme Takip" 
+                                className="h-12 w-12 object-contain drop-shadow-lg" 
+                            />
+                        )}
                     </div>
-                    <span className="text-xl font-bold tracking-tight">Deneme Takip</span>
-                    <Button variant="ghost" size="icon" className="lg:hidden ml-auto" onClick={() => setSidebarOpen(false)}>
+                    <div className="flex-1 min-w-0">
+                        <span className="text-lg font-bold tracking-tight leading-snug block whitespace-normal break-words">
+                            {schoolName}
+                        </span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="lg:hidden ml-auto shrink-0" onClick={(e) => { e.preventDefault(); setSidebarOpen(false); }}>
                         <X className="h-5 w-5" />
                     </Button>
-                </div>
+                </Link>
 
                 {/* User Profile (Visual Style) */}
                 <div className="px-8 mb-8 text-center">
@@ -200,15 +221,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Button variant="ghost" size="icon" className="lg:hidden text-slate-500" onClick={() => setSidebarOpen(true)}>
                                 <Menu className="h-6 w-6" />
                             </Button>
-                            <div className="hidden md:flex relative w-96">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                <Input
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Sınav, öğrenci veya sınıf ara..."
-                                    className="pl-10 bg-white border-transparent shadow-sm hover:bg-white focus:bg-white rounded-full transition-all text-slate-800 dark:text-slate-100"
-                                />
-                            </div>
+                            {user && user.role !== 'STUDENT' && user.role !== 'PARENT' && (
+                                <div className="hidden md:block">
+                                    <GlobalSearch />
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">

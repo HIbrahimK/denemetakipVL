@@ -41,10 +41,12 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
         };
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch("http://localhost:3001/exams", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify(data),
             });
@@ -59,6 +61,9 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
                     
                     await fetch(`http://localhost:3001/exams/${exam.id}/upload-answer-key`, {
                         method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                        },
                         body: fileFormData,
                     });
                 }

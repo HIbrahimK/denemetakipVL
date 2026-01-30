@@ -10,8 +10,19 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 export class StudentsService {
     constructor(private prisma: PrismaService) { }
 
-    async findAll(schoolId: string, query: { gradeId?: string; classId?: string; search?: string }) {
-        const { gradeId, classId, search } = query;
+    async findAll(schoolId: string, query: { gradeId?: string; classId?: string; search?: string; className?: string }) {
+        const { gradeId, classId, search, className } = query;
+
+        // Parse className if provided (format: "12-B")
+        let parsedGradeName: string | undefined;
+        let parsedClassName: string | undefined;
+        if (className) {
+            const parts = className.split('-');
+            if (parts.length === 2) {
+                parsedGradeName = parts[0];
+                parsedClassName = parts[1];
+            }
+        }
 
         return this.prisma.student.findMany({
             where: {
@@ -21,6 +32,20 @@ export class StudentsService {
                     class: {
                         gradeId,
                     },
+                }),
+                ...(parsedGradeName && parsedClassName && {
+                    class: {
+                        grade: {
+                            name: {
+                                equals: parsedGradeName,
+                                mode: 'insensitive'
+                            }
+                        },
+                        name: {
+                            equals: parsedClassName,
+                            mode: 'insensitive'
+                        }
+                    }
                 }),
                 ...(search && {
                     OR: [
@@ -406,6 +431,7 @@ export class StudentsService {
         const student = await this.prisma.student.findUnique({
             where: { id: studentId },
             include: {
+                user: true,
                 class: {
                     include: {
                         grade: true,
@@ -413,7 +439,13 @@ export class StudentsService {
                 },
                 examAttempts: {
                     include: {
-                        exam: true,
+                        exam: {
+                            include: {
+                                _count: {
+                                    select: { attempts: true }
+                                }
+                            }
+                        },
                         lessonResults: {
                             include: {
                                 lesson: true,
@@ -504,6 +536,11 @@ export class StudentsService {
                 totalNet,
                 lessonResults,
                 scores,
+                // Katılım sayıları - eğer null ise attempts sayısından hesapla
+                schoolParticipantCount: attempt.exam.schoolParticipantCount || attempt.exam._count?.attempts || null,
+                districtParticipantCount: attempt.exam.districtParticipantCount,
+                cityParticipantCount: attempt.exam.cityParticipantCount,
+                generalParticipantCount: attempt.exam.generalParticipantCount,
             };
         });
 
@@ -524,6 +561,8 @@ export class StudentsService {
         return {
             studentInfo: {
                 id: student.id,
+                firstName: student.user.firstName,
+                lastName: student.user.lastName,
                 studentNumber: student.studentNumber,
                 className: student.class.name,
                 gradeName: student.class.grade.name,

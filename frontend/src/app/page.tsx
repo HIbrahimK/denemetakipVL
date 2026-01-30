@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ArrowRight, School, GraduationCap, Users, ShieldCheck, BarChart2 } from "lucide-react";
+import { ArrowRight, GraduationCap, Users, ShieldCheck, BarChart2, School } from "lucide-react";
 import Link from "next/link";
+import SchoolLogo from "@/components/school-logo";
 
 export default function Home() {
   return (
@@ -16,14 +17,7 @@ export default function Home() {
       </div>
 
       <header className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-xl shadow-indigo-600/20 transform rotate-3">
-            <School className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Deneme Takip
-          </span>
-        </div>
+        <SchoolLogo className="h-10 w-10" nameClassName="text-2xl font-bold text-slate-900 dark:text-white tracking-tight" />
         <div className="flex items-center gap-4">
           <Link href="#" className="hidden sm:block text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors">Hakkında</Link>
           <Link href="#" className="hidden sm:block text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white transition-colors">İletişim</Link>
