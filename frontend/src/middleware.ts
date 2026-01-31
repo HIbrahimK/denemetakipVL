@@ -47,12 +47,14 @@ export function middleware(request: NextRequest) {
 
         // Student access restrictions
         if (role === 'STUDENT') {
-            // Students can only access their profile, results, and messages pages
+            // Students can only access their profile, results, messages, and calendar pages
             const allowedStudentPaths = [
                 '/dashboard/student/profile',
                 '/dashboard/student/results',
+                '/dashboard/student-calendar',
                 '/dashboard/profile',
                 '/dashboard/messages',
+                '/dashboard/exams/', // Allow viewing exam results
             ];
 
             const isAllowedPath = allowedStudentPaths.some(path => 

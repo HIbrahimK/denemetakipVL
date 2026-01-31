@@ -20,7 +20,8 @@ import {
     School,
     X,
     Bell,
-    UserCircle
+    UserCircle,
+    CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -103,6 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (role === 'STUDENT') {
             return [
                 { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -122,6 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return [
                 { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
                 { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+                { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
                 { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
                 { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
@@ -134,6 +137,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return [
             { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
             { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+            { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
             { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
             { name: "Sınıflar", href: "/dashboard/classes", icon: School },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },

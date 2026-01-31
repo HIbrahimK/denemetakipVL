@@ -135,7 +135,24 @@ model Exam {
   type      ExamType
   publisher String?
   date      DateTime @default(now())
-  gradeLevel Int?
+  gradeLevel Int      // Required: Her deneme tek bir sınıf seviyesine aittir (5-12)
+  
+  // Takvim bilgileri
+  scheduledDateTime  DateTime?  // Denemenin yapılacağı tarih ve saat
+  applicationDateTime DateTime? // Cevap anahtarının açılacağı tarih (uygulama tarihi)
+  broughtBy         String?    // Denemeyi getiren kişi/kurum
+  quantity          Int?       // Adet (kaç öğrenciye alındı)
+  fee               Float?     // Ücret (TL)
+  isPaid            Boolean @default(false) // Ödendi mi?
+  color             String?    // Takvim renk kodu (#hex)
+  isArchived        Boolean @default(false) // Arşivlendi mi?
+  
+  // Görünürlük ayarları (öğrenciler için)
+  isPublished       Boolean @default(true)  // Takvimde görünsün mü?
+  isPublisherVisible Boolean @default(false) // Yayın adı öğrenciye gösterilsin mi?
+  isAnswerKeyPublic Boolean @default(false) // Cevap anahtarı paylaşıldı mı?
+  
+  // Katılım sayıları
   participantCount Int?
   district  String?
   city      String?
@@ -153,6 +170,10 @@ model Exam {
   updatedAt DateTime @updatedAt
 
   attempts ExamAttempt[]
+  notifications ExamNotification[] // Otomatik bildirimler için
+  
+  @@index([schoolId, gradeLevel, date])
+  @@index([schoolId, isArchived, isPublished])
 }
 
 model ExamAttempt {
@@ -398,4 +419,48 @@ model MessageSettings {
   updatedAt             DateTime @updatedAt
   
   @@index([schoolId])
+}
+
+// Deneme Takvimi Ayarları
+model ExamCalendarSettings {
+  id                    String   @id @default(cuid())
+  schoolId              String   @unique
+  
+  // Öğrencilere gösterilecek alanlar
+  showPublisher         Boolean @default(false) // Yayın adını göster
+  showBroughtBy         Boolean @default(false) // Getiren kişiyi göster
+  showFee               Boolean @default(false) // Ücreti göster
+  showParticipantCounts Boolean @default(true)  // Katılım sayılarını göster
+  
+  // Bildirim ayarları
+  notifyDaysBefore      Int     @default(3)     // Kaç gün önce bildirim gönderilsin
+  autoPublishDaysAfter  Int     @default(0)     // Sınav tarihinden kaç gün sonra sonuçlar yayınlansın
+  
+  // Görünüm tercihleri
+  defaultView           String  @default("table") // "table", "calendar", "timeline"
+  academicYearStart     Int     @default(6)       // Akademik yıl başlangıcı (ay numarası: 6=Haziran)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@index([schoolId])
+}
+
+// Otomatik bildirimler için kayıt
+model ExamNotification {
+  id                String   @id @default(cuid())
+  examId            String
+  exam              Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  notificationType  String   // "REMINDER" (deneme yaklaşıyor), "RESULTS_READY" (sonuçlar hazır)
+  scheduledFor      DateTime // Bildirimin gönderileceği tarih
+  sentAt            DateTime? // Gönderilme tarihi
+  isSent            Boolean  @default(false)
+  
+  messageId         String?  // Gönderilen mesajın ID'si
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([examId, isSent])
+  @@index([scheduledFor, isSent])
 }

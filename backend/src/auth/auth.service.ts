@@ -41,7 +41,14 @@ export class AuthService {
             where: { studentNumber: loginDto.studentNumber },
             include: {
                 user: {
-                    include: { school: true },
+                    include: { 
+                        school: true,
+                    },
+                },
+                class: {
+                    include: {
+                        grade: true,
+                    },
                 },
             },
         });
@@ -55,7 +62,17 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        return this.generateToken(student.user);
+        // Include student info in the response
+        const userWithStudent = {
+            ...student.user,
+            student: {
+                id: student.id,
+                studentNumber: student.studentNumber,
+                class: student.class,
+            },
+        };
+
+        return this.generateToken(userWithStudent);
     }
 
     // Parent login with student number
@@ -338,6 +355,7 @@ export class AuthService {
                 schoolId: user.schoolId,
                 avatarSeed: user.avatarSeed,
                 school: user.school,
+                student: user.student, // Include student info if present
             },
         };
     }

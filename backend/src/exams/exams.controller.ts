@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Body, Param, Query, Delete, Patch, UseInterceptors, UploadedFile, UseGuards, Res, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Delete, Patch, UseInterceptors, UploadedFile, UseGuards, Res, HttpStatus, HttpException, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { ExamsService } from './exams.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
+import { CalendarQueryDto } from './dto/calendar-query.dto';
+import { DuplicateExamDto } from './dto/duplicate-exam.dto';
+import { ExamCalendarSettingsDto } from './dto/calendar-settings.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -139,5 +142,79 @@ export class ExamsController {
                 error: error.message,
             });
         }
+    }
+
+    // ============ TAKVIM ENDPOINT'LERİ ============
+
+    @Get('calendar/view')
+    @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT')
+    getCalendar(
+        @Query() query: CalendarQueryDto,
+        @Query('schoolId') schoolId: string,
+        @Req() req: any,
+    ) {
+        const user = req.user;
+        return this.examsService.getCalendarExams(
+            schoolId,
+            query,
+            user?.id,
+            user?.role
+        );
+    }
+
+    @Get('calendar/upcoming')
+    @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT')
+    getUpcoming(
+        @Query('schoolId') schoolId: string,
+        @Query('gradeLevel') gradeLevel?: string,
+        @Query('limit') limit?: string,
+    ) {
+        return this.examsService.getUpcomingExams(
+            schoolId,
+            gradeLevel ? parseInt(gradeLevel) : undefined,
+            limit ? parseInt(limit) : 5,
+        );
+    }
+
+    @Post(':id/duplicate')
+    @Roles('SCHOOL_ADMIN')
+    duplicateExam(
+        @Param('id') id: string,
+        @Body() dto: DuplicateExamDto,
+    ) {
+        return this.examsService.duplicateExam(id, dto);
+    }
+
+    @Patch(':id/toggle-archive')
+    @Roles('SCHOOL_ADMIN')
+    toggleArchive(@Param('id') id: string) {
+        return this.examsService.toggleArchive(id);
+    }
+
+    @Patch(':id/toggle-publisher-visibility')
+    @Roles('SCHOOL_ADMIN')
+    togglePublisherVisibility(@Param('id') id: string) {
+        return this.examsService.togglePublisherVisibility(id);
+    }
+
+    @Patch(':id/toggle-answer-key-public')
+    @Roles('SCHOOL_ADMIN')
+    toggleAnswerKeyPublic(@Param('id') id: string) {
+        return this.examsService.toggleAnswerKeyPublic(id);
+    }
+
+    @Get('calendar/settings')
+    @Roles('SCHOOL_ADMIN', 'TEACHER')
+    getCalendarSettings(@Query('schoolId') schoolId: string) {
+        return this.examsService.getCalendarSettings(schoolId);
+    }
+
+    @Patch('calendar/settings')
+    @Roles('SCHOOL_ADMIN')
+    updateCalendarSettings(
+        @Query('schoolId') schoolId: string,
+        @Body() dto: ExamCalendarSettingsDto,
+    ) {
+        return this.examsService.updateCalendarSettings(schoolId, dto);
     }
 }

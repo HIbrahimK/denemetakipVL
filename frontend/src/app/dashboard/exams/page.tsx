@@ -154,9 +154,17 @@ export default function ExamsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Sınavlar</h2>
-                    <p className="text-slate-500 dark:text-slate-400">Tüm deneme sınavlarını buradan yönetebilirsiniz.</p>
+                    <p className="text-slate-500 dark:text-slate-400">Tüm deneme sınavlarını buradan yönetebilirsiniz. Takvim görünümü için <Link href="/dashboard/exams/calendar" className="text-indigo-600 hover:underline font-medium">Deneme Takvimi</Link> sayfasını ziyaret edin.</p>
                 </div>
-                {userRole !== 'TEACHER' && <CreateExamModal onSuccess={fetchExams} />}
+                <div className="flex gap-2">
+                    <Button variant="outline" asChild>
+                        <Link href="/dashboard/exams/calendar">
+                            <CalendarRange className="mr-2 h-4 w-4" />
+                            Deneme Takvimi
+                        </Link>
+                    </Button>
+                    {userRole !== 'TEACHER' && <CreateExamModal onSuccess={fetchExams} />}
+                </div>
             </div>
 
             {/* Filters */}

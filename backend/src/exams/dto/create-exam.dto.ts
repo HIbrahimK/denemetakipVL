@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsDateString, IsBoolean, IsNumber } from 'class-validator';
 import { ExamType } from '@prisma/client';
 
 export class CreateExamDto {
@@ -16,10 +16,56 @@ export class CreateExamDto {
     @IsDateString()
     date?: string;
 
+    @IsInt()
+    gradeLevel: number; // Artık zorunlu - her deneme tek bir sınıfa ait
+
+    // Takvim bilgileri
+    @IsOptional()
+    @IsDateString()
+    scheduledDateTime?: string;
+
+    @IsOptional()
+    @IsDateString()
+    applicationDateTime?: string;
+
+    @IsOptional()
+    @IsString()
+    broughtBy?: string;
+
     @IsOptional()
     @IsInt()
-    gradeLevel?: number;
+    quantity?: number;
 
+    @IsOptional()
+    @IsNumber()
+    fee?: number;
+
+    @IsOptional()
+    @IsBoolean()
+    isPaid?: boolean;
+
+    @IsOptional()
+    @IsString()
+    color?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    isArchived?: boolean;
+
+    // Görünürlük ayarları
+    @IsOptional()
+    @IsBoolean()
+    isPublished?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    isPublisherVisible?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    isAnswerKeyPublic?: boolean;
+
+    // Katılım sayıları
     @IsOptional()
     @IsInt()
     participantCount?: number;
@@ -43,3 +89,4 @@ export class CreateExamDto {
     @IsString()
     schoolId: string;
 }
+
