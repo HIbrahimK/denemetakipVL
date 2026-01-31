@@ -24,7 +24,7 @@ export default function StudentLoginPage() {
         setError("");
 
         try {
-            const res = await fetch('http://localhost:3001/auth/login-student', {
+            const res = await fetch('http://localhost:4000/auth/login-student', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentNumber, password }),

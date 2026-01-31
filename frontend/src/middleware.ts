@@ -55,6 +55,11 @@ export function middleware(request: NextRequest) {
                 '/dashboard/profile',
                 '/dashboard/messages',
                 '/dashboard/exams/', // Allow viewing exam results
+                '/dashboard/study-plans',
+                '/dashboard/student-dashboard',
+                '/dashboard/achievements',
+                '/dashboard/groups',
+                '/dashboard/recommendations',
             ];
 
             const isAllowedPath = allowedStudentPaths.some(path => 
@@ -88,8 +93,14 @@ export function middleware(request: NextRequest) {
                 return NextResponse.redirect(new URL('/dashboard/exams', request.url));
             }
 
-            // Teachers can access reports and messages
-            if (pathname.startsWith('/dashboard/reports') || pathname.startsWith('/dashboard/messages')) {
+            // Teachers can access reports, messages, study plans, goals, groups
+            if (pathname.startsWith('/dashboard/reports') || 
+                pathname.startsWith('/dashboard/messages') ||
+                pathname.startsWith('/dashboard/study-plans') ||
+                pathname.startsWith('/dashboard/student-dashboard') ||
+                pathname.startsWith('/dashboard/achievements') ||
+                pathname.startsWith('/dashboard/groups') ||
+                pathname.startsWith('/dashboard/recommendations')) {
                 return NextResponse.next();
             }
         }

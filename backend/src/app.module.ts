@@ -14,6 +14,9 @@ import { ParentsModule } from './parents/parents.module';
 import { ReportsModule } from './reports/reports.module';
 import { SearchModule } from './search/search.module';
 import { MessagesModule } from './messages/messages.module';
+import { StudyModule } from './study/study.module';
+import { GoalsModule } from './goals/goals.module';
+import { GroupsModule } from './groups/groups.module';
 
 @Module({
   imports: [
@@ -35,6 +38,9 @@ import { MessagesModule } from './messages/messages.module';
     ReportsModule,
     SearchModule,
     MessagesModule,
+    StudyModule,
+    GoalsModule,
+    GroupsModule,
   ],
 })
 export class AppModule { }

@@ -7,7 +7,7 @@ async function main() {
     console.log('🌱 Seeding database...');
 
     // Hash default password
-    const defaultPassword = await bcrypt.hash('1234', 10);
+    const defaultPassword = await bcrypt.hash('12345', 10);
 
     // Create or get school
     let school = await prisma.school.findFirst();
@@ -71,14 +71,14 @@ async function main() {
                 schoolId: school.id,
             },
         });
-        console.log('✅ School Admin created: admin@test.com / 1234');
+        console.log('✅ School Admin created: admin@test.com / 12345');
     } else {
         // Update password to ensure it's hashed
         await prisma.user.update({
             where: { id: adminUser.id },
             data: { password: defaultPassword },
         });
-        console.log('✅ School Admin exists (password updated): admin@test.com / 1234');
+        console.log('✅ School Admin exists (password updated): admin@test.com / 12345');
     }
 
     // 2. Create Teacher User
@@ -209,7 +209,7 @@ async function main() {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🏫 Okul Yöneticisi:');
     console.log('   Email: admin@test.com');
-    console.log('   Şifre: 1234');
+    console.log('   Şifre: 12345');
     console.log('');
     console.log('👨‍🏫 Öğretmen:');
     console.log('   Email: teacher@test.com');

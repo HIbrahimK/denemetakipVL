@@ -1,5 +1,27 @@
 # 🧭 DENEME TAKİP - MASTER PLAN
 
+Tyt ayt lgs konuları alınacak
+ders çalışma planı hazırlanacak
+öğrenci grurupları (mentörlük gurupları oluşturulabilecek)
+raporlar gözden geçirilecek
+ticket sistemi aktif hale getirilecek
+kullanım yardım belgeleri hazırlanacak
+deneme şablonları indirilir hale getirilecek
+öğrenci excel yükleme şablonu eklenecek
+veri yedekleme yapılacak
+sınıf atlatma eklenecek
+önceki sene denemeleri - önceki yıl denemeleri karşılaştırma raporları eklenecek.
+hedef belirleme - hedef net - puan - okul - bölüm öğrenci anasayfasında gösterilecek. öğrenciyi gaza getirme
+Öğretmen hedef belirleme okul ortalaması. öğretmeni gaza getime LGS Türkçe ortalaması 15.05 olacak hedefimiz.
+Öğretmenler için branş seçimi kullanıcı branşı ekleme (matematik Öğretmeni) gibi
+Mentörlük sistemi grup oluşturma, bunlara mesaj atma, dosya paylaşma. mesajlaşma sistemini elden geçir.
+Sınıf ekleme, şube ekleme  baştan yapalım.
+Ayarlardan okul türü seçimi. Ortaokulsa AYT ve TYT ye gerek yok. 5-6-7-8 Liseyse LGS ye gerek yok. 9-10-11-12. İkisi birlikteyse hepsi olsun. 
+Security_audit reports incelenecek . yapılması gerekenler yapılacak.
+Yeni rapor türleri eklenebilir.
+Proje anali raporu incelenecek . Oradaki proje eksiklikleri tamamlanacak.
+deneme takvimi
+
 ## 🧭 FAZ 0 – ÜRÜN & TEKNİK STRATEJİ (2–3 Hafta)
 
 ### 0.1 Ürün Tanımı (Netleştir)

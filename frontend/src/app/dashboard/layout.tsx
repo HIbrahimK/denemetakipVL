@@ -21,7 +21,11 @@ import {
     X,
     Bell,
     UserCircle,
-    CalendarDays
+    CalendarDays,
+    BookOpenCheck,
+    Target,
+    UsersRound,
+    Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -52,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             // Set up SSE for real-time notifications
             const token = localStorage.getItem("token");
             const eventSource = new EventSource(
-                `http://localhost:3001/messages/stream?token=${token}`
+                `http://localhost:4000/messages/stream?token=${token}`
             );
 
             eventSource.onmessage = (event) => {
@@ -77,7 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
-                "http://localhost:3001/messages/unread-count",
+                "http://localhost:4000/messages/unread-count",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -105,6 +109,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return [
                 { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
                 { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
+                { name: "Çalışma Planlarım", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Hedeflerim", href: "/dashboard/student-dashboard", icon: Target },
+                { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
+                { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -127,6 +135,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
                 { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
                 { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Öğrenci Hedefleri", href: "/dashboard/student-dashboard", icon: Target },
+                { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
@@ -140,6 +151,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
             { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
             { name: "Sınıflar", href: "/dashboard/classes", icon: School },
+            { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
+            { name: "Öğrenci Hedefleri", href: "/dashboard/student-dashboard", icon: Target },
+            { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
