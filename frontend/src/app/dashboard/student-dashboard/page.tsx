@@ -57,7 +57,7 @@ export default function StudentDashboardPage() {
   const fetchGoals = async (userId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/goals/user/${userId}`, {
+      const response = await fetch(`http://localhost:3001/goals/user/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -81,7 +81,7 @@ export default function StudentDashboardPage() {
       // Bugünkü çalışma süresi
       const today = new Date().toISOString().split('T')[0];
       const sessionsResponse = await fetch(
-        `http://localhost:4000/study/sessions/student/${userId}?startDate=${today}`,
+        `http://localhost:3001/study/sessions/student/${userId}?startDate=${today}`,
         {
           headers: { 'Authorization': `Bearer ${token}` },
         }

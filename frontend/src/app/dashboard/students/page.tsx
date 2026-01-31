@@ -29,7 +29,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AddStudentModal } from "@/components/students/add-student-modal";
@@ -55,8 +55,8 @@ export default function StudentsPage() {
     const [filters, setFilters] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [selectedGrade, setSelectedGrade] = useState("");
-    const [selectedClass, setSelectedClass] = useState("");
+    const [selectedGrade, setSelectedGrade] = useState("all");
+    const [selectedClass, setSelectedClass] = useState("all");
     const [userRole, setUserRole] = useState<string>('');
 
     // Selection state
@@ -89,8 +89,8 @@ export default function StudentsPage() {
             // Fetch students
             const params = new URLSearchParams();
             if (search) params.append("search", search);
-            if (selectedGrade) params.append("gradeId", selectedGrade);
-            if (selectedClass) params.append("classId", selectedClass);
+            if (selectedGrade && selectedGrade !== "all") params.append("gradeId", selectedGrade);
+            if (selectedClass && selectedClass !== "all") params.append("classId", selectedClass);
 
             const studentsRes = await fetch(`http://localhost:3001/students?${params.toString()}`, {
                 headers: { "Authorization": `Bearer ${token}` }
@@ -243,25 +243,35 @@ export default function StudentsPage() {
                     </div>
                     <Select
                         value={selectedGrade}
-                        onChange={(e) => {
-                            setSelectedGrade(e.target.value);
-                            setSelectedClass("");
+                        onValueChange={(value) => {
+                            setSelectedGrade(value);
+                            setSelectedClass("all");
                         }}
                     >
-                        <option value="">Tüm Sınıflar</option>
-                        {filters.map((grade) => (
-                            <option key={grade.id} value={grade.id}>{grade.name}</option>
-                        ))}
+                        <SelectTrigger>
+                            <SelectValue placeholder="Tüm Sınıflar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tüm Sınıflar</SelectItem>
+                            {filters.map((grade) => (
+                                <SelectItem key={grade.id} value={grade.id}>{grade.name}</SelectItem>
+                            ))}
+                        </SelectContent>
                     </Select>
                     <Select
                         value={selectedClass}
-                        onChange={(e) => setSelectedClass(e.target.value)}
-                        disabled={!selectedGrade}
+                        onValueChange={(value) => setSelectedClass(value)}
+                        disabled={!selectedGrade || selectedGrade === "all"}
                     >
-                        <option value="">Tüm Şubeler</option>
-                        {classesList.map((cls: any) => (
-                            <option key={cls.id} value={cls.id}>{cls.name}</option>
-                        ))}
+                        <SelectTrigger>
+                            <SelectValue placeholder="Tüm Şubeler" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tüm Şubeler</SelectItem>
+                            {classesList.map((cls: any) => (
+                                <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                            ))}
+                        </SelectContent>
                     </Select>
                 </div>
 

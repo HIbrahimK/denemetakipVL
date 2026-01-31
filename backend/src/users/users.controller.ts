@@ -69,3 +69,18 @@ export class UsersController {
         return this.usersService.changePassword(id, req.user.schoolId, newPassword);
     }
 }
+
+// Öğretmenlerin kendi profillerini güncelleyebilmesi için ayrı controller
+@ApiTags('User Profile')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('profile')
+export class ProfileController {
+    constructor(private readonly usersService: UsersService) { }
+
+    @Put('update')
+    @ApiOperation({ summary: 'Kendi profilini güncelle (Herkes)' })
+    updateMyProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+        return this.usersService.updateMyProfile(req.user.id, updateUserDto);
+    }
+}

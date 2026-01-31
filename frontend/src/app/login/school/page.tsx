@@ -26,7 +26,7 @@ export default function SchoolLoginPage() {
 
         try {
             console.log('Login attempt:', { email });
-            const res = await fetch('http://localhost:4000/auth/login-school', {
+            const res = await fetch('http://localhost:3001/auth/login-school', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),

@@ -8,11 +8,13 @@ export class StudyPlanService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateStudyPlanDto, teacherId: string, schoolId: string) {
+    const { tasks, ...planData } = dto;
+    
     return this.prisma.studyPlan.create({
       data: {
-        ...dto,
-        startDate: new Date(dto.startDate),
-        endDate: new Date(dto.endDate),
+        ...planData,
+        startDate: new Date(planData.startDate),
+        endDate: new Date(planData.endDate),
         teacherId,
         schoolId,
       },
@@ -147,12 +149,14 @@ export class StudyPlanService {
       throw new ForbiddenException('Access denied');
     }
 
+    const { tasks, ...updateData } = dto;
+
     return this.prisma.studyPlan.update({
       where: { id },
       data: {
-        ...dto,
-        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-        endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+        ...updateData,
+        startDate: updateData.startDate ? new Date(updateData.startDate) : undefined,
+        endDate: updateData.endDate ? new Date(updateData.endDate) : undefined,
       },
       include: {
         teacher: {

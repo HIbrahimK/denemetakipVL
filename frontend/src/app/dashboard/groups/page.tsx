@@ -47,7 +47,7 @@ export default function GroupsPage() {
   const fetchGroups = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4000/groups', {
+      const response = await fetch('http://localhost:3001/groups', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

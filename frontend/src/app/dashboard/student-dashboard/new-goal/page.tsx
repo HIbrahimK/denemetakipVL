@@ -39,7 +39,7 @@ export default function NewGoalPage() {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       
-      const response = await fetch('http://localhost:4000/goals', {
+      const response = await fetch('http://localhost:3001/goals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

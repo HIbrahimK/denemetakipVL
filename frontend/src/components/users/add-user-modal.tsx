@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function AddUserModal({ open, onOpenChange, onSuccess }: any) {
     const [loading, setLoading] = useState(false);
@@ -15,6 +15,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: any) {
         email: "",
         role: "TEACHER",
         password: "",
+        branch: "",
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -41,6 +42,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: any) {
                     email: "",
                     role: "TEACHER",
                     password: "",
+                    branch: "",
                 });
             }
         } catch (error) {
@@ -89,15 +91,28 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: any) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="role">Yetki / Rol</Label>
-                        <Select
+                        <select
                             id="role"
                             value={formData.role}
                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="TEACHER">Öğretmen</option>
                             <option value="SCHOOL_ADMIN">Okul Yöneticisi</option>
-                        </Select>
+                        </select>
                     </div>
+                    {formData.role === "TEACHER" && (
+                        <div className="space-y-2">
+                            <Label htmlFor="branch">Branş (Opsiyonel)</Label>
+                            <Input
+                                id="branch"
+                                placeholder="Örn: Matematik, Türkçe, Fizik"
+                                value={formData.branch}
+                                onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                            />
+                            <p className="text-xs text-gray-500">Branş boş bırakılırsa "Öğretmen" olarak gösterilir.</p>
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="password">Şifre</Label>
                         <Input

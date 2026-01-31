@@ -12,6 +12,7 @@ import { CalendarIcon, Target } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { goalsApi } from '@/lib/api/study';
+import { useToast } from '@/hooks/use-toast';
 
 interface CreateGoalDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface CreateGoalDialogProps {
 }
 
 export function CreateGoalDialog({ open, onOpenChange, onCreated }: CreateGoalDialogProps) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -52,6 +54,10 @@ export function CreateGoalDialog({ open, onOpenChange, onCreated }: CreateGoalDi
       });
       onCreated();
       onOpenChange(false);
+      toast({
+        title: "Başarılı",
+        description: "Hedef başarıyla oluşturuldu",
+      });
       // Reset form
       setFormData({
         title: '',
@@ -63,7 +69,11 @@ export function CreateGoalDialog({ open, onOpenChange, onCreated }: CreateGoalDi
       });
     } catch (error) {
       console.error('Goal creation failed:', error);
-      alert('Hedef oluşturulurken hata oluştu');
+      toast({
+        title: "Hata",
+        description: "Hedef oluşturulurken hata oluştu",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -89,4 +89,25 @@ export class UsersService {
             data: { password: hashedPassword },
         });
     }
+
+    // Kullanıcının kendi profilini güncellemesi (yetki kontrolü yok)
+    async updateMyProfile(userId: string, dto: UpdateUserDto) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+
+        // Sadece belirli alanların güncellenmesine izin ver
+        const allowedFields: any = {};
+        if (dto.firstName) allowedFields.firstName = dto.firstName;
+        if (dto.lastName) allowedFields.lastName = dto.lastName;
+        if (dto.phone) allowedFields.phone = dto.phone;
+        if (dto.branch) allowedFields.branch = dto.branch;
+        if (dto.avatar) allowedFields.avatar = dto.avatar;
+
+        return this.prisma.user.update({
+            where: { id: userId },
+            data: allowedFields,
+        });
+    }
 }

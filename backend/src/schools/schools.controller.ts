@@ -116,4 +116,16 @@ export class SchoolsController {
     async restoreData(@Param('id') id: string, @Body('backupId') backupId: string) {
         return this.schoolsService.restoreData(id, backupId);
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id/backups/:backupId')
+    async deleteBackup(@Param('id') id: string, @Param('backupId') backupId: string) {
+        return this.schoolsService.deleteBackup(id, backupId);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post(':id/restore-from-file')
+    async restoreFromFile(@Param('id') id: string, @Body('backupData') backupData: any) {
+        return this.schoolsService.restoreFromFile(id, backupData);
+    }
 }

@@ -1,5 +1,22 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsInt, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsInt, IsBoolean, IsArray, ValidateNested } from 'class-validator';
 import { StudyPlanTargetType } from '@prisma/client';
+import { Type } from 'class-transformer';
+
+class CreateStudyTaskInPlanDto {
+  @IsString()
+  @IsNotEmpty()
+  subjectName: string;
+
+  @IsString()
+  @IsOptional()
+  topicId?: string;
+
+  @IsInt()
+  questionCount: number;
+
+  @IsDateString()
+  date: string;
+}
 
 export class CreateStudyPlanDto {
   @IsString()
@@ -30,4 +47,10 @@ export class CreateStudyPlanDto {
   @IsBoolean()
   @IsOptional()
   isPublic?: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateStudyTaskInPlanDto)
+  @IsOptional()
+  tasks?: CreateStudyTaskInPlanDto[];
 }

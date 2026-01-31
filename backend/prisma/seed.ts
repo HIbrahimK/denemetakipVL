@@ -95,14 +95,18 @@ async function main() {
                 firstName: 'Test',
                 lastName: 'Öğretmen',
                 role: 'TEACHER',
+                branch: 'Matematik',
                 schoolId: school.id,
             },
         });
-        console.log('✅ Teacher created: teacher@test.com / 1234');
+        console.log('✅ Teacher created: teacher@test.com / 1234 (Matematik Öğretmeni)');
     } else {
         await prisma.user.update({
             where: { id: teacherUser.id },
-            data: { password: defaultPassword },
+            data: { 
+                password: defaultPassword,
+                branch: 'Matematik'
+            },
         });
         console.log('✅ Teacher exists (password updated): teacher@test.com / 1234');
     }

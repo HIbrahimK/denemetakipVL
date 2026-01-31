@@ -24,7 +24,7 @@ export default function ParentLoginPage() {
         setError("");
 
         try {
-            const res = await fetch('http://localhost:4000/auth/login-parent', {
+            const res = await fetch('http://localhost:3001/auth/login-parent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentNumber, password }),

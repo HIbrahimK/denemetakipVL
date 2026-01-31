@@ -41,7 +41,7 @@ export default function NewGroupPage() {
         requestData.gradeIds = formData.gradeIds;
       }
       
-      const response = await fetch('http://localhost:4000/groups', {
+      const response = await fetch('http://localhost:3001/groups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

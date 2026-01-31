@@ -69,6 +69,7 @@ model User {
   role       Role     @default(STUDENT)
   firstName  String
   lastName   String
+  branch     String?  // Öğretmen branşı (Matematik, Türkçe, vb.)
   avatarSeed String?
   schoolId   String
   school     School   @relation(fields: [schoolId], references: [id])
@@ -272,6 +273,7 @@ model Backup {
   id        String   @id @default(cuid())
   filename  String
   size      Int // in bytes
+  data      String?  @db.Text // JSON backup data
   schoolId  String
   school    School   @relation(fields: [schoolId], references: [id])
   createdAt DateTime @default(now())

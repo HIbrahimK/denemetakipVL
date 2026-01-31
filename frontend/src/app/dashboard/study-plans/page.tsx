@@ -56,11 +56,11 @@ export default function StudyPlansPage() {
       const userStr = localStorage.getItem('user');
       const currentUser = JSON.parse(userStr || '{}');
 
-      let endpoint = 'http://localhost:4000/study/plans';
+      let endpoint = 'http://localhost:3001/study/plans';
       
       // Eğer öğrenci ise sadece kendi planlarını göster
       if (currentUser.role === 'STUDENT') {
-        endpoint = `http://localhost:4000/study/plans/student/${currentUser.id}`;
+        endpoint = `http://localhost:3001/study/plans/student/${currentUser.id}`;
       }
 
       const response = await fetch(endpoint, {

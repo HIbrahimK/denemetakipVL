@@ -27,8 +27,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddUserModal } from "@/components/users/add-user-modal";
 import { EditUserModal } from "@/components/users/edit-user-modal";
 import { UserChangePasswordModal } from "@/components/users/change-password-modal";
@@ -47,7 +47,7 @@ export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
-    const [selectedRole, setSelectedRole] = useState("");
+    const [selectedRole, setSelectedRole] = useState("all");
 
     // Modals
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -62,7 +62,7 @@ export default function UsersPage() {
         try {
             const params = new URLSearchParams();
             if (search) params.append("search", search);
-            if (selectedRole) params.append("role", selectedRole);
+            if (selectedRole && selectedRole !== "all") params.append("role", selectedRole);
 
             const res = await fetch(`http://localhost:3001/users?${params.toString()}`, {
                 headers: { "Authorization": `Bearer ${token}` }
@@ -138,11 +138,16 @@ export default function UsersPage() {
                     </div>
                     <Select
                         value={selectedRole}
-                        onChange={(e) => setSelectedRole(e.target.value)}
+                        onValueChange={(value) => setSelectedRole(value)}
                     >
-                        <option value="">Tüm Yetkiler</option>
-                        <option value="SCHOOL_ADMIN">Yöneticiler</option>
-                        <option value="TEACHER">Öğretmenler</option>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Tüm Yetkiler" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tüm Yetkiler</SelectItem>
+                            <SelectItem value="SCHOOL_ADMIN">Yöneticiler</SelectItem>
+                            <SelectItem value="TEACHER">Öğretmenler</SelectItem>
+                        </SelectContent>
                     </Select>
                 </div>
 

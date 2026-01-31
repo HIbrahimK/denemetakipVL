@@ -89,7 +89,7 @@ export default function GroupDetailPage() {
         }
 
         // Fetch group details
-        const groupResponse = await fetch(`http://localhost:4000/groups/${groupId}`, {
+        const groupResponse = await fetch(`http://localhost:3001/groups/${groupId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -103,7 +103,7 @@ export default function GroupDetailPage() {
         setGroup(groupData);
 
         // Fetch group stats
-        const statsResponse = await fetch(`http://localhost:4000/groups/${groupId}/stats`, {
+        const statsResponse = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },

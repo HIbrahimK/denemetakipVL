@@ -49,7 +49,7 @@ export default function AchievementsPage() {
   const fetchStudentAchievements = async (userId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:4000/achievements/student/${userId}`, {
+      const response = await fetch(`http://localhost:3001/achievements/student/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -69,7 +69,7 @@ export default function AchievementsPage() {
   const fetchAllAchievements = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4000/achievements', {
+      const response = await fetch('http://localhost:3001/achievements', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

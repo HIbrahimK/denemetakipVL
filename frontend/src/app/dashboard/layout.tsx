@@ -42,11 +42,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
 
     useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const userData = JSON.parse(userStr);
-            setUser(userData);
-        }
+        const fetchUserProfile = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            try {
+                const res = await fetch("http://localhost:3001/auth/me", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (res.ok) {
+                    const userData = await res.json();
+                    setUser(userData);
+                    // Update localStorage with fresh data
+                    localStorage.setItem("user", JSON.stringify(userData));
+                }
+            } catch (error) {
+                console.error("Error fetching user profile:", error);
+            }
+        };
+
+        fetchUserProfile();
     }, []);
 
     useEffect(() => {
@@ -56,7 +74,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             // Set up SSE for real-time notifications
             const token = localStorage.getItem("token");
             const eventSource = new EventSource(
-                `http://localhost:4000/messages/stream?token=${token}`
+                `http://localhost:3001/messages/stream?token=${token}`
             );
 
             eventSource.onmessage = (event) => {
@@ -81,7 +99,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
-                "http://localhost:4000/messages/unread-count",
+                "http://localhost:3001/messages/unread-count",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -165,9 +183,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const getRoleLabel = () => {
         if (!user) return "";
+        
+        // Öğretmen için branş kontrolü
+        if (user.role === "TEACHER") {
+            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
+        }
+        
         const roleLabels: Record<string, string> = {
             SCHOOL_ADMIN: "Okul Yöneticisi",
-            TEACHER: "Öğretmen",
             STUDENT: "Öğrenci",
             PARENT: "Veli",
             SUPER_ADMIN: "Süper Admin"
@@ -237,7 +260,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
 
                 {/* User Profile (Visual Style) */}
-                <div className="px-8 mb-8 text-center">
+                <Link href="/dashboard/profile" className="px-8 mb-8 text-center hover:opacity-80 transition-opacity cursor-pointer block" onClick={() => setSidebarOpen(false)}>
                     <div className="relative inline-block">
                         <Avatar className="h-20 w-20 border-4 border-[#2b2b40] shadow-xl">
                             <AvatarImage src={getAvatarUrl()} />
@@ -249,7 +272,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                     <h3 className="mt-4 font-semibold text-lg">{user?.firstName} {user?.lastName}</h3>
                     <p className="text-slate-400 text-sm">{getRoleLabel()}</p>
-                </div>
+                </Link>
 
                 {/* Navigation */}
                 <nav className="flex-1 px-4 space-y-1 overflow-y-auto">

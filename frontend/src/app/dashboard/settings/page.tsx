@@ -8,6 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select } from "@/components/ui/select";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
     Settings as SettingsIcon,
     Upload,
     Save,
@@ -18,6 +28,8 @@ import {
     ArrowUpCircle,
     Image as ImageIcon,
     Loader2,
+    Trash2,
+    FileUp,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSchool } from "@/contexts/school-context";
@@ -35,6 +47,17 @@ export default function SettingsPage() {
         studentLoginType: "studentNumber",
     });
     const [backups, setBackups] = useState<any[]>([]);
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        onConfirm: () => void;
+    }>({
+        open: false,
+        title: "",
+        description: "",
+        onConfirm: () => {},
+    });
     const { toast } = useToast();
     const { refreshSchoolData } = useSchool();
 
@@ -262,23 +285,38 @@ export default function SettingsPage() {
     };
 
     const handlePromote = async () => {
-        if (!confirm("Tüm öğrencilerin sınıf seviyesini bir üst seviyeye taşımak istediğinize emin misiniz?")) return;
-
-        const token = localStorage.getItem("token");
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        try {
-            const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/promote`, {
-                method: "POST",
-                headers: { "Authorization": `Bearer ${token}` }
-            });
-            const data = await res.json();
-            alert(data.message);
-        } catch (error) {
-            console.error(error);
-        }
+        setConfirmDialog({
+            open: true,
+            title: "Sınıf Atlama Onayla",
+            description: "Tüm öğrencilerin sınıf seviyesini bir üst seviyeye taşımak istediğinize emin misiniz?",
+            onConfirm: async () => {
+                const token = localStorage.getItem("token");
+                const user = JSON.parse(localStorage.getItem("user") || "{}");
+                try {
+                    const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/promote`, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    toast({
+                        title: "Başarılı",
+                        description: data.message,
+                    });
+                } catch (error) {
+                    console.error(error);
+                    toast({
+                        title: "Hata",
+                        description: "Sınıf atlama işlemi sırasında bir hata oluştu.",
+                        variant: "destructive"
+                    });
+                }
+                setConfirmDialog({ ...confirmDialog, open: false });
+            }
+        });
     };
 
     const handleBackup = async () => {
+        setLoading(true);
         const token = localStorage.getItem("token");
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         try {
@@ -287,10 +325,20 @@ export default function SettingsPage() {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
-            alert(data.message);
+            toast({
+                title: "Başarılı",
+                description: data.message || "Yedek başarıyla oluşturuldu.",
+            });
             fetchBackups();
         } catch (error) {
             console.error(error);
+            toast({
+                title: "Hata",
+                description: "Yedekleme sırasında bir hata oluştu.",
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -309,30 +357,151 @@ export default function SettingsPage() {
             a.href = url;
             a.download = backup.filename;
             a.click();
+            
+            toast({
+                title: "Başarılı",
+                description: "Yedek dosyası indiriliyor.",
+            });
         } catch (error) {
             console.error(error);
+            toast({
+                title: "Hata",
+                description: "Yedek indirilemedi.",
+                variant: "destructive"
+            });
         }
     };
 
     const handleRestore = async (backupId: string) => {
-        if (!confirm("Bu yedeği geri yüklemek istediğinize emin misiniz? Mevcut verilerin üzerine yazılabilir.")) return;
+        setConfirmDialog({
+            open: true,
+            title: "Geri Yükleme Onayla",
+            description: "Bu yedeği geri yüklemek istediğinize emin misiniz? Mevcut verilerin üzerine yazılabilir.",
+            onConfirm: async () => {
+                const token = localStorage.getItem("token");
+                const user = JSON.parse(localStorage.getItem("user") || "{}");
+                try {
+                    const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/restore`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ backupId }),
+                    });
+                    const data = await res.json();
+                    toast({
+                        title: "Başarılı",
+                        description: data.message || "Geri yükleme işlemi başlatıldı.",
+                    });
+                } catch (error) {
+                    console.error(error);
+                    toast({
+                        title: "Hata",
+                        description: "Geri yükleme sırasında bir hata oluştu.",
+                        variant: "destructive"
+                    });
+                }
+                setConfirmDialog({ ...confirmDialog, open: false });
+            }
+        });
+    };
 
-        const token = localStorage.getItem("token");
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        try {
-            const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/restore`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({ backupId }),
+    const handleDeleteBackup = async (backupId: string) => {
+        setConfirmDialog({
+            open: true,
+            title: "Yedeği Sil",
+            description: "Bu yedeği silmek istediğinize emin misiniz?",
+            onConfirm: async () => {
+                const token = localStorage.getItem("token");
+                const user = JSON.parse(localStorage.getItem("user") || "{}");
+                try {
+                    const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/backups/${backupId}`, {
+                        method: "DELETE",
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    const data = await res.json();
+                    toast({
+                        title: "Başarılı",
+                        description: data.message || "Yedek başarıyla silindi.",
+                    });
+                    fetchBackups();
+                } catch (error) {
+                    console.error(error);
+                    toast({
+                        title: "Hata",
+                        description: "Yedek silinemedi.",
+                        variant: "destructive"
+                    });
+                }
+                setConfirmDialog({ ...confirmDialog, open: false });
+            }
+        });
+    };
+
+    const handleRestoreFromFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Check file type
+        if (!file.name.endsWith('.json')) {
+            toast({
+                title: "Hata",
+                description: "Lütfen bir JSON yedek dosyası seçin.",
+                variant: "destructive"
             });
-            const data = await res.json();
-            alert(data.message);
-        } catch (error) {
-            console.error(error);
+            return;
         }
+
+        setConfirmDialog({
+            open: true,
+            title: "Dosyadan Geri Yükleme Onayla",
+            description: "Bu yedek dosyasını geri yüklemek istediğinize emin misiniz? Mevcut verilerin üzerine yazılabilir.",
+            onConfirm: async () => {
+                setLoading(true);
+                const token = localStorage.getItem("token");
+                const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+                try {
+                    // Read file content
+                    const fileContent = await file.text();
+                    const backupData = JSON.parse(fileContent);
+
+                    const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/restore-from-file`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ backupData }),
+                    });
+
+                    if (!res.ok) {
+                        throw new Error('Geri yükleme başarısız');
+                    }
+
+                    const data = await res.json();
+                    toast({
+                        title: "Başarılı",
+                        description: data.message || "Dosyadan geri yükleme işlemi başlatıldı.",
+                    });
+
+                    // Reset file input
+                    e.target.value = '';
+                } catch (error) {
+                    console.error(error);
+                    toast({
+                        title: "Hata",
+                        description: error instanceof Error ? error.message : "Dosya yüklenirken bir hata oluştu.",
+                        variant: "destructive"
+                    });
+                    e.target.value = '';
+                } finally {
+                    setLoading(false);
+                }
+                setConfirmDialog({ ...confirmDialog, open: false });
+            }
+        });
     };
 
     return (
@@ -518,13 +687,46 @@ export default function SettingsPage() {
                             <CardDescription className="text-xs">Sistem verilerini yedekle ve geri yükle</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
-                            <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium h-11 rounded-lg gap-2 shadow-sm" onClick={handleBackup} disabled>
-                                <Database className="h-4 w-4" />
-                                Yedek Oluştur
+                            <Button 
+                                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium h-11 rounded-lg gap-2 shadow-sm" 
+                                onClick={handleBackup} 
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Yedekleniyor...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Database className="h-4 w-4" />
+                                        Yedek Oluştur
+                                    </>
+                                )}
                             </Button>
-                            <p className="text-xs text-slate-500 text-center">Yakında aktif olacak</p>
 
-                            <div className="pt-4 space-y-3 hidden">
+                            <div className="relative">
+                                <input
+                                    type="file"
+                                    accept=".json"
+                                    onChange={handleRestoreFromFile}
+                                    disabled={loading}
+                                    className="hidden"
+                                    id="restore-file-upload"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={loading}
+                                    onClick={() => document.getElementById('restore-file-upload')?.click()}
+                                    className="w-full h-11 gap-2 border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+                                >
+                                    <FileUp className="h-4 w-4" />
+                                    Dosyadan Geri Yükle
+                                </Button>
+                            </div>
+
+                            <div className="pt-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <Label className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Alınan Yedekler</Label>
                                     <Button
@@ -585,6 +787,15 @@ export default function SettingsPage() {
                                                                     >
                                                                         <RotateCcw className="h-4 w-4" />
                                                                     </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                                        title="Sil"
+                                                                        onClick={() => handleDeleteBackup(b.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -599,6 +810,26 @@ export default function SettingsPage() {
                     </Card>
                 </div>
             </div>
+
+            {/* Confirmation Dialog */}
+            <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {confirmDialog.description}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>
+                            İptal
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDialog.onConfirm}>
+                            Onayla
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

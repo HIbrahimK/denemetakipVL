@@ -13,9 +13,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 export default function NewStudyPlanPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [targetType, setTargetType] = useState('INDIVIDUAL');
@@ -43,17 +46,87 @@ export default function NewStudyPlanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // API çağrısı burada yapılacak
-    console.log({
-      name,
-      description,
-      targetType,
-      startDate,
-      endDate,
-      tasks,
-    });
+    if (!startDate || !endDate) {
+      toast({
+        title: "Hata",
+        description: "Başlangıç ve bitiş tarihi seçmelisiniz",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // router.push('/study-plans');
+    if (tasks.length === 0) {
+      toast({
+        title: "Hata",
+        description: "En az bir görev eklemelisiniz",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate tasks
+    for (const task of tasks) {
+      if (!task.subjectName || task.questionCount <= 0) {
+        toast({
+          title: "Hata",
+          description: "Tüm görevler için ders adı ve soru sayısı girilmelidir",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setLoading(true);
+    const token = localStorage.getItem('token');
+
+    try {
+      const payload = {
+        name,
+        description,
+        targetType,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        tasks: tasks.map(task => ({
+          subjectName: task.subjectName,
+          topicId: task.topicId,
+          questionCount: task.questionCount,
+          date: task.date ? task.date.toISOString() : new Date().toISOString(),
+        })),
+      };
+
+      const res = await fetch('http://localhost:3001/study/plans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Başarılı",
+          description: "Çalışma planı oluşturuldu",
+        });
+        router.push('/dashboard/study-plans');
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Hata",
+          description: error.message || "Plan oluşturulurken hata oluştu",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Plan creation failed:', error);
+      toast({
+        title: "Hata",
+        description: "Bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -211,10 +284,12 @@ export default function NewStudyPlanPage() {
 
             {/* Aksiyonlar */}
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => router.back()}>
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
                 İptal
               </Button>
-              <Button type="submit">Plan Oluştur</Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Oluşturuluyor...' : 'Plan Oluştur'}
+              </Button>
             </div>
           </form>
         </CardContent>

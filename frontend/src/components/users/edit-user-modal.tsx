@@ -5,15 +5,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 export function EditUserModal({ user, open, onOpenChange, onSuccess }: any) {
+    const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
         email: "",
         role: "",
+        branch: "",
     });
 
     useEffect(() => {
@@ -23,6 +26,7 @@ export function EditUserModal({ user, open, onOpenChange, onSuccess }: any) {
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
+                branch: user.branch || "",
             });
         }
     }, [user]);
@@ -45,9 +49,24 @@ export function EditUserModal({ user, open, onOpenChange, onSuccess }: any) {
             if (res.ok) {
                 onSuccess();
                 onOpenChange(false);
+                toast({
+                    title: "Başarılı",
+                    description: "Kullanıcı bilgileri güncellendi",
+                });
+            } else {
+                toast({
+                    title: "Hata",
+                    description: "Kullanıcı güncellenirken hata oluştu",
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error(error);
+            toast({
+                title: "Hata",
+                description: "Bir hata oluştu",
+                variant: "destructive",
+            });
         } finally {
             setLoading(false);
         }
@@ -93,14 +112,29 @@ export function EditUserModal({ user, open, onOpenChange, onSuccess }: any) {
                     <div className="space-y-2">
                         <Label htmlFor="edit-role">Yetki / Rol</Label>
                         <Select
-                            id="edit-role"
                             value={formData.role}
-                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            onValueChange={(value) => setFormData({ ...formData, role: value })}
                         >
-                            <option value="TEACHER">Öğretmen</option>
-                            <option value="SCHOOL_ADMIN">Okul Yöneticisi</option>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Yetki seçiniz" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="TEACHER">Öğretmen</SelectItem>
+                                <SelectItem value="SCHOOL_ADMIN">Okul Yöneticisi</SelectItem>
+                            </SelectContent>
                         </Select>
                     </div>
+                    {formData.role === "TEACHER" && (
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-branch">Branş</Label>
+                            <Input
+                                id="edit-branch"
+                                placeholder="Örn: Matematik, Türkçe, Fizik"
+                                value={formData.branch}
+                                onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                            />
+                        </div>
+                    )}
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>İptal</Button>
                         <Button type="submit" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">

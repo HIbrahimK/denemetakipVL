@@ -28,28 +28,53 @@ export default function ProfilePage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    // Branch update
+    const [branch, setBranch] = useState("");
+    const [branchMessage, setBranchMessage] = useState("");
+
     // Avatar selection
     const [selectedStyle, setSelectedStyle] = useState('avataaars');
     const [selectedSeed, setSelectedSeed] = useState('');
     const [avatarMessage, setAvatarMessage] = useState("");
 
     useEffect(() => {
-        const userStr = localStorage.getItem("user");
-        if (userStr) {
-            const userData = JSON.parse(userStr);
-            setUser(userData);
-            // Set default avatar seed if exists
-            if (userData.avatarSeed) {
-                const parts = userData.avatarSeed.split(':');
-                if (parts.length === 2) {
-                    setSelectedStyle(parts[0]);
-                    setSelectedSeed(parts[1]);
+        const fetchUserProfile = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            try {
+                const res = await fetch("http://localhost:3001/auth/me", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (res.ok) {
+                    const userData = await res.json();
+                    setUser(userData);
+                    setBranch(userData.branch || "");
+                    
+                    // Update localStorage with fresh data
+                    localStorage.setItem("user", JSON.stringify(userData));
+                    
+                    // Set avatar seed if exists
+                    if (userData.avatarSeed) {
+                        const parts = userData.avatarSeed.split(':');
+                        if (parts.length === 2) {
+                            setSelectedStyle(parts[0]);
+                            setSelectedSeed(parts[1]);
+                        }
+                    } else {
+                        // Default to first name as seed
+                        setSelectedSeed(userData.firstName);
+                    }
                 }
-            } else {
-                // Default to first name as seed
-                setSelectedSeed(userData.firstName);
+            } catch (error) {
+                console.error("Error fetching user profile:", error);
             }
-        }
+        };
+
+        fetchUserProfile();
     }, []);
 
     const handlePasswordChange = async (e: React.FormEvent) => {
@@ -134,6 +159,39 @@ export default function ProfilePage() {
         }
     };
 
+    const handleBranchUpdate = async () => {
+        setBranchMessage("");
+        const token = localStorage.getItem("token");
+
+        try {
+            const res = await fetch(`http://localhost:3001/profile/update`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ branch }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                // Update user in localStorage
+                const updatedUser = { ...user, branch };
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                setUser(updatedUser);
+                setBranchMessage("Branş bilginiz güncellendi!");
+                
+                // Reload page to update sidebar
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                setBranchMessage("Branş bilgisi güncellenemedi!");
+            }
+        } catch (error) {
+            setBranchMessage("Bir hata oluştu!");
+            console.error(error);
+        }
+    };
+
     const getAvatarUrl = (style: string, seed: string) => {
         return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}`;
     };
@@ -150,9 +208,14 @@ export default function ProfilePage() {
 
     const getRoleLabel = () => {
         if (!user) return "";
+        
+        // Öğretmen için branş kontrolü
+        if (user.role === "TEACHER") {
+            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
+        }
+        
         const roleLabels: Record<string, string> = {
             SCHOOL_ADMIN: "Okul Yöneticisi",
-            TEACHER: "Öğretmen",
             STUDENT: "Öğrenci",
             PARENT: "Veli",
             SUPER_ADMIN: "Süper Admin"
@@ -217,6 +280,40 @@ export default function ProfilePage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Branch Update Card for Teachers */}
+            {user.role === "TEACHER" && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <UserCircle className="h-5 w-5" />
+                            Branş Bilgisi
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {branchMessage && (
+                            <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg text-green-700 dark:text-green-300">
+                                {branchMessage}
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="branch">Branşınız</Label>
+                            <Input
+                                id="branch"
+                                placeholder="Örn: Matematik, Türkçe, Fizik"
+                                value={branch}
+                                onChange={(e) => setBranch(e.target.value)}
+                            />
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Branş bilginiz dashboard'da isminizin altında görüntülenecektir.
+                            </p>
+                        </div>
+                        <Button onClick={handleBranchUpdate} className="bg-indigo-600 hover:bg-indigo-700">
+                            Branşı Güncelle
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Avatar Selection Card */}
             <Card>

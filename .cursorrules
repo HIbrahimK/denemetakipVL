@@ -1,0 +1,387 @@
+# Deneme Takip Projesi - Kodlama Kuralları
+
+Bu dosya, proje üzerinde çalışan tüm AI agent'larının uyması gereken kodlama standartlarını içerir.
+
+## 🎯 Genel Prensipler
+
+- **Tutarlılık**: Tüm projede aynı pattern'ları ve component'leri kullan
+- **Kalite**: Her zaman en güncel best practice'leri uygula
+- **Açıklık**: Kod anlaşılabilir ve maintainable olmalı
+- **Güvenlik**: Kullanıcı verilerini koru, güvenli kodlama standartlarına uy
+
+## 🚫 ASLA KULLANILMAYACAK PATTERN'LAR
+
+### 1. Native Browser Dialog'ları
+❌ **YAPMA:**
+```typescript
+alert('Mesaj');
+confirm('Onaylıyor musunuz?');
+```
+
+✅ **YAP:**
+```typescript
+// Toast mesajlar için
+import { useToast } from '@/hooks/use-toast';
+const { toast } = useToast();
+
+toast({
+  title: "Başlık",
+  description: "Mesaj",
+  variant: "default" // veya "destructive"
+});
+
+// Onay dialog'ları için
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
+<AlertDialog open={confirmDialog.open} onOpenChange={...}>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Başlık</AlertDialogTitle>
+      <AlertDialogDescription>Açıklama</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>İptal</AlertDialogCancel>
+      <AlertDialogAction onClick={handleConfirm}>Onayla</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+### 2. Native HTML Select
+❌ **YAPMA:**
+```typescript
+<select onChange={handleChange}>
+  <option>Seçenek</option>
+</select>
+```
+
+✅ **YAP:**
+```typescript
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+<Select value={value} onValueChange={setValue}>
+  <SelectTrigger>
+    <SelectValue placeholder="Seçiniz" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="option1">Seçenek 1</SelectItem>
+    <SelectItem value="option2">Seçenek 2</SelectItem>
+  </SelectContent>
+</Select>
+```
+
+## ✅ UI Component Standartları
+
+### Kullanılması Gereken Component'ler
+
+1. **shadcn/ui + Radix UI** komponentlerini kullan
+2. Native HTML elementler yerine her zaman UI component'lerini tercih et
+3. Tutarlı görünüm için tüm form elementlerinde aynı component'leri kullan
+
+### Component Listesi
+
+- **Button**: `@/components/ui/button`
+- **Input**: `@/components/ui/input`
+- **Select**: `@/components/ui/select` (Radix UI)
+- **Dialog**: `@/components/ui/dialog`
+- **AlertDialog**: `@/components/ui/alert-dialog`
+- **Toast**: `@/hooks/use-toast`
+- **Card**: `@/components/ui/card`
+- **Table**: `@/components/ui/table`
+- **Badge**: `@/components/ui/badge`
+- **Tabs**: `@/components/ui/tabs`
+
+## 🎨 Stil ve Formatlar
+
+### Tailwind CSS
+- Tailwind class'larını kullan, inline style'dan kaçın
+- Responsive design için breakpoint'leri kullan: `sm:`, `md:`, `lg:`, `xl:`
+- Dark mode desteği için `dark:` prefix'ini kullan
+
+### Türkçe Metin Kullanımı
+- Tüm kullanıcı arayüzü metinleri Türkçe olmalı
+- Kod içi değişken ve fonksiyon isimleri İngilizce
+- Comment'ler Türkçe veya İngilizce olabilir
+
+## 🔐 Güvenlik Standartları
+
+### Authentication & Authorization
+```typescript
+// Her API request'inde token kontrolü
+const token = localStorage.getItem('token');
+if (!token) {
+  router.push('/login');
+  return;
+}
+
+// Backend'de JWT verification
+@UseGuards(JwtAuthGuard)
+```
+
+### Data Validation
+```typescript
+// Frontend'de form validation
+const formSchema = z.object({
+  email: z.string().email('Geçerli email giriniz'),
+  password: z.string().min(6, 'En az 6 karakter'),
+});
+
+// Backend'de DTO validation
+import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+
+export class LoginDto {
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
+}
+```
+
+### Sensitive Data
+- Password'leri hiçbir zaman log'lama
+- API response'larında hassas bilgileri exclude et
+- Environment variables için `.env` kullan
+
+## 📦 State Management
+
+### Client State
+```typescript
+// React hooks ile local state
+const [data, setData] = useState<Type>([]);
+
+// Context API ile global state
+const { user, setUser } = useAuth();
+```
+
+### Server State
+```typescript
+// API çağrıları için async/await
+try {
+  const response = await api.getData();
+  setData(response);
+} catch (error) {
+  toast({
+    title: "Hata",
+    description: "Veri yüklenirken hata oluştu",
+    variant: "destructive",
+  });
+}
+```
+
+## 🗄️ Database & Backend
+
+### Prisma Usage
+```typescript
+// İlişkileri dahil et
+const user = await prisma.user.findUnique({
+  where: { id },
+  include: {
+    students: true,
+    school: true,
+  },
+});
+
+// Transaction'lar için
+await prisma.$transaction(async (tx) => {
+  await tx.user.update(...);
+  await tx.school.update(...);
+});
+```
+
+### API Response Format
+```typescript
+// Başarılı response
+return {
+  success: true,
+  data: result,
+  message: 'İşlem başarılı',
+};
+
+// Hata response
+throw new HttpException({
+  success: false,
+  message: 'Hata mesajı',
+  error: error.message,
+}, HttpStatus.BAD_REQUEST);
+```
+
+## 🧪 Error Handling
+
+### Frontend Error Handling
+```typescript
+try {
+  await apiCall();
+  toast({
+    title: "Başarılı",
+    description: "İşlem tamamlandı",
+  });
+} catch (error) {
+  console.error('Operation failed:', error);
+  toast({
+    title: "Hata",
+    description: error.message || "İşlem sırasında hata oluştu",
+    variant: "destructive",
+  });
+}
+```
+
+### Backend Error Handling
+```typescript
+try {
+  // Operation
+} catch (error) {
+  throw new HttpException(
+    'Açıklayıcı hata mesajı',
+    HttpStatus.INTERNAL_SERVER_ERROR,
+  );
+}
+```
+
+## 📁 File Organization
+
+### Frontend Structure
+```
+src/
+  app/
+    dashboard/
+      [feature]/
+        page.tsx          # Route page
+  components/
+    [feature]/
+      Component.tsx       # Feature components
+    ui/
+      component.tsx       # Reusable UI components
+  lib/
+    api/
+      [feature].ts        # API calls
+    utils.ts              # Utility functions
+  hooks/
+    use-[feature].ts      # Custom hooks
+```
+
+### Backend Structure
+```
+src/
+  [feature]/
+    [feature].module.ts
+    [feature].controller.ts
+    [feature].service.ts
+    dto/
+      create-[feature].dto.ts
+      update-[feature].dto.ts
+```
+
+## 🔄 API Patterns
+
+### RESTful Endpoints
+```
+GET    /api/[resource]           # List
+GET    /api/[resource]/:id       # Get one
+POST   /api/[resource]           # Create
+PATCH  /api/[resource]/:id       # Update
+DELETE /api/[resource]/:id       # Delete
+```
+
+### Request/Response
+```typescript
+// Request with proper types
+interface CreateUserRequest {
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+// Response with proper structure
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+}
+```
+
+## 🎯 Performance Optimization
+
+### React Optimization
+```typescript
+// Memoization
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+
+// Callback memoization
+const memoizedCallback = useCallback(() => {
+  doSomething(a, b);
+}, [a, b]);
+```
+
+### Database Optimization
+```typescript
+// Select only needed fields
+const users = await prisma.user.findMany({
+  select: {
+    id: true,
+    name: true,
+    email: true,
+  },
+});
+
+// Use pagination
+const users = await prisma.user.findMany({
+  skip: (page - 1) * pageSize,
+  take: pageSize,
+});
+```
+
+## 📝 Code Documentation
+
+### Component Documentation
+```typescript
+/**
+ * User edit modal component
+ * 
+ * @param userId - The ID of the user to edit
+ * @param onSuccess - Callback when edit is successful
+ * @returns Modal component
+ */
+export function EditUserModal({ userId, onSuccess }: Props) {
+  // Implementation
+}
+```
+
+### Complex Logic Documentation
+```typescript
+// Öğrencilerin sınıf ortalamasını hesapla
+// 1. Tüm öğrenci notlarını getir
+// 2. Her ders için ortalamayı hesapla
+// 3. Genel ortalamayı döndür
+const calculateClassAverage = (students: Student[]) => {
+  // Implementation
+};
+```
+
+## 🚀 Deployment Checklist
+
+- [ ] Tüm testler başarılı
+- [ ] No console.error veya console.warn production'da
+- [ ] Environment variables doğru ayarlanmış
+- [ ] Database migration'ları çalıştırılmış
+- [ ] Build errors yok
+- [ ] Type errors yok
+- [ ] Security vulnerabilities check edilmiş
+
+## 🔍 Code Review Checklist
+
+Agent'lar kod değişikliği yaptığında bu kontrolleri yap:
+
+- [ ] Tutarlılık: Proje standartlarına uygun mu?
+- [ ] Güvenlik: Güvenlik açığı var mı?
+- [ ] Performance: Optimizasyon gerektiriyor mu?
+- [ ] Type Safety: TypeScript type'ları doğru mu?
+- [ ] Error Handling: Hata yakalama var mı?
+- [ ] UI/UX: Kullanıcı dostu mu?
+- [ ] Documentation: Yeterli açıklama var mı?
+
+---
+
+**Not**: Bu kurallar projenin gelişimine göre güncellenecektir. Yeni pattern'lar veya best practice'ler eklenebilir.

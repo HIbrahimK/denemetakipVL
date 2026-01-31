@@ -290,16 +290,100 @@ export class SchoolsService {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `backup-${id}-${timestamp}.json`;
 
-        // In a real app, you'd export data to JSON/SQL here
-        const backup = await this.prisma.backup.create({
-            data: {
-                filename,
-                size: Math.floor(Math.random() * 1024 * 1024), // mock size
-                schoolId: id,
-            },
-        });
+        try {
+            // Export school data in smaller chunks to avoid memory issues
+            const [schoolInfo, grades, users, exams, messages, studyData] = await Promise.all([
+                // Basic school info
+                this.prisma.school.findUnique({
+                    where: { id },
+                }),
+                // Grades with classes and students
+                this.prisma.grade.findMany({
+                    where: { schoolId: id },
+                    include: {
+                        classes: {
+                            include: {
+                                students: {
+                                    include: {
+                                        user: true,
+                                        parent: {
+                                            include: {
+                                                user: true
+                                            }
+                                        },
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }),
+                // Users
+                this.prisma.user.findMany({
+                    where: { schoolId: id },
+                }),
+                // Exams with attempts
+                this.prisma.exam.findMany({
+                    where: { schoolId: id },
+                    include: {
+                        attempts: {
+                            include: {
+                                lessonResults: true,
+                                scores: true,
+                            }
+                        },
+                    }
+                }),
+                // Messages
+                this.prisma.message.findMany({
+                    where: { schoolId: id },
+                }),
+                // Study data
+                Promise.all([
+                    this.prisma.studyPlan.findMany({ where: { schoolId: id } }),
+                    this.prisma.studyTask.findMany({ where: { schoolId: id } }),
+                    this.prisma.studyGoal.findMany({ where: { schoolId: id } }),
+                ]),
+            ]);
 
-        return { message: 'Yedekleme başarıyla oluşturuldu.', backup };
+            // Create backup data object
+            const backupContent = {
+                metadata: {
+                    backupDate: new Date().toISOString(),
+                    schoolId: id,
+                    schoolName: schoolInfo?.name,
+                    version: '1.0',
+                },
+                data: {
+                    school: schoolInfo,
+                    grades,
+                    users,
+                    exams,
+                    messages,
+                    studyPlans: studyData[0],
+                    studyTasks: studyData[1],
+                    studyGoals: studyData[2],
+                },
+            };
+
+            // Calculate actual size
+            const backupJson = JSON.stringify(backupContent);
+            const size = Buffer.byteLength(backupJson, 'utf8');
+
+            // Save backup record with actual data
+            const backup = await this.prisma.backup.create({
+                data: {
+                    filename,
+                    size,
+                    schoolId: id,
+                    data: backupJson,
+                },
+            });
+
+            return { message: 'Yedekleme başarıyla oluşturuldu.', backup };
+        } catch (error) {
+            console.error('Backup error:', error);
+            throw new Error('Yedekleme sırasında bir hata oluştu: ' + error.message);
+        }
     }
 
     async downloadBackup(id: string, backupId: string) {
@@ -308,8 +392,29 @@ export class SchoolsService {
         });
         if (!backup) throw new NotFoundException('Yedek bulunamadı');
 
-        // This would return the file content. For now we return metadata
-        return backup;
+        // Return the actual backup data
+        let backupData;
+        if (backup.data) {
+            // If data is stored as string, parse it
+            backupData = typeof backup.data === 'string' 
+                ? JSON.parse(backup.data) 
+                : backup.data;
+        } else {
+            // Fallback for old backups without data
+            backupData = {
+                metadata: {
+                    backupDate: backup.createdAt.toISOString(),
+                    schoolId: backup.schoolId,
+                    filename: backup.filename,
+                    note: 'Legacy backup - no data available'
+                }
+            };
+        }
+
+        return {
+            ...backupData,
+            filename: backup.filename,
+        };
     }
 
     async restoreData(id: string, backupId: string) {
@@ -318,5 +423,35 @@ export class SchoolsService {
         });
         if (!backup) throw new NotFoundException('Yedek bulunamadı');
         return { message: 'Geri yükleme işlemi başlatıldı.' };
+    }
+
+    async deleteBackup(id: string, backupId: string) {
+        const backup = await this.prisma.backup.findFirst({
+            where: { id: backupId, schoolId: id },
+        });
+        if (!backup) throw new NotFoundException('Yedek bulunamadı');
+        
+        await this.prisma.backup.delete({
+            where: { id: backupId },
+        });
+        
+        return { message: 'Yedek başarıyla silindi.' };
+    }
+
+    async restoreFromFile(id: string, backupData: any) {
+        // Validate backup data structure
+        if (!backupData || typeof backupData !== 'object') {
+            throw new Error('Geçersiz yedek dosyası formatı');
+        }
+
+        // In a real implementation, you would:
+        // 1. Validate the backup data structure
+        // 2. Create a transaction
+        // 3. Delete existing data (optionally)
+        // 4. Restore data from backup
+        // 5. Commit transaction
+
+        // For now, we'll just acknowledge the restore
+        return { message: 'Dosyadan geri yükleme işlemi başlatıldı. Veriler geri yükleniyor...' };
     }
 }

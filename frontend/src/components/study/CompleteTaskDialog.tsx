@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { studyTasksApi } from '@/lib/api/study';
 import { CheckCircle2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CompleteTaskDialogProps {
   taskId: number;
@@ -26,6 +27,7 @@ export function CompleteTaskDialog({
   onOpenChange,
   onComplete,
 }: CompleteTaskDialogProps) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     completedQuestions: questionCount,
@@ -44,9 +46,17 @@ export function CompleteTaskDialog({
       await studyTasksApi.complete(taskId, formData);
       onComplete();
       onOpenChange(false);
+      toast({
+        title: "Başarılı",
+        description: "Görev başarıyla tamamlandı",
+      });
     } catch (error) {
       console.error('Task completion failed:', error);
-      alert('Görev tamamlanırken hata oluştu');
+      toast({
+        title: "Hata",
+        description: "Görev tamamlanırken hata oluştu",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -20,4 +20,8 @@ export class CreateUserDto {
 
     @IsEnum(Role)
     role: Role;
+
+    @IsString()
+    @IsOptional()
+    branch?: string;
 }
