@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
-import { ExamReportSummary, ExamReportDetailed, SubjectReportSummary } from './reports.service';
+import { ExamType } from '@prisma/client';
+import { ReportsService, ExamReportSummary, ExamReportDetailed, SubjectReportSummary } from './reports.service';
 
 @Injectable()
 export class ExportService {
+  constructor(private readonly reportsService: ReportsService) {}
+
   private safeToFixed(value: any, fractionDigits: number = 2): string {
     if (value === null || value === undefined || isNaN(value)) {
       return '0.00';
@@ -790,5 +793,218 @@ export class ExportService {
         reject(new Error(`PDF dosyası oluşturulamadı: ${error.message}`));
       }
     });
+  }
+
+  /**
+   * Sınıf sıralama matris raporunu Excel formatında oluşturur
+   */
+  async generateRankingMatrixExcel(
+    classId: string,
+    schoolId: string,
+    examType?: ExamType,
+  ): Promise<Buffer> {
+    try {
+      // ReportsService'den veriyi al
+      const data = await this.reportsService.getClassRankingMatrix(
+        classId,
+        schoolId,
+        examType,
+      );
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Sıralama Matrisi');
+
+      // Başlık
+      const lastColumn = String.fromCharCode(65 + data.exams.length + 2);
+      worksheet.mergeCells(`A1:${lastColumn}1`);
+      const titleCell = worksheet.getCell('A1');
+      titleCell.value = `${data.classInfo.gradeName} - ${data.classInfo.name} Öğrenci Sıralama Matrisi`;
+      titleCell.font = { bold: true, size: 14 };
+      titleCell.alignment = { horizontal: 'center' };
+      titleCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' },
+      };
+
+      // Boş satır
+      worksheet.addRow([]);
+
+      // Tablo başlıkları
+      const headers = ['Öğrenci No', 'Öğrenci Adı'];
+      data.exams.forEach(exam => {
+        headers.push(exam.title.substring(0, 20));
+      });
+      headers.push('Ort. Sıra');
+
+      const headerRow = worksheet.addRow(headers);
+      headerRow.font = { bold: true };
+      headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+      headerRow.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD3D3D3' },
+        };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+      });
+
+      // Veri satırları
+      data.students.forEach(student => {
+        const rowData = [
+          student.studentNumber,
+          student.fullName,
+        ];
+
+        student.rankings.forEach(r => {
+          rowData.push(r.rank !== null ? String(r.rank) : '-');
+        });
+
+        rowData.push(student.averageRank > 0 ? String(student.averageRank) : '-');
+
+        const row = worksheet.addRow(rowData);
+        row.alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // Border ekle
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' },
+          };
+        });
+
+        // Renk kodlaması - Sınav sütunları (C'den başlar)
+        student.rankings.forEach((r, index) => {
+          if (r.rank) {
+            const cell = row.getCell(index + 3);
+            const totalStudents = data.classInfo.studentCount;
+            const percentile = (r.rank / totalStudents) * 100;
+
+            if (percentile <= 20) {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF90EE90' } }; // Yeşil
+            } else if (percentile >= 80) {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B6B' } }; // Kırmızı
+            } else {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE066' } }; // Sarı
+            }
+          }
+        });
+
+        // Ortalama sütunu renklendirme
+        const avgCell = row.getCell(data.exams.length + 3);
+        if (student.averageRank > 0) {
+          const percentile = (student.averageRank / data.classInfo.studentCount) * 100;
+          if (percentile <= 20) {
+            avgCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF90EE90' } };
+            avgCell.font = { bold: true };
+          } else if (percentile >= 80) {
+            avgCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B6B' } };
+          } else {
+            avgCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE066' } };
+          }
+        }
+      });
+
+      // Sütun genişlikleri
+      worksheet.getColumn(1).width = 12;
+      worksheet.getColumn(2).width = 30;
+      for (let i = 3; i <= data.exams.length + 3; i++) {
+        worksheet.getColumn(i).width = 14;
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      return Buffer.from(buffer);
+    } catch (error) {
+      console.error('Error in generateRankingMatrixExcel:', error);
+      throw new Error(`Excel dosyası oluşturulamadı: ${error.message}`);
+    }
+  }
+
+  async generateGradeRankingMatrixExcel(
+    gradeId: string,
+    schoolId: string,
+    examType?: ExamType,
+  ): Promise<Buffer> {
+    try {
+      const data = await this.reportsService.getGradeRankingMatrix(
+        gradeId, schoolId, examType
+      );
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Sıralama Matrisi');
+
+      // Başlık
+      worksheet.mergeCells('A1:' + String.fromCharCode(65 + data.exams.length + 3) + '1');
+      const titleCell = worksheet.getCell('A1');
+      titleCell.value = `${data.classInfo.name} - Öğrenci Sıralama Matrisi`;
+      titleCell.font = { bold: true, size: 14 };
+      titleCell.alignment = { horizontal: 'center' };
+
+      // Tablo başlıkları
+      const headers = ['Öğrenci No', 'Öğrenci Adı', 'Şube'];
+      data.exams.forEach(exam => {
+        headers.push(exam.title.substring(0, 15));
+      });
+      headers.push('Ort. Sıra');
+
+      const headerRow = worksheet.addRow(headers);
+      headerRow.font = { bold: true };
+      headerRow.alignment = { horizontal: 'center' };
+
+      // Veri satırları
+      data.students.forEach(student => {
+        const rowData = [
+          student.studentNumber,
+          student.fullName,
+          student.className,
+        ];
+
+        student.rankings.forEach(r => {
+          rowData.push(r.rank || '-');
+        });
+
+        rowData.push(student.averageRank || '-');
+
+        const row = worksheet.addRow(rowData);
+        
+        // Renk kodlaması
+        student.rankings.forEach((r, index) => {
+          if (r.rank) {
+            const cell = row.getCell(index + 4);
+            const totalStudents = data.classInfo.studentCount;
+            const percentile = (r.rank / totalStudents) * 100;
+            
+            if (percentile <= 20) {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF90EE90' } };
+            } else if (percentile >= 80) {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B6B' } };
+            } else {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE066' } };
+            }
+          }
+        });
+      });
+
+      // Sütun genişlikleri
+      worksheet.getColumn(1).width = 12;
+      worksheet.getColumn(2).width = 25;
+      worksheet.getColumn(3).width = 10;
+      for (let i = 4; i <= data.exams.length + 4; i++) {
+        worksheet.getColumn(i).width = 12;
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      return Buffer.from(buffer);
+    } catch (error) {
+      console.error('Error in generateGradeRankingMatrixExcel:', error);
+      throw new Error(`Excel dosyası oluşturulamadı: ${error.message}`);
+    }
   }
 }

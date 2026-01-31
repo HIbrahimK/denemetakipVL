@@ -81,6 +81,169 @@ export class SchoolsService {
         });
     }
 
+    async getAllClasses(schoolId: string) {
+        return this.prisma.class.findMany({
+            where: {
+                schoolId,
+            },
+            orderBy: [
+                { grade: { name: 'asc' } },
+                { name: 'asc' }
+            ],
+            include: {
+                grade: true,
+                _count: {
+                    select: { students: true }
+                }
+            }
+        });
+    }
+
+    async createClass(schoolId: string, dto: any) {
+        return this.prisma.class.create({
+            data: {
+                name: dto.name,
+                schoolId,
+                gradeId: dto.gradeId,
+            },
+            include: {
+                grade: true,
+                _count: {
+                    select: { students: true }
+                }
+            }
+        });
+    }
+
+    async updateClass(schoolId: string, classId: string, dto: any) {
+        const classToUpdate = await this.prisma.class.findFirst({
+            where: { id: classId, schoolId }
+        });
+
+        if (!classToUpdate) {
+            throw new NotFoundException('Sınıf bulunamadı');
+        }
+
+        return this.prisma.class.update({
+            where: { id: classId },
+            data: {
+                name: dto.name,
+                gradeId: dto.gradeId,
+            },
+            include: {
+                grade: true,
+                _count: {
+                    select: { students: true }
+                }
+            }
+        });
+    }
+
+    async deleteClass(schoolId: string, classId: string) {
+        const classToDelete = await this.prisma.class.findFirst({
+            where: { id: classId, schoolId },
+            include: {
+                _count: {
+                    select: { students: true }
+                }
+            }
+        });
+
+        if (!classToDelete) {
+            throw new NotFoundException('Sınıf bulunamadı');
+        }
+
+        if (classToDelete._count.students > 0) {
+            throw new Error('Bu sınıfta öğrenci bulunduğu için silinemez');
+        }
+
+        await this.prisma.class.delete({
+            where: { id: classId }
+        });
+
+        return { message: 'Sınıf başarıyla silindi' };
+    }
+
+    async mergeClasses(schoolId: string, dto: any) {
+        const sourceClass = await this.prisma.class.findFirst({
+            where: { id: dto.sourceClassId, schoolId },
+            include: {
+                grade: true,
+                _count: { select: { students: true } }
+            }
+        });
+
+        const targetClass = await this.prisma.class.findFirst({
+            where: { id: dto.targetClassId, schoolId },
+            include: {
+                grade: true,
+                _count: { select: { students: true } }
+            }
+        });
+
+        if (!sourceClass || !targetClass) {
+            throw new NotFoundException('Sınıflardan biri bulunamadı');
+        }
+
+        // Transfer all students from source to target
+        await this.prisma.student.updateMany({
+            where: { classId: dto.sourceClassId },
+            data: { classId: dto.targetClassId }
+        });
+
+        // Delete source class
+        await this.prisma.class.delete({
+            where: { id: dto.sourceClassId }
+        });
+
+        return {
+            message: `${sourceClass.grade.name}-${sourceClass.name} sınıfı ${targetClass.grade.name}-${targetClass.name} sınıfına birleştirildi`,
+            transferredStudents: sourceClass._count.students
+        };
+    }
+
+    async transferStudents(schoolId: string, sourceClassId: string, dto: any) {
+        const sourceClass = await this.prisma.class.findFirst({
+            where: { id: sourceClassId, schoolId },
+            include: { grade: true }
+        });
+
+        const targetClass = await this.prisma.class.findFirst({
+            where: { id: dto.targetClassId, schoolId },
+            include: { grade: true }
+        });
+
+        if (!sourceClass || !targetClass) {
+            throw new NotFoundException('Sınıflardan biri bulunamadı');
+        }
+
+        let transferCount = 0;
+
+        if (dto.studentIds && dto.studentIds.length > 0) {
+            // Transfer selected students
+            const result = await this.prisma.student.updateMany({
+                where: {
+                    id: { in: dto.studentIds },
+                    classId: sourceClassId
+                },
+                data: { classId: dto.targetClassId }
+            });
+            transferCount = result.count;
+        } else {
+            // Transfer all students
+            const result = await this.prisma.student.updateMany({
+                where: { classId: sourceClassId },
+                data: { classId: dto.targetClassId }
+            });
+            transferCount = result.count;
+        }
+
+        return {
+            message: `${transferCount} öğrenci ${sourceClass.grade.name}-${sourceClass.name} sınıfından ${targetClass.grade.name}-${targetClass.name} sınıfına aktarıldı`,
+            transferredCount: transferCount
+        };
+    }
+
     private hasStandardGrades(grades: any[]): boolean {
         const standardGradeNames = ['5', '6', '7', '8', '9', '10', '11', '12'];
         const existingNames = grades.map(g => g.name);

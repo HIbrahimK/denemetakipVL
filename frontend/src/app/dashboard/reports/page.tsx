@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, FileSpreadsheet, FileText, Loader2, BarChart3, TrendingUp, Users, LayoutDashboard, Award, Printer, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import RankingMatrixReport from '@/components/reports/ranking-matrix-report';
 import {
   BarChart,
   Bar,
@@ -78,7 +79,7 @@ export default function ReportsPage() {
   const [examType, setExamType] = useState<string>('TYT');
   const [gradeLevel, setGradeLevel] = useState<string>('');
   const [lessonName, setLessonName] = useState<string>('');
-  const [reportType, setReportType] = useState<'exam' | 'subject'>('exam');
+  const [reportType, setReportType] = useState<'exam' | 'subject' | 'ranking-matrix'>('exam');
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
 
   const [examReports, setExamReports] = useState<ExamReport[]>([]);
@@ -388,13 +389,14 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Rapor Türü</label>
-              <Select value={reportType} onValueChange={(value: 'exam' | 'subject') => setReportType(value)}>
+              <Select value={reportType} onValueChange={(value: 'exam' | 'subject' | 'ranking-matrix') => setReportType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="exam">Sınav Raporu</SelectItem>
                   <SelectItem value="subject">Ders Bazlı Rapor</SelectItem>
+                  <SelectItem value="ranking-matrix">Öğrenci Sıralama Matrisi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1153,6 +1155,10 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {reportType === 'ranking-matrix' && (
+        <RankingMatrixReport classId="" />
       )}
     </div>
   );

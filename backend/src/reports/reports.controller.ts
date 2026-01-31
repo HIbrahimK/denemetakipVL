@@ -7,6 +7,8 @@ import {
   Res,
   HttpException,
   HttpStatus,
+  Param,
+  NotFoundException,
 } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { ExportService } from './export.service';
@@ -427,5 +429,148 @@ export class ReportsController {
       `attachment; filename="${sanitizedFilename}.pdf"; filename*=UTF-8''${sanitizedFilename}.pdf`,
     );
     res.send(buffer);
+  }
+
+  /**
+   * Sınıf sıralama matris raporunu getirir (JSON)
+   * Öğretmen ve yöneticiler erişebilir
+   */
+  @Get('classes/:classId/ranking-matrix')
+  @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
+  async getClassRankingMatrix(
+    @Req() req: any,
+    @Param('classId') classId: string,
+    @Query('examType') examType?: ExamType,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const schoolId = req.user.schoolId;
+
+    if (!classId) {
+      throw new HttpException(
+        'classId parametresi gereklidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.reportsService.getClassRankingMatrix(
+      classId,
+      schoolId,
+      examType,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  @Get('grades/:gradeId/ranking-matrix')
+  @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
+  async getGradeRankingMatrix(
+    @Req() req: any,
+    @Param('gradeId') gradeId: string,
+    @Query('examType') examType?: ExamType,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const schoolId = req.user.schoolId;
+
+    if (!gradeId) {
+      throw new HttpException(
+        'gradeId parametresi gereklidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.reportsService.getGradeRankingMatrix(
+      gradeId,
+      schoolId,
+      examType,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
+    );
+  }
+
+  /**
+   * Sınıf sıralama matris raporunu Excel olarak indirir
+   */
+  @Get('classes/:classId/ranking-matrix/excel')
+  @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
+  async downloadClassRankingMatrixExcel(
+    @Req() req: any,
+    @Res() res: Response,
+    @Param('classId') classId: string,
+    @Query('examType') examType?: ExamType,
+  ) {
+    try {
+      const schoolId = req.user.schoolId;
+
+      if (!classId) {
+        throw new HttpException(
+          'classId parametresi gereklidir',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const buffer = await this.exportService.generateRankingMatrixExcel(
+        classId,
+        schoolId,
+        examType,
+      );
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename=ogrenci-siralama-matrisi.xlsx',
+      );
+      res.send(buffer);
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Excel oluşturulurken hata oluştu',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('grades/:gradeId/ranking-matrix/excel')
+  @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
+  async downloadGradeRankingMatrixExcel(
+    @Req() req: any,
+    @Res() res: Response,
+    @Param('gradeId') gradeId: string,
+    @Query('examType') examType?: ExamType,
+  ) {
+    try {
+      const schoolId = req.user.schoolId;
+
+      if (!gradeId) {
+        throw new HttpException(
+          'gradeId parametresi gereklidir',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const buffer = await this.exportService.generateGradeRankingMatrixExcel(
+        gradeId,
+        schoolId,
+        examType,
+      );
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename=sinif-seviyesi-siralama-matrisi.xlsx',
+      );
+      res.send(buffer);
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Excel oluşturulurken hata oluştu',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

@@ -135,6 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
             { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
             { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "Sınıflar", href: "/dashboard/classes", icon: School },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
