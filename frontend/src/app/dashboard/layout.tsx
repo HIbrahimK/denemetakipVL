@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return [
                 { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
                 { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
-                { name: "Çalışma Planlarım", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Çalışma Planlarım", href: "/dashboard/my-tasks", icon: BookOpenCheck },
                 { name: "Hedeflerim", href: "/dashboard/student-dashboard", icon: Target },
                 { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
                 { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },

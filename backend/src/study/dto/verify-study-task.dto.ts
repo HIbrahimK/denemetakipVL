@@ -1,8 +1,16 @@
-import { IsBoolean, IsString, IsOptional } from 'class-validator';
+import { IsBoolean, IsString, IsOptional, IsEnum } from 'class-validator';
+
+export enum VerificationType {
+  PARENT = 'PARENT',
+  TEACHER = 'TEACHER',
+}
 
 export class VerifyStudyTaskDto {
+  @IsEnum(VerificationType)
+  verificationType: VerificationType;
+
   @IsBoolean()
-  verified: boolean;
+  approved: boolean;
 
   @IsString()
   @IsOptional()

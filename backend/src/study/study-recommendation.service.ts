@@ -32,9 +32,6 @@ export class StudyRecommendationService {
       },
       orderBy: { updatedAt: 'desc' },
       take: 20,
-      include: {
-        topic: true,
-      },
     });
 
     // Get study sessions
@@ -44,22 +41,24 @@ export class StudyRecommendationService {
       take: 30,
     });
 
-    // Analyze weak topics from completed tasks
+    // Analyze weak subjects from completed tasks
     const recommendations: any[] = [];
 
     // 1. Identify weak subjects from task performance
     const subjectScores: { [key: string]: { total: number; count: number } } = {};
 
-    completedTasks.forEach((task) => {
-      if (task.topic) {
-        const score = task.correctAnswers / (task.correctAnswers + task.wrongAnswers + task.blankAnswers) * 100;
-        const subjectName = task.topic.name;
-        
-        if (!subjectScores[subjectName]) {
-          subjectScores[subjectName] = { total: 0, count: 0 };
+    completedTasks.forEach((task: any) => {
+      if (task.subjectName) {
+        const totalAnswered = task.correctCount + task.wrongCount + task.blankCount;
+        if (totalAnswered > 0) {
+          const score = (task.correctCount / totalAnswered) * 100;
+          
+          if (!subjectScores[task.subjectName]) {
+            subjectScores[task.subjectName] = { total: 0, count: 0 };
+          }
+          subjectScores[task.subjectName].total += score;
+          subjectScores[task.subjectName].count += 1;
         }
-        subjectScores[subjectName].total += score;
-        subjectScores[subjectName].count += 1;
       }
     });
 
@@ -71,24 +70,26 @@ export class StudyRecommendationService {
       }))
       .sort((a, b) => a.average - b.average);
 
-    // 1. Weak topic recommendations
+    // 1. Weak subject recommendations
     if (subjectAverages.length > 0) {
       const weakestSubject = subjectAverages[0];
-      recommendations.push({
-        recommendationType: 'WEAK_TOPIC',
-        subjectName: weakestSubject.name,
-        reasoning: `${weakestSubject.name} konusunda ortalamanız ${weakestSubject.average.toFixed(1)}%. Bu konuda daha fazla çalışma yapmanızı öneririz.`,
-        priority: 5,
-      });
+      if (weakestSubject.average < 70) {
+        recommendations.push({
+          recommendationType: 'WEAK_AREA',
+          subjectName: weakestSubject.name,
+          reasoning: `${weakestSubject.name} dersinde ortalamanız %${weakestSubject.average.toFixed(1)}. Bu derste daha fazla çalışma yapmanızı öneririz.`,
+          priority: 5,
+        });
+      }
     }
 
     // 2. Study consistency check
     const totalMinutes = sessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-    const avgMinutesPerDay = totalMinutes / 30; // last 30 sessions
+    const avgMinutesPerDay = sessions.length > 0 ? totalMinutes / 30 : 0;
 
     if (avgMinutesPerDay < 60) {
       recommendations.push({
-        recommendationType: 'STUDY_HABIT',
+        recommendationType: 'STUDY_GAP',
         subjectName: 'Genel',
         reasoning: `Günlük ortalama çalışma süreniz ${Math.round(avgMinutesPerDay)} dakika. Hedef en az 2 saat olmalı.`,
         priority: 4,
@@ -100,7 +101,6 @@ export class StudyRecommendationService {
       where: {
         studentId,
         status: 'PENDING',
-        date: { lt: new Date() },
       },
     });
 
@@ -113,26 +113,19 @@ export class StudyRecommendationService {
       });
     }
 
-    // 4. Topic recommendations
-    if (subjectAverages.length > 0) {
-      const weakestSubject = subjectAverages[0];
-      
-      const topics = await this.prisma.topic.findMany({
-        where: { 
-          examType: 'TYT',
-          subjectName: weakestSubject.name
-        },
-        take: 3,
-      });
-
-      if (topics.length > 0) {
-        recommendations.push({
-          recommendationType: 'WEAK_TOPIC',
-          subjectName: weakestSubject.name,
-          topicId: topics[0].id,
-          reasoning: `${weakestSubject.name} konusunda ortalamanız ${weakestSubject.average.toFixed(1)}%. Bu konuda daha fazla çalışma yapmanızı öneririz.`,
-          priority: 5,
-        });
+    // 4. Subject-specific recommendations based on performance
+    if (subjectAverages.length > 1) {
+      // Find subjects with biggest gaps
+      for (let i = 0; i < Math.min(2, subjectAverages.length); i++) {
+        const subject = subjectAverages[i];
+        if (subject.average < 60) {
+          recommendations.push({
+            recommendationType: 'DIFFICULTY_BALANCE',
+            subjectName: subject.name,
+            reasoning: `${subject.name} dersinde başarı oranınız düşük (%${subject.average.toFixed(1)}). Konu tekrarı yapmanız faydalı olacaktır.`,
+            priority: 4 - i,
+          });
+        }
       }
     }
 
@@ -147,7 +140,6 @@ export class StudyRecommendationService {
           subjectName: rec.subjectName,
           reasoning: rec.reasoning,
           priority: rec.priority,
-          topicId: rec.topicId,
         },
       });
       saved.push(created);
@@ -187,7 +179,6 @@ export class StudyRecommendationService {
             },
           },
         },
-        topic: true,
       },
       orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
     });
@@ -209,16 +200,49 @@ export class StudyRecommendationService {
       throw new NotFoundException('Recommendation not found');
     }
 
-    if (recommendation.schoolId !== schoolId || recommendation.student.userId !== userId) {
-      throw new NotFoundException('Access denied');
+    if (recommendation.schoolId !== schoolId) {
+      throw new NotFoundException('Recommendation not found');
+    }
+
+    // Only the student can mark as applied
+    if (recommendation.student.userId !== userId) {
+      throw new NotFoundException('Recommendation not found');
     }
 
     return this.prisma.studyRecommendation.update({
       where: { id },
-      data: {
-        isCompleted: true,
-        completedAt: new Date(),
+      data: { isCompleted: true, completedAt: new Date() },
+    });
+  }
+
+  async dismiss(id: string, userId: string, schoolId: string) {
+    const recommendation = await this.prisma.studyRecommendation.findUnique({
+      where: { id },
+      include: {
+        student: {
+          select: {
+            userId: true,
+          },
+        },
       },
+    });
+
+    if (!recommendation) {
+      throw new NotFoundException('Recommendation not found');
+    }
+
+    if (recommendation.schoolId !== schoolId) {
+      throw new NotFoundException('Recommendation not found');
+    }
+
+    // Only the student can dismiss
+    if (recommendation.student.userId !== userId) {
+      throw new NotFoundException('Recommendation not found');
+    }
+
+    return this.prisma.studyRecommendation.update({
+      where: { id },
+      data: { isCompleted: true },
     });
   }
 }

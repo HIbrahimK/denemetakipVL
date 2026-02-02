@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsUrl, IsInt, Min, Max } from 'class-validator';
 
 export class UpdateSchoolDto {
     @IsString()
@@ -28,4 +28,14 @@ export class UpdateSchoolDto {
     @IsString()
     @IsOptional()
     studentLoginType?: string;
+
+    @IsBoolean()
+    @IsOptional()
+    autoCleanupEnabled?: boolean;
+
+    @IsInt()
+    @Min(1)
+    @Max(12)
+    @IsOptional()
+    cleanupMonthsToKeep?: number;
 }

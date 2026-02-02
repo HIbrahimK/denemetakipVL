@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateStudyTaskDto, CompleteStudyTaskDto, VerifyStudyTaskDto } from './dto';
+import { CreateStudyTaskDto, CompleteStudyTaskDto, VerifyStudyTaskDto, VerificationType } from './dto';
 import { StudyTaskStatus } from '@prisma/client';
 
 @Injectable()
@@ -17,24 +17,31 @@ export class StudyTaskService {
       throw new NotFoundException('Student not found');
     }
 
-    // Verify topic exists if provided
-    if (dto.topicId) {
-      const topic = await this.prisma.topic.findUnique({
-        where: { id: dto.topicId },
-      });
+    // Verify plan exists and belongs to school
+    const plan = await this.prisma.studyPlan.findUnique({
+      where: { id: dto.planId },
+    });
 
-      if (!topic) {
-        throw new NotFoundException('Topic not found');
-      }
+    if (!plan || plan.schoolId !== schoolId) {
+      throw new NotFoundException('Study plan not found');
     }
 
+    const data: any = {
+      planId: dto.planId,
+      studentId: dto.studentId,
+      schoolId,
+      rowIndex: dto.rowIndex,
+      dayIndex: dto.dayIndex,
+      subjectName: dto.subjectName,
+      topicName: dto.topicName,
+      targetQuestionCount: dto.targetQuestionCount,
+      targetDuration: dto.targetDuration,
+      targetResource: dto.targetResource,
+      status: dto.status ?? StudyTaskStatus.PENDING,
+    };
+
     return this.prisma.studyTask.create({
-      data: {
-        ...dto,
-        date: new Date(dto.date),
-        schoolId,
-        status: 'PENDING',
-      },
+      data,
       include: {
         student: {
           select: {
@@ -48,7 +55,12 @@ export class StudyTaskService {
             },
           },
         },
-        topic: true,
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
@@ -78,11 +90,8 @@ export class StudyTaskService {
       where.planId = filters.planId;
     }
 
-    if (filters?.startDate && filters?.endDate) {
-      where.date = {
-        gte: new Date(filters.startDate),
-        lte: new Date(filters.endDate),
-      };
+    if (filters?.studentId && (userRole === 'TEACHER' || userRole === 'SCHOOL_ADMIN')) {
+      where.studentId = filters.studentId;
     }
 
     return this.prisma.studyTask.findMany({
@@ -100,7 +109,6 @@ export class StudyTaskService {
             },
           },
         },
-        topic: true,
         plan: {
           select: {
             id: true,
@@ -108,7 +116,9 @@ export class StudyTaskService {
           },
         },
       },
-      orderBy: { date: 'desc' },
+      orderBy: {
+        studentId: 'asc',
+      },
     });
   }
 
@@ -128,7 +138,6 @@ export class StudyTaskService {
             },
           },
         },
-        topic: true,
         plan: {
           select: {
             id: true,
@@ -180,23 +189,25 @@ export class StudyTaskService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (task.status === 'COMPLETED') {
+    if (task.status === StudyTaskStatus.COMPLETED) {
       throw new ForbiddenException('Task is already completed');
     }
 
-    const now = new Date();
-    const isLate = now > task.date;
+    const data: any = {
+      status: StudyTaskStatus.COMPLETED,
+      completedQuestionCount: dto.completedQuestionCount,
+      correctCount: dto.correctCount,
+      wrongCount: dto.wrongCount,
+      blankCount: dto.blankCount,
+      actualDuration: dto.actualDuration ?? 0,
+      actualResource: dto.actualResource,
+      studentNotes: dto.studentNotes,
+      completedAt: new Date(),
+    };
 
     return this.prisma.studyTask.update({
       where: { id },
-      data: {
-        status: isLate ? 'LATE' : 'COMPLETED',
-        completedQuestions: dto.completedQuestions,
-        correctAnswers: dto.correctAnswers,
-        wrongAnswers: dto.wrongAnswers,
-        blankAnswers: dto.blankAnswers,
-        timeSpent: dto.timeSpent,
-      },
+      data,
       include: {
         student: {
           select: {
@@ -210,14 +221,32 @@ export class StudyTaskService {
             },
           },
         },
-        topic: true,
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
 
-  async verify(id: string, dto: VerifyStudyTaskDto, userId: string, schoolId: string) {
+  async verify(id: string, dto: VerifyStudyTaskDto, userId: string, schoolId: string, verifierRole: string) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id },
+      include: {
+        student: {
+          select: {
+            userId: true,
+            parentId: true,
+          },
+        },
+        plan: {
+          select: {
+            teacherId: true,
+          },
+        },
+      },
     });
 
     if (!task) {
@@ -228,18 +257,41 @@ export class StudyTaskService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (task.status !== 'COMPLETED' && task.status !== 'LATE') {
+    if (task.status !== StudyTaskStatus.COMPLETED) {
       throw new ForbiddenException('Only completed tasks can be verified');
+    }
+
+    const updateData: any = {};
+
+    if (dto.verificationType === VerificationType.PARENT) {
+      // Check if user is the parent of the student
+      const parent = await this.prisma.parent.findUnique({
+        where: { userId },
+      });
+
+      if (!parent || task.student.parentId !== parent.id) {
+        throw new ForbiddenException('Only the parent can verify this task');
+      }
+
+      updateData.parentApproved = dto.approved;
+      updateData.parentComment = dto.comment;
+      updateData.parentApprovedAt = new Date();
+      updateData.parentId = parent.id;
+    } else if (dto.verificationType === VerificationType.TEACHER) {
+      // Check if user is a teacher or school admin
+      if (verifierRole !== 'TEACHER' && verifierRole !== 'SCHOOL_ADMIN') {
+        throw new ForbiddenException('Only teachers can verify tasks');
+      }
+
+      updateData.teacherApproved = dto.approved;
+      updateData.teacherComment = dto.comment;
+      updateData.teacherApprovedAt = new Date();
+      updateData.teacherApprovedById = userId;
     }
 
     return this.prisma.studyTask.update({
       where: { id },
-      data: {
-        teacherReviewed: dto.verified,
-        verifiedById: userId,
-        verifiedAt: new Date(),
-        teacherComment: dto.comment,
-      },
+      data: updateData,
       include: {
         student: {
           select: {
@@ -253,7 +305,12 @@ export class StudyTaskService {
             },
           },
         },
-        topic: true,
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
@@ -294,7 +351,12 @@ export class StudyTaskService {
             },
           },
         },
-        topic: true,
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
@@ -327,6 +389,7 @@ export class StudyTaskService {
     // Only teachers who created the plan or the student can delete
     const canDelete =
       (userRole === 'TEACHER' && task.plan?.teacherId === userId) ||
+      (userRole === 'SCHOOL_ADMIN') ||
       (userRole === 'STUDENT' && task.student.userId === userId);
 
     if (!canDelete) {
@@ -338,5 +401,27 @@ export class StudyTaskService {
     });
 
     return { message: 'Study task deleted successfully' };
+  }
+
+  async getStudentTasks(studentId: string, planId: string, schoolId: string) {
+    // Verify student belongs to school
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+    });
+
+    if (!student || student.schoolId !== schoolId) {
+      throw new NotFoundException('Student not found');
+    }
+
+    return this.prisma.studyTask.findMany({
+      where: {
+        studentId,
+        planId,
+        schoolId,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
   }
 }

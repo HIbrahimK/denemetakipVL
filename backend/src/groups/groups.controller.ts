@@ -30,6 +30,7 @@ export class GroupsController {
   @Get()
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   findAllGroups(@Request() req) {
+    // Use req.user.id (database ID) instead of req.user.userId
     return this.groupsService.findAll(req.user.id, req.user.role, req.user.schoolId);
   }
 

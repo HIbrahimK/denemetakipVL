@@ -1,22 +1,5 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsInt, IsBoolean, IsArray, ValidateNested } from 'class-validator';
-import { StudyPlanTargetType } from '@prisma/client';
-import { Type } from 'class-transformer';
-
-class CreateStudyTaskInPlanDto {
-  @IsString()
-  @IsNotEmpty()
-  subjectName: string;
-
-  @IsString()
-  @IsOptional()
-  topicId?: string;
-
-  @IsInt()
-  questionCount: number;
-
-  @IsDateString()
-  date: string;
-}
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsInt, IsBoolean, IsArray } from 'class-validator';
+import { StudyPlanTargetType, ExamType, StudyPlanStatus } from '@prisma/client';
 
 export class CreateStudyPlanDto {
   @IsString()
@@ -27,30 +10,55 @@ export class CreateStudyPlanDto {
   @IsOptional()
   description?: string;
 
+  @IsEnum(ExamType)
+  @IsOptional()
+  examType?: ExamType;
+
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  gradeLevels?: number[];
+
   @IsEnum(StudyPlanTargetType)
-  targetType: StudyPlanTargetType;
+  @IsOptional()
+  targetType?: StudyPlanTargetType;
 
   @IsString()
   @IsOptional()
   targetId?: string;
 
   @IsDateString()
-  startDate: string;
+  @IsOptional()
+  weekStartDate?: string;
 
   @IsDateString()
-  endDate: string;
+  @IsOptional()
+  startDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+
+  @IsOptional()
+  planData?: any; // JSON data for plan structure
+
+  @IsEnum(StudyPlanStatus)
+  @IsOptional()
+  status?: StudyPlanStatus;
 
   @IsBoolean()
   @IsOptional()
   isTemplate?: boolean;
 
+  @IsString()
+  @IsOptional()
+  templateName?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isShared?: boolean;
+
   @IsBoolean()
   @IsOptional()
   isPublic?: boolean;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateStudyTaskInPlanDto)
-  @IsOptional()
-  tasks?: CreateStudyTaskInPlanDto[];
 }

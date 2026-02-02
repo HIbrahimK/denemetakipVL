@@ -1,24 +1,32 @@
-import { IsInt, IsOptional, Min, Max, IsString } from 'class-validator';
+import { IsInt, IsOptional, Min, IsString } from 'class-validator';
 
 export class CompleteStudyTaskDto {
   @IsInt()
   @Min(0)
-  completedQuestions: number;
+  completedQuestionCount: number;
 
   @IsInt()
   @Min(0)
-  correctAnswers: number;
+  correctCount: number;
 
   @IsInt()
   @Min(0)
-  wrongAnswers: number;
+  wrongCount: number;
 
   @IsInt()
   @Min(0)
-  blankAnswers: number;
+  blankCount: number;
 
   @IsInt()
   @IsOptional()
   @Min(0)
-  timeSpent?: number;
+  actualDuration?: number; // dakika
+
+  @IsString()
+  @IsOptional()
+  actualResource?: string;
+
+  @IsString()
+  @IsOptional()
+  studentNotes?: string;
 }

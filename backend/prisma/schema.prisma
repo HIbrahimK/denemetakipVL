@@ -7,12 +7,852 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  SUPER_ADMIN
-  SCHOOL_ADMIN
-  TEACHER
+model Achievement {
+  id                 String               @id @default(uuid())
+  code               String               @unique
+  name               String
+  description        String
+  iconUrl            String?
+  category           AchievementCategory
+  criteria           Json
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  schoolId           String
+  requiredPoints     Int                  @default(0)
+  school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentAchievements StudentAchievement[]
+
+  @@index([category])
+  @@index([schoolId])
+}
+
+model Backup {
+  id        String   @id @default(uuid())
+  filename  String
+  size      Int
+  schoolId  String
+  createdAt DateTime @default(now())
+  data      String?
+  school    School   @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId])
+}
+
+model Class {
+  id       String    @id @default(uuid())
+  name     String
+  gradeId  String
+  schoolId String
+  grade    Grade     @relation(fields: [gradeId], references: [id])
+  school   School    @relation(fields: [schoolId], references: [id])
+  messages Message[]
+  students Student[]
+}
+
+model Exam {
+  id                       String             @id @default(uuid())
+  title                    String
+  type                     ExamType
+  date                     DateTime           @default(now())
+  schoolId                 String
+  createdAt                DateTime           @default(now())
+  updatedAt          DateTime             @updatedAt
+  branchParticipantCount   Json?
+  city                     String?
+  district                 String?
+  generalInfo              String?
+  gradeLevel               Int
+  participantCount         Int?
+  publisher                String?
+  schoolParticipantCount   Int?
+  cityParticipantCount     Int?
+  districtParticipantCount Int?
+  generalParticipantCount  Int?
+  answerKeyUrl             String?
+  applicationDateTime      DateTime?
+  broughtBy                String?
+  color                    String?
+  fee                      Float?
+  isAnswerKeyPublic        Boolean            @default(false)
+  isArchived               Boolean            @default(false)
+  isPaid                   Boolean            @default(false)
+  isPublished              Boolean            @default(true)
+  isPublisherVisible       Boolean            @default(false)
+  quantity                 Int?
+  scheduledDateTime        DateTime?
+  school                   School             @relation(fields: [schoolId], references: [id])
+  attempts                 ExamAttempt[]
+  notifications            ExamNotification[]
+
+  @@index([schoolId, gradeLevel, date])
+  @@index([schoolId, isArchived, isPublished])
+}
+
+model ExamAttempt {
+  id               String             @id @default(uuid())
+  examId           String
+  studentId        String
+  createdAt        DateTime           @default(now())
+  schoolId         String?
+  exam             Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  school           School?            @relation(fields: [schoolId], references: [id])
+  student          Student            @relation(fields: [studentId], references: [id])
+  lessonResults    ExamLessonResult[]
+  scores           ExamScore[]
+
+  @@unique([examId, studentId])
+}
+
+model ExamCalendarSettings {
+  id                    String   @id @default(uuid())
+  schoolId              String   @unique
+  showPublisher         Boolean  @default(false)
+  showBroughtBy         Boolean  @default(false)
+  showFee               Boolean  @default(false)
+  showParticipantCounts Boolean  @default(true)
+  notifyDaysBefore      Int      @default(3)
+  autoPublishDaysAfter  Int      @default(0)
+  defaultView           String   @default("table")
+  academicYearStart     Int      @default(6)
+  createdAt             DateTime @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([schoolId])
+}
+
+model ExamLessonResult {
+  id          String      @id @default(uuid())
+  attemptId   String
+  lessonId    String
+  correct     Int         @default(0)
+  incorrect   Int         @default(0)
+  empty       Int         @default(0)
+  net         Float       @default(0)
+  point       Float       @default(0)
+  schoolId    String?
+  attempt     ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  lesson      Lesson      @relation(fields: [lessonId], references: [id])
+  school      School?     @relation(fields: [schoolId], references: [id])
+}
+
+model ExamNotification {
+  id               String    @id @default(uuid())
+  examId           String
+  notificationType String
+  scheduledFor     DateTime
+  sentAt           DateTime?
+  isSent           Boolean   @default(false)
+  messageId        String?
+  createdAt        DateTime  @default(now())
+  exam             Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId, isSent])
+  @@index([scheduledFor, isSent])
+}
+
+model ExamScore {
+  id          String      @id @default(uuid())
+  attemptId   String
+  type        String
+  score       Float
+  rankSchool  Int?
+  rankClass   Int?
+  rankCity    Int?
+  rankGen     Int?
+  schoolId    String?
+  attempt     ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  school      School?     @relation(fields: [schoolId], references: [id])
+}
+
+model Grade {
+  id       String    @id @default(uuid())
+  name     String
+  schoolId String
+  classes  Class[]
+  school   School    @relation(fields: [schoolId], references: [id])
+  messages Message[]
+}
+
+model GroupGoal {
+  id          String      @id @default(uuid())
+  groupId     String
+  goalType    String
+  targetData  Json
+  deadline    DateTime?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt          DateTime             @updatedAt
+  schoolId    String
+  group       MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id])
+
+  @@index([groupId, isActive])
+  @@index([schoolId])
+}
+
+model GroupMembership {
+  id          String          @id @default(uuid())
+  groupId     String
+  studentId   String
+  role        GroupMemberRole @default(MEMBER)
+  joinedAt    DateTime        @default(now())
+  leftAt      DateTime?
+  schoolId    String
+  group       MentorGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  school      School          @relation(fields: [schoolId], references: [id])
+  student     Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studentId])
+  @@index([groupId, leftAt])
+  @@index([schoolId])
+  @@index([studentId])
+}
+
+model GroupStudyPlan {
+  id          String      @id @default(uuid())
+  groupId     String
+  studyPlanId String
+  assignedAt  DateTime    @default(now())
+  group       MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  studyPlan   StudyPlan   @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studyPlanId])
+  @@index([groupId])
+}
+
+model Lesson {
+  id               String             @id @default(uuid())
+  name             String
+  examType         ExamType
+  schoolId         String
+  examLessonResults ExamLessonResult[]
+  school           School             @relation(fields: [schoolId], references: [id])
+
+  @@unique([name, examType, schoolId])
+}
+
+model MentorGroup {
+  id              String            @id @default(uuid())
+  teacherId       String
+  schoolId        String
+  name            String
+  description     String?
+  gradeIds        Json              @default("[]")
+  maxStudents     Int               @default(25)
+  isActive        Boolean           @default(true)
+  coverImage      String?
+  createdAt       DateTime          @default(now())
+  updatedAt          DateTime             @updatedAt
+  goals           GroupGoal[]
+  memberships     GroupMembership[]
+  groupPlans      GroupStudyPlan[]
+  school          School            @relation(fields: [schoolId], references: [id])
+  teacher         User              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  messages        Message[]
+
+  @@index([isActive])
+  @@index([teacherId, schoolId])
+}
+
+model Message {
+  id                String              @id @default(uuid())
+  senderId          String
+  subject           String
+  body              String
+  type              MessageType         @default(DIRECT)
+  category          MessageCategory     @default(GENERAL)
+  status            MessageStatus       @default(SENT)
+  targetRoles       Json?
+  targetGradeId     String?
+  targetClassId     String?
+  scheduledFor      DateTime?
+  sentAt            DateTime?
+  requiresApproval  Boolean             @default(false)
+  approvedBy        String?
+  approvedAt        DateTime?
+  schoolId          String
+  createdAt         DateTime            @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt         DateTime?
+  allowReplies      Boolean             @default(true)
+  groupId           String?
+  group             MentorGroup?        @relation(fields: [groupId], references: [id])
+  school            School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  sender            User                @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  targetClass       Class?              @relation(fields: [targetClassId], references: [id])
+  targetGrade       Grade?              @relation(fields: [targetGradeId], references: [id])
+  attachments       MessageAttachment[]
+  recipients        MessageRecipient[]
+  replies           MessageReply[]
+
+  @@index([deletedAt])
+  @@index([schoolId, sentAt])
+  @@index([senderId, status])
+  @@index([status, scheduledFor])
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid())
+  messageId String
+  filename  String
+  fileUrl   String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model MessageDraft {
+  id            String          @id @default(uuid())
+  userId        String
+  subject       String?
+  body          String?
+  category      MessageCategory @default(GENERAL)
+  targetRoles   Json?
+  targetGradeId String?
+  targetClassId String?
+  recipientIds  Json?
+  schoolId      String
+  createdAt     DateTime        @default(now())
+  updatedAt          DateTime             @updatedAt
+  allowReplies  Boolean         @default(true)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, schoolId])
+}
+
+model MessageRecipient {
+  id          String    @id @default(uuid())
+  messageId   String
+  recipientId String
+  isRead      Boolean   @default(false)
+  readAt      DateTime?
+  deliveredAt DateTime  @default(now())
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  isFavorite  Boolean   @default(false)
+  message     Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  recipient   User      @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, recipientId])
+  @@index([recipientId, deletedAt])
+  @@index([recipientId, isRead])
+}
+
+model MessageReply {
+  id        String    @id @default(uuid())
+  messageId String
+  senderId  String
+  body      String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  sender    User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([messageId, createdAt])
+}
+
+model MessageSettings {
+  id                       String   @id @default(uuid())
+  schoolId                 String   @unique
+  maxCharacterLimit        Int      @default(1000)
+  autoDeleteDays           Int      @default(30)
+  requireTeacherApproval   Boolean  @default(false)
+  enableEmailNotifications Boolean  @default(true)
+  enablePushNotifications  Boolean  @default(true)
+  reminderAfterDays        Int      @default(3)
+  createdAt                DateTime @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([schoolId])
+}
+
+model MessageTemplate {
+  id        String          @id @default(uuid())
+  name      String
+  subject   String
+  body      String
+  category  MessageCategory
+  schoolId  String
+  createdAt DateTime        @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([schoolId])
+}
+
+model Parent {
+  id       String    @id @default(uuid())
+  userId   String    @unique
+  user     User      @relation(fields: [userId], references: [id])
+  students Student[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Resource {
+  id                String          @id @default(uuid())
+  name              String
+  type              ResourceType    @default(BOOK)
+  publisherOrAuthor String?
+  examType          ExamType?
+  subjectName       String?
+  isPopular         Boolean         @default(false)
+  createdAt         DateTime        @default(now())
+  updatedAt          DateTime             @updatedAt
+  topicResources    TopicResource[]
+
+  @@unique([examType, subjectName, name])
+  @@index([examType, subjectName])
+  @@index([isPopular])
+}
+
+model School {
+  id                        String                      @id @default(uuid())
+  name                      String
+  logoUrl                   String?
+  domain                    String?                     @unique
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  address                   String?
+  isParentLoginActive       Boolean                     @default(true)
+  phone                     String?
+  studentLoginType          String                      @default("studentNumber")
+  website                   String?
+  
+  // Study Plan Cleanup Settings
+  autoCleanupEnabled        Boolean                     @default(true)
+  cleanupMonthsToKeep       Int                         @default(1)
+  lastCleanupAt             DateTime?
+  
+  achievements              Achievement[]
+  backups                   Backup[]
+  classes                   Class[]
+  exams                     Exam[]
+  examAttempts              ExamAttempt[]
+  examLessonResults         ExamLessonResult[]
+  examScores                ExamScore[]
+  grades                    Grade[]
+  groupGoals                GroupGoal[]
+  groupMemberships          GroupMembership[]
+  lessons                   Lesson[]
+  mentorGroups              MentorGroup[]
+  messages                  Message[]
+  students                  Student[]
+  studentAchievements       StudentAchievement[]
+  studentPerformanceSummaries StudentPerformanceSummary[]
+  studyGoals                StudyGoal[]
+  studyPlans                StudyPlan[]
+  studyPlanAssignments      StudyPlanAssignment[]
+  studyPlanTemplates        StudyPlanTemplate[]
+  studyRecommendations      StudyRecommendation[]
+  studySessions             StudySession[]
+  studyTasks                StudyTask[]
+  users                     User[]
+}
+
+model Student {
+  id                   String                      @id @default(uuid())
+  studentNumber        String?
+  userId               String                      @unique
+  classId              String
+  schoolId             String
+  parentId             String?
+  tcNo                 String?                     @unique
+  examAttempts         ExamAttempt[]
+  groupMemberships     GroupMembership[]
+  class                Class                       @relation(fields: [classId], references: [id])
+  parent               Parent?                     @relation(fields: [parentId], references: [id])
+  school               School                      @relation(fields: [schoolId], references: [id])
+  user                 User                        @relation(fields: [userId], references: [id])
+  achievements         StudentAchievement[]
+  performanceSummaries StudentPerformanceSummary[]
+  goals                StudyGoal[]
+  recommendations      StudyRecommendation[]
+  sessions             StudySession[]
+  tasks                StudyTask[]
+}
+
+model StudentAchievement {
+  id            String      @id @default(uuid())
+  studentId     String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  schoolId      String
+  earnedAt      DateTime    @default(now())
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, achievementId])
+  @@index([earnedAt])
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([unlockedAt])
+}
+
+model StudentPerformanceSummary {
+  id                 String     @id @default(uuid())
+  studentId          String
+  schoolId           String
+  year               Int?
+  month              Int?
+  weekNumber         Int?
+  totalTasks         Int        @default(0)
+  completedTasks     Int        @default(0)
+  totalQuestions     Int        @default(0)
+  completedQuestions Int        @default(0)
+  correctCount       Int        @default(0)
+  wrongCount         Int        @default(0)
+  blankCount         Int        @default(0)
+  totalDuration      Int        @default(0)
+  completionRate     Float      @default(0)
+  planName           String?
+  examType           ExamType?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime             @updatedAt
+  planId             String?
+  plan               StudyPlan? @relation(fields: [planId], references: [id])
+  school             School     @relation(fields: [schoolId], references: [id])
+  student            Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, planId])
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([planId])
+}
+
+model StudyGoal {
+  id           String        @id @default(uuid())
+  userId       String
+  schoolId     String
+  type         StudyGoalType
+  targetData   Json
+  deadline     DateTime?
+  progress     Float         @default(0)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt          DateTime             @updatedAt
+  studentId    String?
+  title        String?
+  description  String?
+  targetValue  Float?        @default(0)
+  targetUnit   String?
+  targetDate   DateTime?
+  currentValue Float?        @default(0)
+  topicId      String?
+  isCompleted  Boolean       @default(false)
+  completedAt  DateTime?
+  school       School        @relation(fields: [schoolId], references: [id])
+  student      Student?      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic        Topic?        @relation(fields: [topicId], references: [id])
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([studentId])
+  @@index([topicId])
+  @@index([userId, isActive])
+}
+
+model StudyPlan {
+  id                   String                      @id @default(uuid())
+  teacherId            String
+  schoolId             String
+  name                 String
+  description          String?
+  targetType           StudyPlanTargetType?
+  targetId             String?
+  isTemplate           Boolean                     @default(true)
+  createdAt            DateTime                    @default(now())
+  updatedAt          DateTime             @updatedAt
+  examType             String?
+  gradeLevels          Int[]
+  planData             Json
+  status               StudyPlanStatus             @default(DRAFT)
+  templateName         String?
+  weekStartDate        DateTime?
+  isShared             Boolean                     @default(false)
+  sharedAt             DateTime?
+  deletedAt            DateTime?
+  endDate              DateTime?
+  isPublic             Boolean                     @default(false)
+  startDate            DateTime?
+  groupPlans           GroupStudyPlan[]
+  performanceSummaries StudentPerformanceSummary[]
+  school               School                      @relation(fields: [schoolId], references: [id])
+  teacher              User                        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  assignments          StudyPlanAssignment[]
+  tasks                StudyTask[]
+
+  @@index([examType, gradeLevels])
+  @@index([isShared])
+  @@index([isTemplate])
+  @@index([status])
+  @@index([teacherId, schoolId])
+  @@index([deletedAt])
+}
+
+model StudyPlanAssignment {
+  id             String               @id @default(uuid())
+  schoolId       String
+  assignedById   String
+  targetType     AssignmentTargetType
+  targetId       String
+  customPlanData Json?
+  year           Int?
+  month          Int?
+  weekNumber     Int?
+  status         StudyPlanStatus      @default(ASSIGNED)
+  expiresAt      DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  endDate        DateTime?
+  planId         String
+  startDate      DateTime?
+  assignedBy     User                 @relation(fields: [assignedById], references: [id])
+  plan           StudyPlan            @relation(fields: [planId], references: [id], onDelete: Cascade)
+  school         School               @relation(fields: [schoolId], references: [id])
+  tasks          StudyTask[]
+
+  @@index([assignedById])
+  @@index([expiresAt])
+  @@index([schoolId])
+  @@index([status])
+  @@index([targetType, targetId])
+  @@index([planId])
+}
+
+model StudyPlanTemplate {
+  id             String           @id @default(uuid())
+  name           String
+  description    String?
+  authorId       String
+  schoolId       String
+  examType       ExamType
+  gradeLevel     String
+  durationWeeks  Int
+  isPublic       Boolean          @default(false)
+  isOfficial     Boolean          @default(false)
+  tags           Json
+  planData       Json
+  usageCount     Int              @default(0)
+  averageRating  Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt          DateTime             @updatedAt
+  author         User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  school         School           @relation(fields: [schoolId], references: [id])
+  ratings        TemplateRating[]
+
+  @@index([authorId])
+  @@index([examType, isPublic])
+  @@index([schoolId])
+}
+
+model StudyRecommendation {
+  id                 String             @id @default(uuid())
+  studentId          String
+  schoolId           String
+  recommendationType RecommendationType
+  subjectName        String?
+  topicId            String?
+  reasoning          String
+  priority           Int                @default(5)
+  estimatedTime      Int?
+  isCompleted        Boolean            @default(false)
+  completedAt        DateTime?
+  createdAt          DateTime           @default(now())
+  expiresAt          DateTime?
+  school             School             @relation(fields: [schoolId], references: [id])
+  student            Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic              Topic?             @relation(fields: [topicId], references: [id])
+
+  @@index([createdAt])
+  @@index([schoolId])
+  @@index([studentId, isCompleted])
+}
+
+model StudySession {
+  id             String   @id @default(uuid())
+  studentId      String
+  schoolId       String
+  subjectName    String
+  topicId        String?
+  startTime      DateTime
+  endTime        DateTime
+  duration       Int
+  isPomodoroMode Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  school         School   @relation(fields: [schoolId], references: [id])
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic          Topic?   @relation(fields: [topicId], references: [id])
+
+  @@index([schoolId])
+  @@index([studentId, startTime])
+}
+
+model StudyTask {
+  id                     String               @id @default(uuid())
+  planId                 String?
+  studentId              String
+  schoolId               String
+  subjectName            String
+  status                 StudyTaskStatus      @default(PENDING)
+  teacherComment         String?
+  parentComment          String?
+  createdAt              DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  rowIndex               Int                  @default(0)
+  dayIndex               Int                  @default(0)
+  topicName              String?
+  targetQuestionCount    Int?
+  targetDuration         Int?
+  targetResource         String?
+  completedQuestionCount Int                  @default(0)
+  actualDuration         Int                  @default(0)
+  correctCount           Int                  @default(0)
+  wrongCount             Int                  @default(0)
+  blankCount             Int                  @default(0)
+  actualResource         String?
+  studentNotes           String?
+  completedAt            DateTime?
+  parentApproved         Boolean              @default(false)
+  parentApprovedAt       DateTime?
+  parentId               String?
+  teacherApproved        Boolean              @default(false)
+  teacherApprovedAt      DateTime?
+  teacherApprovedById    String?
+  assignmentId           String?
+  dueDate                DateTime?
+  assignment             StudyPlanAssignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  plan                   StudyPlan?           @relation(fields: [planId], references: [id])
+  school                 School               @relation(fields: [schoolId], references: [id])
+  student                Student              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherApprovedBy      User?                @relation(fields: [teacherApprovedById], references: [id])
+
+  @@unique([assignmentId, studentId, rowIndex, dayIndex])
+  @@index([assignmentId])
+  @@index([planId])
+  @@index([schoolId])
+  @@index([studentId, status])
+  @@index([dueDate])
+}
+
+model Subject {
+  id          String   @id @default(uuid())
+  name        String
+  examType    String
+  gradeLevels Int[]
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt          DateTime             @updatedAt
+  topics      Topic[]
+
+  @@index([examType])
+  @@index([isActive])
+}
+
+model TemplateRating {
+  id                String            @id @default(uuid())
+  templateId        String
+  userId            String
+  rating            Int
+  comment           String?
+  createdAt         DateTime          @default(now())
+  template          StudyPlanTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, userId])
+  @@index([templateId])
+}
+
+model Topic {
+  id                  String                @id @default(uuid())
+  name                String
+  parentTopicId       String?
+  order               Int                   @default(0)
+  createdAt           DateTime              @default(now())
+  updatedAt          DateTime             @updatedAt
+  subjectId           String?
+  studyGoals          StudyGoal[]
+  studyRecommendations StudyRecommendation[]
+  studySessions       StudySession[]
+  parentTopic         Topic?                @relation("TopicToTopic", fields: [parentTopicId], references: [id])
+  childTopics         Topic[]               @relation("TopicToTopic")
+  subject             Subject?              @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topicResources      TopicResource[]
+
+  @@index([parentTopicId])
+  @@index([subjectId])
+}
+
+model TopicResource {
+  id         String   @id @default(uuid())
+  topicId    String
+  resourceId String
+  createdAt  DateTime @default(now())
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, resourceId])
+  @@index([resourceId])
+  @@index([topicId])
+}
+
+model User {
+  id                   String                @id @default(uuid())
+  email                String                @unique
+  password             String
+  role                 Role                  @default(STUDENT)
+  firstName            String
+  lastName             String
+  schoolId             String
+  createdAt            DateTime              @default(now())
+  updatedAt          DateTime             @updatedAt
+  avatarSeed           String?
+  branch               String?
+  mentorGroups         MentorGroup[]
+  messages             Message[]
+  messageDrafts        MessageDraft[]
+  messageRecipients    MessageRecipient[]
+  messageReplies       MessageReply[]
+  parent               Parent?
+  passwordResetTokens  PasswordResetToken[]
+  student              Student?
+  studyGoals           StudyGoal[]
+  studyPlans           StudyPlan[]
+  studyPlanAssignments StudyPlanAssignment[]
+  studyPlanTemplates   StudyPlanTemplate[]
+  approvedTasks        StudyTask[]
+  templateRatings      TemplateRating[]
+  school               School                @relation(fields: [schoolId], references: [id])
+}
+
+enum AchievementCategory {
+  STREAK
+  MILESTONE
+  IMPROVEMENT
+  GROUP
+  CONSISTENCY
+}
+
+enum AssignmentTargetType {
   STUDENT
-  PARENT
+  GROUP
+  GRADE
+  CLASS
 }
 
 enum ExamType {
@@ -22,269 +862,9 @@ enum ExamType {
   OZEL
 }
 
-model School {
-  id                  String  @id @default(cuid())
-  name                String
-  logoUrl             String?
-  domain              String? @unique
-  website             String?
-  address             String?
-  phone               String?
-  isParentLoginActive Boolean @default(true)
-  studentLoginType    String  @default("studentNumber") // "studentNumber" or "tcNo"
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users         User[]
-  grades        Grade[]
-  lessons       Lesson[]
-  exams         Exam[]
-  students      Student[]
-  classes       Class[]
-  attempts      ExamAttempt[]
-  lessonResults ExamLessonResult[]
-  scores        ExamScore[]
-  backups       Backup[]
-  messages      Message[]
-
-  // Learning Management relations
-  studyPlans           StudyPlan[]
-  studyTasks           StudyTask[]
-  studySessions        StudySession[]
-  studyGoals           StudyGoal[]
-  studyRecommendations StudyRecommendation[]
-  achievements         Achievement[]
-  studentAchievements  StudentAchievement[]
-  mentorGroups         MentorGroup[]
-  groupMemberships     GroupMembership[]
-  groupGoals           GroupGoal[]
-  studyPlanTemplates   StudyPlanTemplate[]
-}
-
-model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  password   String
-  role       Role     @default(STUDENT)
-  firstName  String
-  lastName   String
-  branch     String?  // Öğretmen branşı (Matematik, Türkçe, vb.)
-  avatarSeed String?
-  schoolId   String
-  school     School   @relation(fields: [schoolId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  student             Student?
-  parent              Parent?
-  passwordResetTokens PasswordResetToken[]
-  sentMessages        Message[]            @relation("SentMessages")
-  receivedMessages    MessageRecipient[]   @relation("ReceivedMessages")
-  messageDrafts       MessageDraft[]       @relation("MessageDrafts")
-  sentReplies         MessageReply[]       @relation("SentReplies")
-
-  // Learning Management relations
-  studyPlans         StudyPlan[]
-  studyGoals         StudyGoal[]
-  mentorGroups       MentorGroup[]
-  verifiedTasks      StudyTask[]           @relation("TaskVerifier")
-  studyPlanTemplates StudyPlanTemplate[]
-  templateRatings    TemplateRating[]
-}
-
-model Grade {
-  id       String @id @default(cuid())
-  name     String
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  classes          Class[]
-  targetedMessages Message[]
-}
-
-model Class {
-  id       String @id @default(cuid())
-  name     String
-  gradeId  String
-  grade    Grade  @relation(fields: [gradeId], references: [id])
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  students         Student[]
-  targetedMessages Message[]
-}
-
-model Student {
-  id            String  @id @default(cuid())
-  studentNumber String?
-  tcNo          String? @unique
-  userId        String  @unique
-  user          User    @relation(fields: [userId], references: [id])
-  classId       String
-  class         Class   @relation(fields: [classId], references: [id])
-  schoolId      String
-  school        School  @relation(fields: [schoolId], references: [id])
-  parentId      String?
-  parent        Parent? @relation(fields: [parentId], references: [id])
-
-  examAttempts ExamAttempt[]
-
-  // Learning Management relations
-  studyTasks           StudyTask[]
-  studySessions        StudySession[]
-  studyGoals           StudyGoal[]
-  studyRecommendations StudyRecommendation[]
-  achievements         StudentAchievement[]
-  groupMemberships     GroupMembership[]
-}
-
-model Parent {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-
-  students Student[]
-}
-
-model Lesson {
-  id       String   @id @default(cuid())
-  name     String
-  examType ExamType
-  schoolId String
-  school   School   @relation(fields: [schoolId], references: [id])
-
-  lessonResults ExamLessonResult[]
-
-  @@unique([name, examType, schoolId])
-}
-
-model Exam {
-  id         String   @id @default(cuid())
-  title      String
-  type       ExamType
-  publisher  String?
-  date       DateTime @default(now())
-  gradeLevel Int // Required: Her deneme tek bir sınıf seviyesine aittir (5-12)
-
-  // Takvim bilgileri
-  scheduledDateTime   DateTime? // Denemenin yapılacağı tarih ve saat
-  applicationDateTime DateTime? // Cevap anahtarının açılacağı tarih (uygulama tarihi)
-  broughtBy           String? // Denemeyi getiren kişi/kurum
-  quantity            Int? // Adet (kaç öğrenciye alındı)
-  fee                 Float? // Ücret (TL)
-  isPaid              Boolean   @default(false) // Ödendi mi?
-  color               String? // Takvim renk kodu (#hex)
-  isArchived          Boolean   @default(false) // Arşivlendi mi?
-
-  // Görünürlük ayarları (öğrenciler için)
-  isPublished        Boolean @default(true) // Takvimde görünsün mü?
-  isPublisherVisible Boolean @default(false) // Yayın adı öğrenciye gösterilsin mi?
-  isAnswerKeyPublic  Boolean @default(false) // Cevap anahtarı paylaşıldı mı?
-
-  // Katılım sayıları
-  participantCount         Int?
-  district                 String?
-  city                     String?
-  districtParticipantCount Int?
-  cityParticipantCount     Int?
-  generalParticipantCount  Int?
-  generalInfo              String?
-  schoolParticipantCount   Int?
-  branchParticipantCount   Json?
-  answerKeyUrl             String?
-
-  schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  attempts      ExamAttempt[]
-  notifications ExamNotification[] // Otomatik bildirimler için
-
-  @@index([schoolId, gradeLevel, date])
-  @@index([schoolId, isArchived, isPublished])
-}
-
-model ExamAttempt {
-  id        String   @id @default(cuid())
-  examId    String
-  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
-  studentId String
-  student   Student  @relation(fields: [studentId], references: [id])
-  createdAt DateTime @default(now())
-
-  lessonResults ExamLessonResult[]
-  scores        ExamScore[]
-
-  schoolId String?
-  school   School? @relation(fields: [schoolId], references: [id])
-
-  @@unique([examId, studentId])
-}
-
-model ExamLessonResult {
-  id        String      @id @default(cuid())
-  attemptId String
-  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  lessonId  String
-  lesson    Lesson      @relation(fields: [lessonId], references: [id])
-
-  correct   Int   @default(0)
-  incorrect Int   @default(0)
-  empty     Int   @default(0)
-  net       Float @default(0)
-  point     Float @default(0)
-
-  schoolId String?
-  school   School? @relation(fields: [schoolId], references: [id])
-}
-
-model ExamScore {
-  id        String      @id @default(cuid())
-  attemptId String
-  attempt   ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-
-  type       String
-  score      Float
-  rankSchool Int?
-  rankClass  Int?
-  rankCity   Int?
-  rankGen    Int?
-
-  schoolId String?
-  school   School? @relation(fields: [schoolId], references: [id])
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  used      Boolean  @default(false)
-
-  @@index([token])
-  @@index([userId])
-}
-
-model Backup {
-  id        String   @id @default(cuid())
-  filename  String
-  size      Int // in bytes
-  data      String?  @db.Text // JSON backup data
-  schoolId  String
-  school    School   @relation(fields: [schoolId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@index([schoolId])
-}
-
-enum MessageType {
-  DIRECT
-  BROADCAST
-  SCHEDULED
+enum GroupMemberRole {
+  MEMBER
+  CO_LEADER
 }
 
 enum MessageCategory {
@@ -302,228 +882,10 @@ enum MessageStatus {
   DELETED
 }
 
-model Message {
-  id       String @id @default(cuid())
-  senderId String
-  sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-
-  subject  String
-  body     String          @db.Text
-  type     MessageType     @default(DIRECT)
-  category MessageCategory @default(GENERAL)
-  status   MessageStatus   @default(SENT)
-
-  // For broadcasts
-  targetRoles   Json? // ["STUDENT", "PARENT"]
-  targetGradeId String? // Grade ID for grade-wide messages
-  targetGrade   Grade?  @relation(fields: [targetGradeId], references: [id])
-  targetClassId String? // Class ID for class-wide messages
-  targetClass   Class?  @relation(fields: [targetClassId], references: [id])
-
-  // Scheduling
-  scheduledFor DateTime?
-  sentAt       DateTime?
-
-  // Approval workflow
-  requiresApproval Boolean   @default(false)
-  approvedBy       String?
-  approvedAt       DateTime?
-
-  // Reply settings
-  allowReplies Boolean @default(true)
-
-  // Group messaging
-  groupId String?
-  group   MentorGroup? @relation(fields: [groupId], references: [id])
-
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime? // Soft delete
-
-  recipients  MessageRecipient[]
-  attachments MessageAttachment[]
-  replies     MessageReply[]
-
-  @@index([schoolId, sentAt])
-  @@index([senderId, status])
-  @@index([status, scheduledFor])
-  @@index([deletedAt])
-}
-
-model MessageRecipient {
-  id          String  @id @default(cuid())
-  messageId   String
-  message     Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  recipientId String
-  recipient   User    @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
-
-  isRead      Boolean   @default(false)
-  readAt      DateTime?
-  deliveredAt DateTime  @default(now())
-  deletedAt   DateTime? // Soft delete by recipient
-  isFavorite  Boolean   @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@unique([messageId, recipientId])
-  @@index([recipientId, isRead])
-  @@index([recipientId, deletedAt])
-}
-
-model MessageReply {
-  id        String  @id @default(cuid())
-  messageId String
-  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  senderId  String
-  sender    User    @relation("SentReplies", fields: [senderId], references: [id], onDelete: Cascade)
-  body      String  @db.Text
-
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-
-  @@index([messageId, createdAt])
-}
-
-model MessageAttachment {
-  id        String  @id @default(cuid())
-  messageId String
-  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  filename String
-  fileUrl  String
-  fileSize Int // in bytes
-  mimeType String
-
-  createdAt DateTime @default(now())
-
-  @@index([messageId])
-}
-
-model MessageDraft {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation("MessageDrafts", fields: [userId], references: [id], onDelete: Cascade)
-
-  subject  String?
-  body     String?         @db.Text
-  category MessageCategory @default(GENERAL)
-
-  targetRoles   Json?
-  targetGradeId String?
-  targetClassId String?
-  recipientIds  Json? // Array of recipient user IDs for direct messages
-
-  allowReplies Boolean @default(true)
-
-  schoolId String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId, schoolId])
-}
-
-model MessageTemplate {
-  id       String          @id @default(cuid())
-  name     String
-  subject  String
-  body     String          @db.Text
-  category MessageCategory
-
-  schoolId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([schoolId])
-}
-
-model MessageSettings {
-  id       String @id @default(cuid())
-  schoolId String @unique
-
-  maxCharacterLimit        Int     @default(1000)
-  autoDeleteDays           Int     @default(30)
-  requireTeacherApproval   Boolean @default(false)
-  enableEmailNotifications Boolean @default(true)
-  enablePushNotifications  Boolean @default(true)
-  reminderAfterDays        Int     @default(3)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([schoolId])
-}
-
-// Deneme Takvimi Ayarları
-model ExamCalendarSettings {
-  id       String @id @default(cuid())
-  schoolId String @unique
-
-  // Öğrencilere gösterilecek alanlar
-  showPublisher         Boolean @default(false) // Yayın adını göster
-  showBroughtBy         Boolean @default(false) // Getiren kişiyi göster
-  showFee               Boolean @default(false) // Ücreti göster
-  showParticipantCounts Boolean @default(true) // Katılım sayılarını göster
-
-  // Bildirim ayarları
-  notifyDaysBefore     Int @default(3) // Kaç gün önce bildirim gönderilsin
-  autoPublishDaysAfter Int @default(0) // Sınav tarihinden kaç gün sonra sonuçlar yayınlansın
-
-  // Görünüm tercihleri
-  defaultView       String @default("table") // "table", "calendar", "timeline"
-  academicYearStart Int    @default(6) // Akademik yıl başlangıcı (ay numarası: 6=Haziran)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([schoolId])
-}
-
-// Otomatik bildirimler için kayıt
-model ExamNotification {
-  id     String @id @default(cuid())
-  examId String
-  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
-
-  notificationType String // "REMINDER" (deneme yaklaşıyor), "RESULTS_READY" (sonuçlar hazır)
-  scheduledFor     DateTime // Bildirimin gönderileceği tarih
-  sentAt           DateTime? // Gönderilme tarihi
-  isSent           Boolean   @default(false)
-
-  messageId String? // Gönderilen mesajın ID'si
-
-  createdAt DateTime @default(now())
-
-  @@index([examId, isSent])
-  @@index([scheduledFor, isSent])
-}
-
-// ============================================
-// LEARNING MANAGEMENT SYSTEM MODELS
-// ============================================
-
-enum StudyTaskStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  MISSED
-  LATE
-}
-
-enum StudyPlanTargetType {
-  INDIVIDUAL
-  GROUP
-  CLASS
-}
-
-enum StudyGoalType {
-  STUDENT_NET
-  STUDENT_SCORE
-  STUDENT_UNIVERSITY
-  TEACHER_CLASS_AVERAGE
+enum MessageType {
+  DIRECT
+  BROADCAST
+  SCHEDULED
 }
 
 enum RecommendationType {
@@ -534,12 +896,6 @@ enum RecommendationType {
   EXAM_PREP
 }
 
-enum TopicDifficulty {
-  EASY
-  MEDIUM
-  HARD
-}
-
 enum ResourceType {
   BOOK
   VIDEO
@@ -547,415 +903,44 @@ enum ResourceType {
   ONLINE_COURSE
 }
 
-enum AchievementCategory {
-  STREAK
-  MILESTONE
-  IMPROVEMENT
+enum Role {
+  SUPER_ADMIN
+  SCHOOL_ADMIN
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum StudyGoalType {
+  STUDENT_NET
+  STUDENT_SCORE
+  STUDENT_UNIVERSITY
+  TEACHER_CLASS_AVERAGE
+}
+
+enum StudyPlanStatus {
+  DRAFT
+  ASSIGNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum StudyPlanTargetType {
+  INDIVIDUAL
   GROUP
-  CONSISTENCY
 }
 
-enum GroupMemberRole {
-  MEMBER
-  CO_LEADER
+enum StudyTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  LATE
 }
 
-// Konu hiyerarşisi (TYT/AYT/LGS konuları)
-model Topic {
-  id            String          @id @default(cuid())
-  name          String
-  examType      ExamType // TYT, AYT, LGS
-  subjectName   String // Matematik, Türkçe, vb.
-  parentTopicId String?
-  parentTopic   Topic?          @relation("TopicHierarchy", fields: [parentTopicId], references: [id])
-  childTopics   Topic[]         @relation("TopicHierarchy")
-  order         Int             @default(0)
-  difficulty    TopicDifficulty @default(MEDIUM)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  studyTasks      StudyTask[]
-  studySessions   StudySession[]
-  studyGoals      StudyGoal[]
-  recommendations StudyRecommendation[]
-  topicResources  TopicResource[]
-
-  @@unique([examType, subjectName, name, parentTopicId])
-  @@index([examType, subjectName])
-  @@index([parentTopicId])
-}
-
-// Kaynak/Kitap veritabanı
-model Resource {
-  id                String       @id @default(cuid())
-  name              String
-  type              ResourceType @default(BOOK)
-  publisherOrAuthor String?
-  examType          ExamType?
-  subjectName       String?
-  isPopular         Boolean      @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  topicResources TopicResource[]
-
-  @@unique([examType, subjectName, name])
-  @@index([examType, subjectName])
-  @@index([isPopular])
-}
-
-// Topic ve Resource arasındaki ilişki
-model TopicResource {
-  id         String   @id @default(cuid())
-  topicId    String
-  topic      Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  resourceId String
-  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([topicId, resourceId])
-  @@index([topicId])
-  @@index([resourceId])
-}
-
-// Öğretmen tarafından oluşturulan çalışma planları
-model StudyPlan {
-  id        String @id @default(cuid())
-  teacherId String
-  teacher   User   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School @relation(fields: [schoolId], references: [id])
-
-  name        String
-  description String?             @db.Text
-  targetType  StudyPlanTargetType
-  targetId    String? // Student, Group, or Class ID
-
-  startDate DateTime
-  endDate   DateTime
-
-  isTemplate Boolean @default(false)
-  isPublic   Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  tasks      StudyTask[]
-  groupPlans GroupStudyPlan[]
-
-  @@index([teacherId, schoolId])
-  @@index([targetType, targetId])
-}
-
-// Günlük çalışma görevleri
-model StudyTask {
-  id        String     @id @default(cuid())
-  planId    String?
-  plan      StudyPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
-  studentId String
-  student   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School     @relation(fields: [schoolId], references: [id])
-
-  date        DateTime
-  subjectName String
-  topicId     String?
-  topic       Topic?   @relation(fields: [topicId], references: [id])
-
-  questionCount     Int
-  resourceReference String? // "Paraf Matematik S.45-55"
-  estimatedTime     Int? // minutes
-
-  status             StudyTaskStatus @default(PENDING)
-  completedQuestions Int             @default(0)
-  correctAnswers     Int             @default(0)
-  wrongAnswers       Int             @default(0)
-  blankAnswers       Int             @default(0)
-  timeSpent          Int? // minutes
-
-  teacherReviewed Boolean   @default(false)
-  teacherComment  String?   @db.Text
-  reviewedAt      DateTime?
-
-  parentVerified Boolean   @default(false)
-  parentComment  String?   @db.Text
-  verifiedAt     DateTime?
-
-  verifiedById String?
-  verifiedBy   User?   @relation("TaskVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
-  isVerified   Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([studentId, date])
-  @@index([planId])
-  @@index([status])
-  @@index([schoolId])
-  @@index([verifiedById])
-}
-
-// Çalışma seans takibi (zamanlama)
-model StudySession {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
-
-  subjectName String
-  topicId     String?
-  topic       Topic?  @relation(fields: [topicId], references: [id])
-
-  startTime      DateTime
-  endTime        DateTime
-  duration       Int // seconds
-  isPomodoroMode Boolean  @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@index([studentId, startTime])
-  @@index([schoolId])
-}
-
-// Öğrenci ve öğretmen hedefleri
-model StudyGoal {
-  id        String  @id @default(cuid())
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  studentId String?
-  student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
-
-  type       StudyGoalType
-  title      String?
-  description String?   @db.Text
-  targetData Json // Hedef detayları (nets, score, university, etc.)
-  targetValue Float?   @default(0)
-  targetUnit  String?
-  targetDate  DateTime?
-  deadline   DateTime?
-  currentValue Float?    @default(0)
-  progress   Float         @default(0) // 0-1 arası
-  topicId    String?
-  topic      Topic?   @relation(fields: [topicId], references: [id])
-
-  isActive    Boolean   @default(true)
-  isCompleted Boolean   @default(false)
-  completedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId, isActive])
-  @@index([studentId])
-  @@index([topicId])
-  @@index([schoolId])
-}
-
-// AI önerileri
-model StudyRecommendation {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
-
-  recommendationType RecommendationType
-  subjectName        String?
-  topicId            String?
-  topic              Topic?             @relation(fields: [topicId], references: [id])
-
-  reasoning     String @db.Text
-  priority      Int    @default(5) // 1-10
-  estimatedTime Int? // minutes
-
-  isCompleted Boolean   @default(false)
-  completedAt DateTime?
-
-  createdAt DateTime  @default(now())
-  expiresAt DateTime? // Öneri geçerlilik süresi
-
-  @@index([studentId, isCompleted])
-  @@index([schoolId])
-  @@index([createdAt])
-}
-
-// Rozet tanımları
-model Achievement {
-  id          String              @id @default(cuid())
-  schoolId    String
-  school      School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  code        String              @unique // STREAK_7, QUESTIONS_1000, vb.
-  name        String
-  description String              @db.Text
-  iconUrl     String?
-  category    AchievementCategory
-  criteria    Json // Açılma kriterleri
-  requiredPoints Int              @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  studentAchievements StudentAchievement[]
-
-  @@index([category])
-  @@index([schoolId])
-}
-
-// Öğrencilerin kazandığı rozetler
-// Öğrencilerin kazandığı rozetler
-model StudentAchievement {
-  id            String      @id @default(cuid())
-  studentId     String
-  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  achievementId String
-  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-  schoolId      String
-  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-
-  unlockedAt DateTime @default(now())
-  earnedAt   DateTime @default(now())
-
-  @@unique([studentId, achievementId])
-  @@index([studentId])
-  @@index([schoolId])
-  @@index([unlockedAt])
-  @@index([earnedAt])
-}
-
-// Mentörlük grupları
-model MentorGroup {
-  id        String @id @default(cuid())
-  teacherId String
-  teacher   User   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School @relation(fields: [schoolId], references: [id])
-
-  name        String
-  description String? @db.Text
-  gradeIds    Json     @default("[]") // Hangi sınıf seviyelerine açık
-  maxStudents Int      @default(25)
-  isActive    Boolean @default(true)
-  coverImage  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  memberships GroupMembership[]
-  studyPlans  GroupStudyPlan[]
-  goals       GroupGoal[]
-  messages    Message[]
-
-  @@index([teacherId, schoolId])
-  @@index([isActive])
-}
-
-// Grup üyelikleri
-model GroupMembership {
-  id        String      @id @default(cuid())
-  groupId   String
-  group     MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  studentId String
-  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  schoolId  String
-  school    School      @relation(fields: [schoolId], references: [id])
-
-  role     GroupMemberRole @default(MEMBER)
-  joinedAt DateTime        @default(now())
-  leftAt   DateTime?
-
-  @@unique([groupId, studentId])
-  @@index([studentId])
-  @@index([schoolId])
-  @@index([groupId, leftAt])
-}
-
-// Gruba atanan çalışma planları
-model GroupStudyPlan {
-  id          String      @id @default(cuid())
-  groupId     String
-  group       MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  studyPlanId String
-  studyPlan   StudyPlan   @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
-
-  assignedAt DateTime @default(now())
-
-  @@unique([groupId, studyPlanId])
-  @@index([groupId])
-}
-
-// Grup hedefleri
-model GroupGoal {
-  id       String      @id @default(cuid())
-  groupId  String
-  group    MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  schoolId String
-  school   School      @relation(fields: [schoolId], references: [id])
-
-  goalType   String // "WEEKLY_COMPLETION", "AVERAGE_STUDY_HOURS", vb.
-  targetData Json // Hedef detayları
-  deadline   DateTime?
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([groupId, isActive])
-  @@index([schoolId])
-}
-
-// Çalışma planı şablonları (marketplace)
-model StudyPlanTemplate {
-  id          String  @id @default(cuid())
-  name        String
-  description String? @db.Text
-  authorId    String
-  author      User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  schoolId    String
-  school      School  @relation(fields: [schoolId], references: [id])
-
-  examType      ExamType
-  gradeLevel    String // "8", "9", "10", "11", "12"
-  durationWeeks Int
-
-  isPublic   Boolean @default(false)
-  isOfficial Boolean @default(false) // Sistem tarafından sağlanan
-
-  tags     Json // ["matematik", "yoğun", "12-hafta"]
-  planData Json // Serileştirilmiş plan yapısı
-
-  usageCount    Int   @default(0)
-  averageRating Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ratings TemplateRating[]
-
-  @@index([examType, isPublic])
-  @@index([schoolId])
-  @@index([authorId])
-}
-
-// Şablon değerlendirmeleri
-model TemplateRating {
-  id         String            @id @default(cuid())
-  templateId String
-  template   StudyPlanTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  rating  Int // 1-5
-  comment String? @db.Text
-
-  createdAt DateTime @default(now())
-
-  @@unique([templateId, userId])
-  @@index([templateId])
+enum TopicDifficulty {
+  EASY
+  MEDIUM
+  HARD
 }

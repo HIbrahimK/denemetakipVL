@@ -17,6 +17,7 @@ import { MessagesModule } from './messages/messages.module';
 import { StudyModule } from './study/study.module';
 import { GoalsModule } from './goals/goals.module';
 import { GroupsModule } from './groups/groups.module';
+import { SubjectsModule } from './subjects/subjects.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { GroupsModule } from './groups/groups.module';
     StudyModule,
     GoalsModule,
     GroupsModule,
+    SubjectsModule,
   ],
 })
 export class AppModule { }

@@ -56,6 +56,7 @@ export function middleware(request: NextRequest) {
                 '/dashboard/messages',
                 '/dashboard/exams/', // Allow viewing exam results
                 '/dashboard/study-plans',
+                '/dashboard/my-tasks', // Allow access to study plans/tasks
                 '/dashboard/student-dashboard',
                 '/dashboard/achievements',
                 '/dashboard/groups',

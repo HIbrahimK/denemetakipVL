@@ -4,6 +4,7 @@ import { StudyPlanService } from './study-plan.service';
 import { StudyTaskService } from './study-task.service';
 import { StudySessionService } from './study-session.service';
 import { StudyRecommendationService } from './study-recommendation.service';
+import { StudyCleanupService } from './study-cleanup.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -14,12 +15,14 @@ import { PrismaModule } from '../prisma/prisma.module';
     StudyTaskService,
     StudySessionService,
     StudyRecommendationService,
+    StudyCleanupService,
   ],
   exports: [
     StudyPlanService,
     StudyTaskService,
     StudySessionService,
     StudyRecommendationService,
+    StudyCleanupService,
   ],
 })
 export class StudyModule {}
