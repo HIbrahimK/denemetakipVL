@@ -71,6 +71,11 @@ export default function ExamResultsPage() {
         return stats.branchStats.map((b: any) => b.name).sort();
     }, [stats]);
 
+    const lessonNames = useMemo(() => {
+        if (!stats?.lessonStats) return [];
+        return stats.lessonStats.map((l: any) => l.name);
+    }, [stats]);
+
     const filteredStudents = useMemo(() => {
         if (!stats) return [];
         let students = [...stats.students];
@@ -133,13 +138,117 @@ export default function ExamResultsPage() {
             <ArrowDown className="h-4 w-4 ml-1 inline" />;
     };
 
+    const isBranchActive = (branchName: string) => selectedBranches.length === 0 || selectedBranches.includes(branchName);
+
     const toggleBranch = (branchName: string) => {
-        setSelectedBranches(prev =>
-            prev.includes(branchName)
-                ? prev.filter(b => b !== branchName)
-                : [...prev, branchName]
-        );
+        setSelectedBranches(prev => {
+            // Empty selection means "hepsi" açık; uncheck ederken mevcut listedeki diğerlerini koru
+            if (prev.length === 0) {
+                return branches.filter((b: string) => b !== branchName);
+            }
+            if (prev.includes(branchName)) {
+                return prev.filter(b => b !== branchName);
+            }
+            return [...prev, branchName];
+        });
     };
+
+    const toggleAllBranches = () => {
+        setSelectedBranches(prev => (prev.length === 0 || prev.length === branches.length ? [] : branches));
+    };
+
+    const getPrimaryScore = (student: any, examType: string) => {
+        if (examType === 'AYT') {
+            const order = ['SAY', 'EA', 'SÖZ'];
+            for (const type of order) {
+                const found = student.scores?.find((s: any) => s.type === type)?.score;
+                if (found !== undefined && found !== null) return found;
+            }
+        }
+        return student.scores?.[0]?.score ?? student.score ?? 0;
+    };
+
+    const selectedStudentsForAverages = useMemo(() => {
+        if (!stats) return [];
+        if (selectedBranches.length === 0) return stats.students;
+        return stats.students.filter((s: any) => selectedBranches.includes(s.className));
+    }, [stats, selectedBranches]);
+
+    const branchAverages = useMemo(() => {
+        if (!stats) return [];
+        const map = new Map<string, any>();
+
+        stats.students.forEach((student: any) => {
+            const branchName = student.className || 'Şube Yok';
+            const current = map.get(branchName) || {
+                name: branchName,
+                count: 0,
+                totalNet: 0,
+                totalScore: 0,
+                lessonTotals: {} as Record<string, number>,
+            };
+
+            current.count += 1;
+            current.totalNet += student.net || 0;
+            current.totalScore += getPrimaryScore(student, stats.examType);
+
+            lessonNames.forEach((lesson: string) => {
+                const raw = student.lessons?.[lesson];
+                const net = typeof raw === 'object' ? raw?.net : raw;
+                if (net !== undefined && net !== null) {
+                    current.lessonTotals[lesson] = (current.lessonTotals[lesson] || 0) + Number(net);
+                }
+            });
+
+            map.set(branchName, current);
+        });
+
+        return Array.from(map.values())
+            .map((entry: any) => ({
+                name: entry.name,
+                participant: entry.count,
+                avgTotalNet: entry.count ? entry.totalNet / entry.count : 0,
+                avgScore: entry.count ? entry.totalScore / entry.count : 0,
+                lessonAverages: lessonNames.reduce((acc: any, lesson: string) => ({
+                    ...acc,
+                    [lesson]: entry.count ? (entry.lessonTotals?.[lesson] || 0) / entry.count : 0,
+                }), {}),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+    }, [stats, lessonNames]);
+
+    const overallSelectedAverages = useMemo(() => {
+        if (!stats) return null;
+        const count = selectedStudentsForAverages.length;
+        if (count === 0) return null;
+
+        let totalNet = 0;
+        let totalScore = 0;
+        const lessonTotals: Record<string, number> = {};
+
+        selectedStudentsForAverages.forEach((student: any) => {
+            totalNet += student.net || 0;
+            totalScore += getPrimaryScore(student, stats.examType);
+
+            lessonNames.forEach((lesson: string) => {
+                const raw = student.lessons?.[lesson];
+                const net = typeof raw === 'object' ? raw?.net : raw;
+                if (net !== undefined && net !== null) {
+                    lessonTotals[lesson] = (lessonTotals[lesson] || 0) + Number(net);
+                }
+            });
+        });
+
+        return {
+            participant: count,
+            avgTotalNet: totalNet / count,
+            avgScore: totalScore / count,
+            lessonAverages: lessonNames.reduce((acc: any, lesson: string) => ({
+                ...acc,
+                [lesson]: count ? (lessonTotals?.[lesson] || 0) / count : 0,
+            }), {}),
+        };
+    }, [stats, lessonNames, selectedStudentsForAverages]);
 
     const handlePrint = () => {
         const style = document.createElement('style');
@@ -265,7 +374,7 @@ export default function ExamResultsPage() {
                                 <DropdownMenuLabel>Şube Filtrele</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {branches.map((branch: string) => (
-                                    <DropdownMenuCheckboxItem key={branch} checked={selectedBranches.includes(branch)} onCheckedChange={() => toggleBranch(branch)}>
+                                    <DropdownMenuCheckboxItem key={branch} checked={isBranchActive(branch)} onCheckedChange={() => toggleBranch(branch)}>
                                         {branch}
                                     </DropdownMenuCheckboxItem>
                                 ))}
@@ -395,12 +504,89 @@ export default function ExamResultsPage() {
                 )}
             </div>
 
+            {/* Branch Averages */}
+            <Card className="print-card overflow-hidden border-slate-200 dark:border-slate-800">
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm">Şube Ortalamaları</CardTitle>
+                        <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                className="h-4 w-4"
+                                checked={selectedBranches.length === 0 || selectedBranches.length === branches.length}
+                                onChange={toggleAllBranches}
+                            />
+                            <span>Tümünü seç</span>
+                        </label>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
+                    <table className="w-full text-xs md:text-sm">
+                        <thead className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <th className="w-10 p-3 text-center"></th>
+                                <th className="p-3 text-left">Şube</th>
+                                {lessonNames.map((lesson) => (
+                                    <th key={lesson} className="p-3 text-center whitespace-nowrap">{lesson}</th>
+                                ))}
+                                <th className="p-3 text-center whitespace-nowrap">Toplam Net</th>
+                                <th className="p-3 text-center whitespace-nowrap">Puan Ortalaması</th>
+                                <th className="p-3 text-center">Katılım</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {branchAverages.map((branch) => {
+                                const active = isBranchActive(branch.name);
+                                return (
+                                    <tr key={branch.name} className={active ? '' : 'opacity-60'}>
+                                        <td className="p-3 text-center">
+                                            <input
+                                                type="checkbox"
+                                                className="h-4 w-4"
+                                                checked={active}
+                                                onChange={() => toggleBranch(branch.name)}
+                                            />
+                                        </td>
+                                        <td className="p-3 font-medium text-slate-800 dark:text-slate-100">{branch.name}</td>
+                                        {lessonNames.map((lesson) => (
+                                            <td key={lesson} className="p-3 text-center font-mono text-xs md:text-sm">
+                                                {branch.lessonAverages?.[lesson] !== undefined ? branch.lessonAverages[lesson].toFixed(2) : '-'}
+                                            </td>
+                                        ))}
+                                        <td className="p-3 text-center font-semibold text-indigo-600 dark:text-indigo-300">{branch.avgTotalNet.toFixed(2)}</td>
+                                        <td className="p-3 text-center font-semibold text-emerald-600 dark:text-emerald-300">{branch.avgScore.toFixed(2)}</td>
+                                        <td className="p-3 text-center">{branch.participant}</td>
+                                    </tr>
+                                );
+                            })}
+
+                            {overallSelectedAverages && (
+                                <tr className="bg-slate-50 dark:bg-slate-900/40 font-semibold">
+                                    <td className="p-3 text-center"></td>
+                                    <td className="p-3">Ortalama</td>
+                                    {lessonNames.map((lesson) => (
+                                        <td key={lesson} className="p-3 text-center font-mono text-xs md:text-sm">
+                                            {overallSelectedAverages.lessonAverages?.[lesson] !== undefined
+                                                ? overallSelectedAverages.lessonAverages[lesson].toFixed(2)
+                                                : '-'}
+                                        </td>
+                                    ))}
+                                    <td className="p-3 text-center text-indigo-700 dark:text-indigo-200">{overallSelectedAverages.avgTotalNet.toFixed(2)}</td>
+                                    <td className="p-3 text-center text-emerald-700 dark:text-emerald-200">{overallSelectedAverages.avgScore.toFixed(2)}</td>
+                                    <td className="p-3 text-center">{overallSelectedAverages.participant}</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </CardContent>
+            </Card>
+
             {/* Table */}
             <Card className="print-card overflow-hidden border-slate-200 dark:border-slate-800">
                 <CardContent className="p-0">
                     <div className="max-h-[70vh] overflow-auto relative print:max-h-none print:overflow-visible">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-100 dark:bg-slate-800 shadow-sm print:bg-slate-100">
+                            <thead className="bg-slate-100 dark:bg-slate-800 shadow-sm print:bg-slate-100 sticky top-0 z-10">
                                 <tr>
                                     <th className="p-3 text-left w-12 cursor-pointer" onClick={() => handleSort('idx')}>
                                         <div className="flex items-center gap-1">Sıra {getSortIcon('idx')}</div>

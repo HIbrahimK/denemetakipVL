@@ -82,4 +82,10 @@ export class StudentsController {
     import(@Request() req, @UploadedFile() file: Express.Multer.File) {
         return this.studentsService.importFromExcel(req.user.schoolId, file.buffer);
     }
+
+    @Get('me/exams')
+    @ApiOperation({ summary: 'Öğrencinin tüm deneme sonuçlarını getir' })
+    getMyExams(@Request() req) {
+        return this.studentsService.getStudentExamResults(req.user.id);
+    }
 }

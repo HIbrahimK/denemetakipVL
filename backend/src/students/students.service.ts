@@ -282,4 +282,120 @@ export class StudentsService {
 
         return grades;
     }
+
+    async getStudentExamResults(userId: string) {
+        const student = await this.prisma.student.findUnique({
+            where: { userId },
+            include: {
+                class: {
+                    include: {
+                        grade: true,
+                    },
+                },
+            },
+        });
+
+        if (!student) {
+            throw new NotFoundException('Öğrenci bulunamadı');
+        }
+
+        const attempts = await this.prisma.examAttempt.findMany({
+            where: { studentId: student.id },
+            include: {
+                exam: true,
+                lessonResults: {
+                    include: {
+                        lesson: true,
+                    },
+                },
+                scores: true,
+            },
+            orderBy: {
+                exam: {
+                    date: 'desc',
+                },
+            },
+        });
+
+        const allSchoolExams = await this.prisma.exam.findMany({
+            where: { schoolId: student.schoolId },
+            include: {
+                _count: {
+                    select: { attempts: true },
+                },
+            },
+        });
+
+        const attemptedExamIds = new Set(attempts.map(a => a.examId));
+        const missedExams = allSchoolExams.filter(exam => !attemptedExamIds.has(exam.id));
+
+        const gradeLevel = parseInt(student.class.grade.name) || 0;
+
+        return {
+            student: {
+                id: student.id,
+                classId: student.classId,
+                className: student.class.name,
+                gradeName: student.class.grade.name,
+                gradeLevel,
+            },
+            attempts,
+            missedExams,
+            statistics: this.calculateStatistics(attempts, gradeLevel),
+        };
+    }
+
+    private calculateStatistics(attempts: any[], gradeLevel: number) {
+        if (attempts.length === 0) {
+            return {
+                totalExams: 0,
+                averageScore: 0,
+                highestScore: 0,
+                averageRank: 0,
+                lessonAverages: {},
+            };
+        }
+
+        let totalScore = 0;
+        let totalRank = 0;
+        let rankCount = 0;
+        let highestScore = 0;
+        const lessonStats: Record<string, { totalNet: number; count: number }> = {};
+
+        attempts.forEach(attempt => {
+            const tytScore = attempt.scores.find((s: any) => s.type === 'TYT');
+            if (tytScore) {
+                totalScore += tytScore.score;
+                if (tytScore.score > highestScore) {
+                    highestScore = tytScore.score;
+                }
+                if (tytScore.rankSchool) {
+                    totalRank += tytScore.rankSchool;
+                    rankCount++;
+                }
+            }
+
+            attempt.lessonResults.forEach((lr: any) => {
+                const lessonName = lr.lesson.name;
+                if (!lessonStats[lessonName]) {
+                    lessonStats[lessonName] = { totalNet: 0, count: 0 };
+                }
+                lessonStats[lessonName].totalNet += lr.net;
+                lessonStats[lessonName].count++;
+            });
+        });
+
+        const lessonAverages: Record<string, number> = {};
+        Object.keys(lessonStats).forEach(lessonName => {
+            lessonAverages[lessonName] = lessonStats[lessonName].totalNet / lessonStats[lessonName].count;
+        });
+
+        return {
+            totalExams: attempts.length,
+            averageScore: totalScore / attempts.length,
+            highestScore,
+            averageRank: rankCount > 0 ? totalRank / rankCount : 0,
+            lessonAverages,
+        };
+    }
 }
