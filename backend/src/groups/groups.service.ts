@@ -363,4 +363,312 @@ export class GroupsService {
       activeGroupGoals: activeGoals,
     };
   }
+
+  async getAvailableStudents(groupId: string, schoolId: string, gradeId?: string, classId?: string) {
+    // Verify group exists and belongs to school
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    // Get existing member IDs
+    const existingMembers = await this.prisma.groupMembership.findMany({
+      where: { groupId, leftAt: null },
+      select: { studentId: true },
+    });
+
+    const existingMemberIds = existingMembers.map(m => m.studentId);
+
+    // Build where clause
+    const where: any = {
+      schoolId,
+      id: { notIn: existingMemberIds },
+    };
+
+    if (classId) {
+      where.classId = classId;
+    } else if (gradeId) {
+      where.class = { gradeId };
+    }
+
+    // Get available students
+    return this.prisma.student.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        class: {
+          select: {
+            name: true,
+            grade: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        { class: { grade: { name: 'asc' } } },
+        { class: { name: 'asc' } },
+        { user: { firstName: 'asc' } },
+      ],
+    });
+  }
+
+  async getGradesForGroup(schoolId: string) {
+    // Önce mevcut grade'leri kontrol et
+    let grades = await this.prisma.grade.findMany({
+      where: { schoolId },
+      include: {
+        _count: {
+          select: {
+            classes: true,
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    // Eğer standart grade'ler yoksa, oluştur
+    if (grades.length === 0 || !this.hasStandardGrades(grades)) {
+      await this.createStandardGrades(schoolId);
+      grades = await this.prisma.grade.findMany({
+        where: { schoolId },
+        include: {
+          _count: {
+            select: {
+              classes: true,
+            },
+          },
+        },
+        orderBy: { name: 'asc' },
+      });
+    }
+
+    return grades;
+  }
+
+  private hasStandardGrades(grades: any[]): boolean {
+    const standardGradeNames = ['5', '6', '7', '8', '9', '10', '11', '12'];
+    const existingNames = grades.map(g => g.name);
+    return standardGradeNames.every(name => existingNames.includes(name));
+  }
+
+  private async createStandardGrades(schoolId: string) {
+    const standardGrades = [
+      { name: '5', schoolId },
+      { name: '6', schoolId },
+      { name: '7', schoolId },
+      { name: '8', schoolId },
+      { name: '9', schoolId },
+      { name: '10', schoolId },
+      { name: '11', schoolId },
+      { name: '12', schoolId },
+    ];
+
+    for (const grade of standardGrades) {
+      const existing = await this.prisma.grade.findFirst({
+        where: { schoolId, name: grade.name },
+      });
+
+      if (!existing) {
+        await this.prisma.grade.create({ data: grade });
+      }
+    }
+  }
+
+  async getClassesByGrade(gradeId: string, schoolId: string) {
+    return this.prisma.class.findMany({
+      where: {
+        gradeId,
+        schoolId,
+      },
+      include: {
+        _count: {
+          select: {
+            students: true,
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async addMembersBulk(groupId: string, studentIds: string[], userId: string, schoolId: string) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || group.teacherId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const results: any[] = [];
+    const errors: any[] = [];
+
+    for (const studentId of studentIds) {
+      try {
+        // Verify student exists and belongs to school
+        const student = await this.prisma.student.findUnique({
+          where: { id: studentId },
+        });
+
+        if (!student || student.schoolId !== schoolId) {
+          errors.push({ studentId, error: 'Öğrenci bulunamadı veya okula ait değil' });
+          continue;
+        }
+
+        // Check if already a member
+        const existing = await this.prisma.groupMembership.findFirst({
+          where: {
+            groupId,
+            studentId,
+            leftAt: null,
+          },
+        });
+
+        if (existing) {
+          errors.push({ studentId, error: 'Öğrenci zaten grup üyesi' });
+          continue;
+        }
+
+        const membership = await this.prisma.groupMembership.create({
+          data: {
+            groupId,
+            studentId,
+            role: 'MEMBER',
+            schoolId,
+          },
+          include: {
+            student: {
+              select: {
+                id: true,
+                userId: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        results.push(membership);
+      } catch (error) {
+        errors.push({ studentId, error: error.message });
+      }
+    }
+
+    return {
+      added: results,
+      errors,
+      totalAdded: results.length,
+      totalErrors: errors.length,
+    };
+  }
+
+  async updateGroupGoal(groupId: string, goalId: string, dto: any, userId: string, schoolId: string) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || group.teacherId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const goal = await this.prisma.groupGoal.findUnique({
+      where: { id: goalId },
+    });
+
+    if (!goal || goal.groupId !== groupId) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    const updateData: any = {};
+    
+    if (dto.goalType) updateData.goalType = dto.goalType;
+    if (dto.targetData) updateData.targetData = dto.targetData;
+    if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
+    if (dto.deadline) updateData.deadline = new Date(dto.deadline);
+
+    return this.prisma.groupGoal.update({
+      where: { id: goalId },
+      data: updateData,
+    });
+  }
+
+  async deleteGroupGoal(groupId: string, goalId: string, userId: string, schoolId: string) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || group.teacherId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const goal = await this.prisma.groupGoal.findUnique({
+      where: { id: goalId },
+    });
+
+    if (!goal || goal.groupId !== groupId) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    await this.prisma.groupGoal.delete({
+      where: { id: goalId },
+    });
+
+    return { message: 'Goal deleted successfully' };
+  }
+
+  async updateGroup(groupId: string, dto: any, userId: string, schoolId: string) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || group.teacherId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return this.prisma.mentorGroup.update({
+      where: { id: groupId },
+      data: {
+        name: dto.name,
+        description: dto.description,
+        maxStudents: dto.maxStudents,
+        gradeIds: dto.gradeIds,
+      },
+    });
+  }
 }

@@ -227,6 +227,8 @@ export class StudentsService {
 
     async remove(id: string, schoolId: string) {
         const student = await this.findOne(id, schoolId);
+        // Delete dependent exam attempts first to satisfy FK constraints
+        await this.prisma.examAttempt.deleteMany({ where: { studentId: id } });
 
         // Delete student and associated user
         await this.prisma.student.delete({ where: { id } });
@@ -251,15 +253,12 @@ export class StudentsService {
 
         const userIds = students.map(s => s.userId);
 
-        // Delete students and their users in transaction
-        await this.prisma.$transaction([
-            this.prisma.student.deleteMany({
-                where: { id: { in: studentIds } },
-            }),
-            this.prisma.user.deleteMany({
-                where: { id: { in: userIds } },
-            }),
-        ]);
+        // Delete records in proper order to avoid FK constraint issues
+        await this.prisma.$transaction(async (tx) => {
+            await tx.examAttempt.deleteMany({ where: { studentId: { in: studentIds } } });
+            await tx.student.deleteMany({ where: { id: { in: studentIds } } });
+            await tx.user.deleteMany({ where: { id: { in: userIds } } });
+        });
 
         return { success: true, count: students.length, message: `${students.length} öğrenci silindi` };
     }

@@ -20,6 +20,9 @@ export function ImportWizard() {
     const [importData, setImportData] = useState<any[]>([]);
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [existingClasses, setExistingClasses] = useState<any[]>([]);
+    const [classesIndex, setClassesIndex] = useState<Set<string>>(new Set());
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
     useEffect(() => {
         if (examId) {
@@ -77,6 +80,28 @@ export function ImportWizard() {
                 })));
                 setStep(2);
                 setError(null);
+
+                // Fetch existing classes for comparison
+                try {
+                    const classesRes = await fetch(`${API_URL}/schools/${schoolId}/classes`, {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                        },
+                    });
+                    if (classesRes.ok) {
+                        const classesData = await classesRes.json();
+                        setExistingClasses(classesData);
+                        const idx = new Set<string>();
+                        classesData.forEach((c: any) => {
+                            const grade = (c?.grade?.name ?? '').toString();
+                            const section = (c?.name ?? '').toString().toUpperCase();
+                            if (grade && section) idx.add(`${grade}/${section}`);
+                        });
+                        setClassesIndex(idx);
+                    }
+                } catch (e) {
+                    console.warn('Sınıflar alınamadı, yeni şube vurgusu atlanacak.', e);
+                }
             } else {
                 // Extract error message from response
                 const errorData = await response.json().catch(() => ({ message: 'Bilinmeyen hata' }));
@@ -151,6 +176,17 @@ export function ImportWizard() {
         }
         
         setImportData(newData);
+    };
+
+    // Parse class text like "12-A", "12/B", "12A" into gradeLevel + section (uppercased)
+    const parseClassLabel = (label?: string): { gradeLevel?: string; section?: string } => {
+        if (!label) return {};
+        const txt = label.trim();
+        const m = txt.match(/^(\d{1,2})\s*[-\/]?\s*([A-Za-zÇĞİÖŞÜçğıöşü]+)?$/);
+        if (!m) return {};
+        const gradeLevel = m[1];
+        const section = (m[2] || '').toUpperCase();
+        return { gradeLevel, section };
     };
 
     return (
@@ -250,7 +286,6 @@ export function ImportWizard() {
                                             />
                                         </th>
                                         <th className="p-2 text-left font-semibold text-slate-600">No</th>
-                                        <th className="p-2 text-left font-semibold text-slate-600">TC No</th>
                                         <th className="p-2 text-left font-semibold text-slate-600">Ad Soyad</th>
                                         <th className="p-2 text-left font-semibold text-slate-600">Sınıf/Şube</th>
                                         <th className="p-2 text-left font-semibold text-slate-600">Durum</th>
@@ -261,6 +296,9 @@ export function ImportWizard() {
                                     {importData.map((row, idx) => {
                                         const isRowInvalid = !row.isValid;
                                         const status = row.validationStatus || 'valid';
+                                        const parsed = parseClassLabel(row.class);
+                                        const key = parsed.gradeLevel && parsed.section ? `${parsed.gradeLevel}/${parsed.section}` : '';
+                                        const isNewClass = !!key && !classesIndex.has(key);
                                         
                                         // Renk kodlaması
                                         let rowBgColor = 'hover:bg-slate-50 dark:hover:bg-slate-800';
@@ -288,9 +326,12 @@ export function ImportWizard() {
                                             statusBadgeColor = 'text-emerald-600';
                                             statusText = 'Hazır';
                                         }
+
+                                        // Yeni oluşturulacak sınıf ise farklı bir vurgu ekle
+                                        const newClassOutline = isNewClass ? ' outline outline-2 outline-yellow-300' : '';
                                         
                                         return (
-                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-800 ${rowBgColor} ${!row.selected ? 'opacity-65' : ''}`}>
+                                            <tr key={idx} className={`border-b border-slate-100 dark:border-slate-800 ${rowBgColor}${newClassOutline} ${!row.selected ? 'opacity-65' : ''}`}>
                                                 <td className="p-2 text-center">
                                                     <input
                                                         type="checkbox"
@@ -306,26 +347,37 @@ export function ImportWizard() {
                                                     <Input
                                                         value={row.studentNumber || ''}
                                                         onChange={(e) => updateStudentNumber(idx, e.target.value)}
-                                                        className={`h-8 w-20 text-xs ${status === 'invalid_number' ? 'border-red-300 focus-visible:ring-red-500' : ''}`}
+                                                        className={`h-8 w-20 text-xs border-slate-400 focus-visible:ring-1 focus-visible:ring-slate-600 ${status === 'invalid_number' ? 'border-red-300 focus-visible:ring-1 focus-visible:ring-red-500' : ''}`}
                                                     />
                                                 </td>
                                                 <td className="p-2">
                                                     <Input
-                                                        value={row.tcNo || ''}
+                                                        value={row.name || ''}
                                                         onChange={(e) => {
                                                             const newData = [...importData];
-                                                            newData[idx].tcNo = e.target.value;
+                                                            newData[idx].name = e.target.value;
                                                             setImportData(newData);
                                                         }}
-                                                        placeholder="Opsiyonel"
-                                                        className="h-8 w-24 text-xs"
+                                                        placeholder="Ad Soyad"
+                                                        className="h-8 w-40 text-xs border-slate-400 focus-visible:ring-1 focus-visible:ring-slate-600"
                                                     />
                                                 </td>
-                                                <td className="p-2 text-slate-700 text-xs font-medium">
-                                                    {row.name}
-                                                </td>
                                                 <td className="p-2 text-slate-500 text-xs">
-                                                    {row.class}
+                                                    <Input
+                                                        value={row.class || ''}
+                                                        onChange={(e) => {
+                                                            const newData = [...importData];
+                                                            newData[idx].class = e.target.value;
+                                                            setImportData(newData);
+                                                        }}
+                                                        placeholder="Örn: 12-A, 11/B, 10A"
+                                                        className="h-8 w-28 text-xs border-slate-400 focus-visible:ring-1 focus-visible:ring-slate-600"
+                                                    />
+                                                    {isNewClass && parsed.gradeLevel && parsed.section ? (
+                                                        <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase text-yellow-700">
+                                                            Yeni Şube: {parsed.gradeLevel}/{parsed.section}
+                                                        </span>
+                                                    ) : null}
                                                 </td>
                                                 <td className="p-2">
                                                     {isRowInvalid && status !== 'not_registered' && status !== 'duplicate_in_exam' ? (
@@ -372,6 +424,7 @@ export function ImportWizard() {
                                     <li><strong className="text-red-600">Kırmızı:</strong> Hatalı numara formatı (0, *, ?, yazı vb) - lütfen düzeltin</li>
                                     <li><strong className="text-orange-600">Turuncu:</strong> Bu öğrenci sınava zaten kayıtlı - verileri güncellenecek</li>
                                     <li><strong className="text-blue-600">Mavi:</strong> Sistemde kayıtlı değil - yeni öğrenci oluşturulacak (şifre: 1234)</li>
+                                    <li><strong className="text-yellow-600">Sarı Çerçeve:</strong> İlgili sınıf/şube okulda yok — yeni şube oluşturulacak</li>
                                     <li><strong className="text-emerald-600">Yeşil:</strong> Hazır ve kaydedilebilir</li>
                                 </ul>
                             </div>

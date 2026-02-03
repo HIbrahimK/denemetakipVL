@@ -5,3 +5,5 @@ export * from './complete-study-task.dto';
 export * from './verify-study-task.dto';
 export * from './log-study-session.dto';
 export * from './assign-study-plan.dto';
+export * from './approve-task.dto';
+export * from './reject-task.dto';

@@ -47,6 +47,8 @@ model Class {
   school   School    @relation(fields: [schoolId], references: [id])
   messages Message[]
   students Student[]
+
+  @@unique([schoolId, gradeId, name])
 }
 
 model Exam {
@@ -171,6 +173,8 @@ model Grade {
   classes  Class[]
   school   School    @relation(fields: [schoolId], references: [id])
   messages Message[]
+
+  @@unique([schoolId, name])
 }
 
 model GroupGoal {
@@ -726,6 +730,7 @@ model StudyTask {
   blankCount             Int                  @default(0)
   actualResource         String?
   studentNotes           String?
+  customContent          String?
   completedAt            DateTime?
   parentApproved         Boolean              @default(false)
   parentApprovedAt       DateTime?
@@ -755,6 +760,7 @@ model Subject {
   examType    String
   gradeLevels Int[]
   order       Int      @default(0)
+  type        String   @default("NORMAL") // NORMAL, EXAM, PRACTICE, REVIEW
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt          DateTime             @updatedAt
@@ -783,6 +789,7 @@ model Topic {
   name                String
   parentTopicId       String?
   order               Int                   @default(0)
+  isSpecialActivity   Boolean               @default(false)
   createdAt           DateTime              @default(now())
   updatedAt          DateTime             @updatedAt
   subjectId           String?
@@ -924,6 +931,7 @@ enum StudyPlanStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+  ARCHIVED
 }
 
 enum StudyPlanTargetType {

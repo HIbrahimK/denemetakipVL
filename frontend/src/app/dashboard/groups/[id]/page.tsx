@@ -76,6 +76,18 @@ export default function GroupDetailPage() {
   const [stats, setStats] = useState<GroupStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [grades, setGrades] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
+  const [selectedGradeId, setSelectedGradeId] = useState<string>('');
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [addingMembers, setAddingMembers] = useState(false);
 
   useEffect(() => {
     const fetchGroupData = async () => {
@@ -131,6 +143,165 @@ export default function GroupDetailPage() {
     const gradeNames = gradeIds.map(g => `${g}. Sınıf`).join(', ');
     return gradeNames;
   };
+
+  // Modal functions
+  const openAddMemberModal = async () => {
+    setShowAddMemberModal(true);
+    setSelectedGradeId('');
+    setSelectedClassId('');
+    setSearchTerm('');
+    setSelectedStudents([]);
+    setAvailableStudents([]);
+    setModalLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const schoolId = user?.schoolId;
+      
+      // Fetch grades from schools API
+      const gradesResponse = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (gradesResponse.ok) {
+        const gradesData = await gradesResponse.json();
+        setGrades(gradesData);
+      }
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const fetchClasses = async (gradeId: string) => {
+    setSelectedGradeId(gradeId);
+    setSelectedClassId('');
+    setAvailableStudents([]);
+    setSelectedStudents([]);
+
+    if (!gradeId) {
+      setClasses([]);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const classesResponse = await fetch(`http://localhost:3001/groups/grades/${gradeId}/classes`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (classesResponse.ok) {
+        const classesData = await classesResponse.json();
+        setClasses(classesData);
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    }
+  };
+
+  const fetchStudents = async (classId: string) => {
+    setSelectedClassId(classId);
+    setSelectedStudents([]);
+
+    if (!classId) {
+      setAvailableStudents([]);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const studentsResponse = await fetch(
+        `http://localhost:3001/groups/${groupId}/available-students?classId=${classId}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }
+      );
+
+      if (studentsResponse.ok) {
+        const studentsData = await studentsResponse.json();
+        setAvailableStudents(studentsData);
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    setSelectedStudents(prev => 
+      prev.includes(studentId)
+        ? prev.filter(id => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  const addSelectedMembers = async () => {
+    if (selectedStudents.length === 0) return;
+
+    setAddingMembers(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Use bulk endpoint for better performance
+      const response = await fetch(`http://localhost:3001/groups/${groupId}/members/bulk`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ studentIds: selectedStudents }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Öğrenciler eklenirken bir hata oluştu');
+      }
+
+      const result = await response.json();
+      
+      // Show result
+      if (result.errors && result.errors.length > 0) {
+        const errorMessages = result.errors.map((e: any) => e.error).join('\n');
+        alert(`Bazı öğrenciler eklenemedi:\n${errorMessages}`);
+      } else {
+        alert(`${result.totalAdded} öğrenci başarıyla eklendi`);
+      }
+
+      setShowAddMemberModal(false);
+      
+      // Refresh group data
+      const groupResponse = await fetch(`http://localhost:3001/groups/${groupId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (groupResponse.ok) {
+        const groupData = await groupResponse.json();
+        setGroup(groupData);
+      }
+
+      // Refresh stats
+      const statsResponse = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(statsData);
+      }
+    } catch (error) {
+      console.error('Error adding members:', error);
+      alert('Öğrenciler eklenirken bir hata oluştu');
+    } finally {
+      setAddingMembers(false);
+    }
+  };
+
+  // Filter students by search term
+  const filteredStudents = availableStudents.filter(student => {
+    const fullName = `${student.user.firstName} ${student.user.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
+  });
 
   if (loading) {
     return (
@@ -190,7 +361,7 @@ export default function GroupDetailPage() {
             <Settings className="mr-2 h-4 w-4" />
             Düzenle
           </Button>
-          <Button>
+          <Button onClick={openAddMemberModal}>
             <UserPlus className="mr-2 h-4 w-4" />
             Üye Ekle
           </Button>
@@ -406,6 +577,148 @@ export default function GroupDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Gruba Üye Ekle</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAddMemberModal(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Step 1: Select Grade */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Sınıf Seviyesi
+                </label>
+                <select
+                  value={selectedGradeId}
+                  onChange={(e) => fetchClasses(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Sınıf seçiniz...</option>
+                  {grades.map((grade: any) => (
+                    <option key={grade.id} value={grade.id}>
+                      {grade.name}. Sınıf
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 2: Select Class */}
+              {selectedGradeId && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Şube
+                  </label>
+                  <select
+                    value={selectedClassId}
+                    onChange={(e) => fetchStudents(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Şube seçiniz...</option>
+                    {classes.map((cls: any) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name} ({cls._count?.students || 0} öğrenci)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Step 3: Search and Select Students */}
+              {selectedClassId && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Öğrenci Ara
+                    </label>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Öğrenci adı veya soyadı..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="border rounded-lg max-h-64 overflow-y-auto">
+                    {modalLoading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Yükleniyor...
+                      </div>
+                    ) : filteredStudents.length === 0 ? (
+                      <div className="p-4 text-center text-gray-500">
+                        Öğrenci bulunamadı
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {filteredStudents.map((student: any) => (
+                          <label
+                            key={student.id}
+                            className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedStudents.includes(student.id)}
+                              onChange={() => toggleStudentSelection(student.id)}
+                              className="h-5 w-5 text-blue-600 rounded"
+                            />
+                            <Avatar>
+                              <AvatarFallback className="text-sm">
+                                {student.user.firstName[0]}
+                                {student.user.lastName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="font-medium">
+                                {student.user.firstName} {student.user.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {student.class?.name} - {student.class?.grade?.name}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-6 border-t flex justify-between items-center bg-gray-50">
+              <div className="text-sm text-gray-600">
+                {selectedStudents.length} öğrenci seçildi
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddMemberModal(false)}
+                >
+                  İptal
+                </Button>
+                <Button
+                  onClick={addSelectedMembers}
+                  disabled={selectedStudents.length === 0 || addingMembers}
+                >
+                  {addingMembers ? 'Ekleniyor...' : `${selectedStudents.length} Öğrenci Ekle`}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

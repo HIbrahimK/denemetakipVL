@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ExcelParsingService, ParsedExamRow } from './excel-parsing.service';
 import { PrismaService } from '../prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ImportService {
@@ -23,6 +24,10 @@ export class ImportService {
             // We cast to ParsedExamRow & { selected?: boolean }
             const rowsToProcess = data.filter(row => row.isValid && (row as any).selected !== false);
 
+            // Prepare a default hashed password once for all created users
+            const defaultPassword = process.env.DEFAULT_STUDENT_PASSWORD || '123456';
+            const defaultHashedPassword = await bcrypt.hash(defaultPassword, 10);
+
             await this.prisma.$transaction(async (tx) => {
                 for (const row of rowsToProcess) {
                     // row is ParsedExamRow
@@ -33,7 +38,25 @@ export class ImportService {
 
                     // 1. Manage Grade & Class
                     let gradeName = row.grade || 'Diğer';
-                    let branchName = row.section || 'A';
+                    let branchName = (row.section || 'A').toString().trim();
+                    // If client edited combined class label, parse it to override grade/section
+                    if ((row as any).class) {
+                        const classText = ((row as any).class as string).trim();
+                        const m = classText.match(/^(\d+)\s*[-\/]?\s*(.*)$/);
+                        if (m) {
+                            const g = m[1];
+                            const s = (m[2] || 'A').trim();
+                            if (/^\d+$/.test(g)) {
+                                const gNum = parseInt(g, 10);
+                                if (gNum >= 5 && gNum <= 12) {
+                                    gradeName = g;
+                                    branchName = s || 'A';
+                                }
+                            }
+                        }
+                    }
+                    // Normalize section to uppercase (Turkish locale-aware)
+                    branchName = branchName.toLocaleUpperCase('tr-TR');
 
                     let grade = await tx.grade.findFirst({
                         where: { name: gradeName, schoolId }
@@ -45,12 +68,12 @@ export class ImportService {
                     }
 
                     let studentClass = await tx.class.findFirst({
-                        where: { name: `${gradeName}-${branchName}`, gradeId: grade.id }
+                        where: { name: branchName, gradeId: grade.id, schoolId }
                     });
                     if (!studentClass) {
                         studentClass = await tx.class.create({
                             data: {
-                                name: `${gradeName}-${branchName}`,
+                                name: branchName,
                                 gradeId: grade.id,
                                 schoolId,
                             }
@@ -64,33 +87,44 @@ export class ImportService {
                     });
 
                     if (!student) {
-                        // Create Student User
-                        const studentUser = await tx.user.create({
-                            data: {
-                                email: `${studentNumber}.${schoolId}.s@denemetakip.com`,
-                                password: '1234',
-                                firstName,
-                                lastName,
-                                role: 'STUDENT',
-                                schoolId,
-                            }
-                        });
+                        const studentEmail = `${studentNumber}.${schoolId}.s@denemetakip.com`;
+                        const parentEmail = `${studentNumber}.${schoolId}.p@denemetakip.com`;
 
-                        // Create Parent User
-                        const parentUser = await tx.user.create({
-                            data: {
-                                email: `${studentNumber}.${schoolId}.p@denemetakip.com`,
-                                password: '1234',
-                                firstName: `Veli - ${firstName}`,
-                                lastName,
-                                role: 'PARENT',
-                                schoolId,
-                            }
-                        });
+                        // Find or create Student User
+                        let studentUser = await tx.user.findUnique({ where: { email: studentEmail } });
+                        if (!studentUser) {
+                            studentUser = await tx.user.create({
+                                data: {
+                                    email: studentEmail,
+                                    password: defaultHashedPassword,
+                                    firstName,
+                                    lastName,
+                                    role: 'STUDENT',
+                                    schoolId,
+                                }
+                            });
+                        }
 
-                        const parent = await tx.parent.create({
-                            data: { userId: parentUser.id }
-                        });
+                        // Find or create Parent User
+                        let parentUser = await tx.user.findUnique({ where: { email: parentEmail } });
+                        if (!parentUser) {
+                            parentUser = await tx.user.create({
+                                data: {
+                                    email: parentEmail,
+                                    password: defaultHashedPassword,
+                                    firstName: `Veli - ${firstName}`,
+                                    lastName,
+                                    role: 'PARENT',
+                                    schoolId,
+                                }
+                            });
+                        }
+
+                        // Ensure Parent entity exists for parent user
+                        let parent = await tx.parent.findUnique({ where: { userId: parentUser.id } });
+                        if (!parent) {
+                            parent = await tx.parent.create({ data: { userId: parentUser.id } });
+                        }
 
                         student = await tx.student.create({
                             data: {
@@ -114,11 +148,11 @@ export class ImportService {
                         });
 
                         // Update Student Record
+                        // Do not reassign existing student's class during import
                         await tx.student.update({
                             where: { id: student.id },
                             data: {
                                 tcNo: tcNo || undefined,
-                                classId: studentClass.id
                             }
                         });
                     }

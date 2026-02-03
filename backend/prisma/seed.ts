@@ -24,34 +24,45 @@ async function main() {
         console.log('✅ Using existing school:', school.name);
     }
 
-    // Create Grade and Class
-    let grade = await prisma.grade.findFirst({
-        where: { schoolId: school.id },
-    });
-
-    if (!grade) {
-        grade = await prisma.grade.create({
-            data: {
-                name: '12. Sınıf',
-                schoolId: school.id,
-            },
+    // Create Grades (5-12) with numeric names for consistency
+    const gradeLevels = ['5', '6', '7', '8', '9', '10', '11', '12'];
+    
+    const gradeMap: { [key: string]: string } = {};
+    
+    for (const gradeName of gradeLevels) {
+        let grade = await prisma.grade.findFirst({
+            where: { name: gradeName, schoolId: school.id },
         });
-        console.log('✅ Grade created:', grade.name);
-    }
 
-    let classRoom = await prisma.class.findFirst({
-        where: { gradeId: grade.id },
-    });
+        if (!grade) {
+            grade = await prisma.grade.create({
+                data: {
+                    name: gradeName,
+                    schoolId: school.id,
+                },
+            });
+            console.log('✅ Grade created:', grade.name);
+        }
+        gradeMap[gradeName] = grade.id;
 
-    if (!classRoom) {
-        classRoom = await prisma.class.create({
-            data: {
-                name: '12-A',
-                gradeId: grade.id,
-                schoolId: school.id,
-            },
-        });
-        console.log('✅ Class created:', classRoom.name);
+        // Create sample classes for each grade (A, B sections)
+        const sectionNames = ['A', 'B'];
+        for (const section of sectionNames) {
+            let classRoom = await prisma.class.findFirst({
+                where: { name: section, gradeId: grade.id },
+            });
+
+            if (!classRoom) {
+                classRoom = await prisma.class.create({
+                    data: {
+                        name: section,
+                        gradeId: grade.id,
+                        schoolId: school.id,
+                    },
+                });
+                console.log('✅ Class created:', `${gradeName}-${section}`);
+            }
+        }
     }
 
     // 1. Create School Admin User
@@ -103,7 +114,7 @@ async function main() {
     } else {
         await prisma.user.update({
             where: { id: teacherUser.id },
-            data: { 
+            data: {
                 password: defaultPassword,
                 branch: 'Matematik'
             },
@@ -111,8 +122,14 @@ async function main() {
         console.log('✅ Teacher exists (password updated): teacher@test.com / 1234');
     }
 
-    // 3. Create Student User
+    // 3. Create Student User (using 12-A class)
     const studentNumber = '2024001';
+    const class12A = gradeMap['12'] ? (
+        await prisma.class.findFirst({
+            where: { name: 'A', gradeId: gradeMap['12'] },
+        })
+    ) : null;
+
     let studentUser = await prisma.user.findFirst({
         where: {
             student: {
@@ -122,7 +139,7 @@ async function main() {
         include: { student: true },
     });
 
-    if (!studentUser) {
+    if (!studentUser && class12A) {
         studentUser = await prisma.user.create({
             data: {
                 email: 'student1@test.com',
@@ -136,14 +153,14 @@ async function main() {
                         studentNumber: studentNumber,
                         tcNo: '12345678901',
                         schoolId: school.id,
-                        classId: classRoom.id,
+                        classId: class12A.id,
                     },
                 },
             },
             include: { student: true },
         });
         console.log(`✅ Student created: ${studentNumber} / 1234`);
-    } else {
+    } else if (studentUser) {
         await prisma.user.update({
             where: { id: studentUser.id },
             data: { password: defaultPassword },
@@ -153,6 +170,12 @@ async function main() {
 
     // 4. Create Parent User
     const parentStudentNumber = studentNumber; // Parent logs in with student number
+    
+    // Get student ID separately
+    const student = class12A ? await prisma.student.findFirst({
+        where: { studentNumber: parentStudentNumber, classId: class12A.id },
+    }) : null;
+
     let parentUser = await prisma.user.findFirst({
         where: {
             role: 'PARENT',
@@ -173,7 +196,7 @@ async function main() {
         },
     });
 
-    if (!parentUser) {
+    if (!parentUser && student) {
         parentUser = await prisma.user.create({
             data: {
                 email: 'parent1@test.com',
@@ -186,7 +209,7 @@ async function main() {
                     create: {
                         students: {
                             connect: {
-                                id: studentUser.student!.id,
+                                id: student.id,
                             },
                         },
                     },
@@ -201,7 +224,7 @@ async function main() {
             },
         });
         console.log(`✅ Parent created: ${parentStudentNumber} (öğrenci no ile giriş) / 1234`);
-    } else {
+    } else if (parentUser) {
         await prisma.user.update({
             where: { id: parentUser.id },
             data: { password: defaultPassword },
@@ -209,24 +232,99 @@ async function main() {
         console.log(`✅ Parent exists (password updated): ${parentStudentNumber} / 1234`);
     }
 
-    console.log('\n📋 Test Kullanıcıları:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🏫 Okul Yöneticisi:');
-    console.log('   Email: admin@test.com');
-    console.log('   Şifre: 12345');
-    console.log('');
-    console.log('👨‍🏫 Öğretmen:');
-    console.log('   Email: teacher@test.com');
-    console.log('   Şifre: 1234');
-    console.log('');
-    console.log('🎓 Öğrenci:');
-    console.log('   Öğrenci No: 2024001');
-    console.log('   Şifre: 1234');
-    console.log('');
-    console.log('👨‍👩‍👧 Veli:');
-    console.log('   Öğrenci No: 2024001 (öğrencinin numarası)');
-    console.log('   Şifre: 1234');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // 5. Create Subjects and Topics
+    console.log('\n📚 Creating Subjects and Topics...');
+
+    interface SubjectDef {
+        name: string;
+        examType: string;
+        type?: string;
+        gradeLevels: number[];
+        topics?: string[];
+    }
+
+    const subjects: SubjectDef[] = [
+        { name: 'Matematik', examType: 'TYT', gradeLevels: [9, 10, 11, 12] },
+        { name: 'Türkçe', examType: 'TYT', gradeLevels: [9, 10, 11, 12] },
+        { name: 'Fizik', examType: 'AYT', gradeLevels: [11, 12] },
+        { name: 'Kimya', examType: 'AYT', gradeLevels: [11, 12] },
+        { name: 'Biyoloji', examType: 'AYT', gradeLevels: [11, 12] },
+        { name: 'Tarih', examType: 'TYT', gradeLevels: [9, 10, 11, 12] },
+        { name: 'Coğrafya', examType: 'TYT', gradeLevels: [9, 10, 11, 12] },
+        {
+            name: 'Aktiviteler',
+            examType: 'GENEL',
+            type: 'ACTIVITY',
+            gradeLevels: [9, 10, 11, 12],
+            topics: ['MEBİ DENEMESİ', 'TYT DENEMESİ', 'AYT DENEMESİ', 'MSÜ DENEMESİ']
+        }
+    ];
+
+    for (const sub of subjects) {
+        let subject = await prisma.subject.findFirst({
+            where: { name: sub.name, examType: sub.examType }
+        });
+
+        if (!subject) {
+            subject = await prisma.subject.create({
+                data: {
+                    name: sub.name,
+                    examType: sub.examType,
+                    gradeLevels: sub.gradeLevels,
+                    type: sub.type || 'NORMAL',
+                    isActive: true
+                }
+            });
+            console.log(`✅ Subject created: ${sub.name}`);
+        }
+
+        // Add standard special topics for normal subjects
+        if (sub.type !== 'ACTIVITY') {
+            const specialTopics = [
+                { name: `${sub.name} Branş Denemesi`, isSpecialActivity: true },
+                { name: `${sub.name} Konu Tekrarı`, isSpecialActivity: true }
+            ];
+
+            for (const t of specialTopics) {
+                const existing = await prisma.topic.findFirst({
+                    where: { subjectId: subject.id, name: t.name }
+                });
+
+                if (!existing) {
+                    await prisma.topic.create({
+                        data: {
+                            name: t.name,
+                            subjectId: subject.id,
+                            isSpecialActivity: t.isSpecialActivity,
+                            order: 999
+                        }
+                    });
+                    console.log(`   + Topic created: ${t.name}`);
+                }
+            }
+        } else if (sub.topics) {
+            // Add defined topics for Activity subject
+            for (const tName of sub.topics) {
+                const existing = await prisma.topic.findFirst({
+                    where: { subjectId: subject.id, name: tName }
+                });
+
+                if (!existing) {
+                    await prisma.topic.create({
+                        data: {
+                            name: tName,
+                            subjectId: subject.id,
+                            isSpecialActivity: true,
+                            order: 0
+                        }
+                    });
+                    console.log(`   + Activity Topic created: ${tName}`);
+                }
+            }
+        }
+    }
 }
 
 main()

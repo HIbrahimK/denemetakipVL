@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Put, Body, Post, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Param, Put, Body, Post, Delete, UseGuards, Request, Patch } from '@nestjs/common';
 import { SchoolsService } from './schools.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -23,7 +23,7 @@ export class SchoolsController {
         return this.schoolsService.getSchool(id);
     }
 
-    @Put(':id')
+    @Patch(':id')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('SCHOOL_ADMIN')
     async updateSchool(@Param('id') id: string, @Body() dto: UpdateSchoolDto) {

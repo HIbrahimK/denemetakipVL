@@ -5,7 +5,7 @@ import { StudyTaskStatus } from '@prisma/client';
 
 @Injectable()
 export class StudyTaskService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateStudyTaskDto, schoolId: string) {
     // Verify student belongs to school
@@ -257,8 +257,9 @@ export class StudyTaskService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (task.status !== StudyTaskStatus.COMPLETED) {
-      throw new ForbiddenException('Only completed tasks can be verified');
+    // Only check completion status for parent verification
+    if (dto.verificationType === VerificationType.PARENT && task.status !== StudyTaskStatus.COMPLETED) {
+      throw new ForbiddenException('Only completed tasks can be verified by parents');
     }
 
     const updateData: any = {};
@@ -287,6 +288,15 @@ export class StudyTaskService {
       updateData.teacherComment = dto.comment;
       updateData.teacherApprovedAt = new Date();
       updateData.teacherApprovedById = userId;
+
+      // If teacher approves, task is considered COMPLETED (or VERIFIED)
+      if (dto.approved) {
+        // If not completed yet, mark as completed
+        if (task.status !== StudyTaskStatus.COMPLETED && task.status !== 'VERIFIED' as StudyTaskStatus) {
+          updateData.status = StudyTaskStatus.COMPLETED;
+          updateData.completedAt = new Date();
+        }
+      }
     }
 
     return this.prisma.studyTask.update({
@@ -421,6 +431,211 @@ export class StudyTaskService {
       },
       orderBy: {
         createdAt: 'asc',
+      },
+    });
+  }
+
+  async approveTask(taskId: string, teacherId: string, schoolId: string, comment?: string) {
+    const task = await this.prisma.studyTask.findUnique({
+      where: { id: taskId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Study task not found');
+    }
+
+    if (task.schoolId !== schoolId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    // Öğretmen onayı ile görev tamamlanmış sayılır
+    const updateData: any = {
+      teacherApproved: true,
+      teacherApprovedById: teacherId,
+      teacherApprovedAt: new Date(),
+      status: StudyTaskStatus.COMPLETED,
+    };
+
+    if (comment) {
+      updateData.teacherComment = comment;
+    }
+
+    // Eğer completedAt yoksa şimdi ekle
+    if (!task.completedAt) {
+      updateData.completedAt = new Date();
+    }
+
+    return this.prisma.studyTask.update({
+      where: { id: taskId },
+      data: updateData,
+      include: {
+        student: {
+          select: {
+            id: true,
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        teacherApprovedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  }
+
+  async rejectTask(taskId: string, teacherId: string, schoolId: string, comment: string) {
+    const task = await this.prisma.studyTask.findUnique({
+      where: { id: taskId },
+      include: {
+        student: {
+          select: {
+            id: true,
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Study task not found');
+    }
+
+    if (task.schoolId !== schoolId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    // Öğretmen reddettiğinde görev PENDING durumuna döner
+    const updateData: any = {
+      teacherApproved: false,
+      teacherApprovedById: teacherId,
+      teacherApprovedAt: new Date(),
+      teacherComment: comment,
+      status: StudyTaskStatus.PENDING,
+    };
+
+    return this.prisma.studyTask.update({
+      where: { id: taskId },
+      data: updateData,
+      include: {
+        student: {
+          select: {
+            id: true,
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        teacherApprovedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getPendingApprovalTasks(teacherId: string, schoolId: string) {
+    // Öğretmenin planlarına ait, tamamlanmış ama onaylanmamış görevleri getir
+    return this.prisma.studyTask.findMany({
+      where: {
+        schoolId,
+        status: StudyTaskStatus.COMPLETED,
+        teacherApproved: false,
+        plan: {
+          teacherId,
+        },
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+            class: {
+              select: {
+                name: true,
+                grade: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        plan: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        completedAt: 'desc',
       },
     });
   }

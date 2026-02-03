@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -347,6 +347,9 @@ export default function PlanDetailPage() {
             <Calendar className="h-5 w-5" />
             Haftalık Çalışma Planı
           </CardTitle>
+          <CardDescription>
+            Öğretmeninizin belirlediği hedefleri tabloda görebilirsiniz. Her hücreye tıklayarak görevinizi tamamlayabilirsiniz.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -393,20 +396,31 @@ export default function PlanDetailPage() {
                                   {task.topicName}
                                 </p>
                               )}
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                {task.targetQuestionCount && (
-                                  <span className="flex items-center gap-1">
-                                    <Target className="h-3 w-3" />
-                                    {task.targetQuestionCount} soru
-                                  </span>
-                                )}
-                                {task.targetDuration && (
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {formatDuration(task.targetDuration)}
-                                  </span>
-                                )}
-                              </div>
+                              
+                              {/* Teacher Targets - More Prominent */}
+                              {(task.targetQuestionCount || task.targetDuration || task.targetResource) && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-2 space-y-1 mt-2">
+                                  <p className="text-xs font-semibold text-blue-900 mb-1">Öğretmen Hedefi:</p>
+                                  {task.targetQuestionCount && (
+                                    <div className="flex items-center gap-1 text-xs text-blue-800">
+                                      <Target className="h-3 w-3 flex-shrink-0" />
+                                      <span className="font-medium">{task.targetQuestionCount} soru</span>
+                                    </div>
+                                  )}
+                                  {task.targetDuration && (
+                                    <div className="flex items-center gap-1 text-xs text-blue-800">
+                                      <Clock className="h-3 w-3 flex-shrink-0" />
+                                      <span className="font-medium">{formatDuration(task.targetDuration)}</span>
+                                    </div>
+                                  )}
+                                  {task.targetResource && (
+                                    <div className="flex items-center gap-1 text-xs text-blue-800">
+                                      <BookOpen className="h-3 w-3 flex-shrink-0" />
+                                      <span className="font-medium truncate">{task.targetResource}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                               {task.status === 'PENDING' && (
                                 <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
                                   Yapılmadı

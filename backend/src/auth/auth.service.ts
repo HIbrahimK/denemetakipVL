@@ -24,12 +24,12 @@ export class AuthService {
         });
 
         if (!user || !['SCHOOL_ADMIN', 'TEACHER', 'SUPER_ADMIN'].includes(user.role)) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         const isPasswordValid = await this.comparePassword(loginDto.password, user.password);
         if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         return this.generateToken(user);
@@ -54,12 +54,12 @@ export class AuthService {
         });
 
         if (!student || student.user.role !== 'STUDENT') {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         const isPasswordValid = await this.comparePassword(loginDto.password, student.user.password);
         if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         // Include student info in the response
@@ -92,13 +92,13 @@ export class AuthService {
         });
 
         if (!student || !student.parent || student.parent.user.role !== 'PARENT') {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         const user = student.parent.user;
         const isPasswordValid = await this.comparePassword(loginDto.password, user.password);
         if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Geçersiz kimlik bilgileri');
         }
 
         return this.generateToken(user);

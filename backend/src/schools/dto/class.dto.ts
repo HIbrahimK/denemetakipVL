@@ -1,19 +1,41 @@
-import { IsNotEmpty, IsString, IsArray, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsArray, IsOptional, IsNumber, IsInt } from 'class-validator';
 
 export class CreateClassDto {
-    @IsNotEmpty()
-    @IsString()
-    name: string;
+    // Yeni format: gradeLevel ve section
+    @IsOptional()
+    @IsInt()
+    gradeLevel?: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
-    gradeId: string;
-}
+    section?: string;
 
-export class UpdateClassDto {
+    // Eski format: name ve gradeId (geriye dönük uyumluluk için)
+    @IsOptional()
     @IsString()
     name?: string;
 
+    @IsOptional()
+    @IsString()
+    gradeId?: string;
+}
+
+export class UpdateClassDto {
+    // Yeni format: gradeLevel ve section
+    @IsOptional()
+    @IsInt()
+    gradeLevel?: number;
+
+    @IsOptional()
+    @IsString()
+    section?: string;
+
+    // Eski format: name ve gradeId (geriye dönük uyumluluk için)
+    @IsOptional()
+    @IsString()
+    name?: string;
+
+    @IsOptional()
     @IsString()
     gradeId?: string;
 }
@@ -35,6 +57,5 @@ export class TransferStudentsDto {
 
     @IsOptional()
     @IsArray()
-    @IsString({ each: true })
     studentIds?: string[]; // Boşsa tüm öğrenciler aktarılır
 }

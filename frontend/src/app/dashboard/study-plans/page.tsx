@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Users, Target, TrendingUp, Loader2, BookOpen, Eye, Filter, Copy, FileText, GraduationCap, Send, Trash2, Search, X, Settings } from 'lucide-react';
+import { Plus, Calendar, Users, Target, TrendingUp, Loader2, BookOpen, Eye, Filter, Copy, FileText, GraduationCap, Send, Search, X, Settings, ArrowLeft, ChevronDown, Check, Edit, AlertCircle, Archive, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -104,21 +104,24 @@ export default function StudyPlansPage() {
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const { toast } = useToast();
-  
+
   // Filters
   const [examTypeFilter, setExamTypeFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Template Filters (Monthly + Sort)
   const [templateMonth, setTemplateMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
   const [templateYear, setTemplateYear] = useState<number>(new Date().getFullYear());
   const [templateCreatedBy, setTemplateCreatedBy] = useState<string>('all'); // 'mine' | 'all'
   const [templateSortBy, setTemplateSortBy] = useState<string>('newest'); // 'newest' | 'most-used' | 'name'
-  
+
   // Active tab
   const [activeTab, setActiveTab] = useState('active'); // Changed default to 'active'
-  
+
+  // Assignment summaries for plans
+  const [assignmentSummaries, setAssignmentSummaries] = useState<Record<string, string>>({});
+
   // Assignment Modal State
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedPlanForAssignment, setSelectedPlanForAssignment] = useState<StudyPlan | null>(null);
@@ -128,18 +131,18 @@ export default function StudyPlansPage() {
   const [assignmentMonth, setAssignmentMonth] = useState(new Date().getMonth() + 1);
   const [assignmentWeek, setAssignmentWeek] = useState(1);
   const [assigning, setAssigning] = useState(false);
-  
+
   // Assignment data sources
   const [students, setStudents] = useState<Student[]>([]);
   const [groups, setGroups] = useState<MentorGroup[]>([]);
   const [grades, setGrades] = useState<Grade[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [studentSearch, setStudentSearch] = useState('');
-  
+
   // Delete Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedPlanForDelete, setSelectedPlanForDelete] = useState<StudyPlan | null>(null);
-  const [deleteMode, setDeleteMode] = useState<'cancel' | 'delete'>('cancel');
+  const [deleteMode, setDeleteMode] = useState<'cancel' | 'delete' | 'archive'>('cancel');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -163,42 +166,42 @@ export default function StudyPlansPage() {
   // Apply filters to templates
   useEffect(() => {
     let filtered = templates;
-    
+
     if (examTypeFilter !== 'ALL') {
       filtered = filtered.filter(p => p.examType === examTypeFilter);
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.description?.toLowerCase().includes(query)
       );
     }
-    
+
     setFilteredTemplates(filtered);
   }, [templates, examTypeFilter, searchQuery]);
 
   // Apply filters to assigned plans
   useEffect(() => {
     let filtered = plans;
-    
+
     if (examTypeFilter !== 'ALL') {
       filtered = filtered.filter(p => p.examType === examTypeFilter);
     }
-    
+
     if (statusFilter !== 'ALL') {
       filtered = filtered.filter(p => p.status === statusFilter);
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(query) ||
         p.description?.toLowerCase().includes(query)
       );
     }
-    
+
     setFilteredPlans(filtered);
   }, [plans, examTypeFilter, statusFilter, searchQuery]);
 
@@ -213,7 +216,7 @@ export default function StudyPlansPage() {
         createdBy: templateCreatedBy,
         sortBy: templateSortBy,
       });
-      
+
       const templatesResponse = await fetch(`http://localhost:3001/study/plans/templates?${templateParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -230,11 +233,11 @@ export default function StudyPlansPage() {
       if (templatesResponse.ok && plansResponse.ok) {
         const templatesData = await templatesResponse.json();
         const plansData = await plansResponse.json();
-        
+
         // Kullanıcı rolüne göre filtreleme
         const userStr = localStorage.getItem('user');
         const currentUser = userStr ? JSON.parse(userStr) : null;
-        
+
         if (currentUser?.role === 'STUDENT') {
           // Öğrenci için: tüm atanan planları göster
           setPlans(plansData.filter((p: StudyPlan) => p.status === 'ACTIVE' || p.status === 'ASSIGNED'));
@@ -243,6 +246,9 @@ export default function StudyPlansPage() {
           // Öğretmen/Admin için: template'ler ve atanan planlar ayrı
           setTemplates(templatesData);
           setPlans(plansData);
+          
+          // Fetch assignment summaries for templates and active plans
+          fetchAssignmentSummaries([...templatesData, ...plansData]);
         }
       }
     } catch (error) {
@@ -252,9 +258,85 @@ export default function StudyPlansPage() {
     }
   };
 
+  const fetchAssignmentSummaries = async (allPlans: StudyPlan[]) => {
+    const token = localStorage.getItem('token');
+    const summaries: Record<string, string> = {};
+
+    for (const plan of allPlans) {
+      try {
+        const response = await fetch(`http://localhost:3001/study/plans/${plan.id}/assignment-summary`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          summaries[plan.id] = formatAssignmentSummary(data);
+        }
+      } catch (error) {
+        console.error(`Error fetching summary for plan ${plan.id}:`, error);
+      }
+    }
+    
+    setAssignmentSummaries(summaries);
+  };
+
+  const formatAssignmentSummary = (summary: any): string => {
+    if (!summary || !summary.assignments || summary.assignments.length === 0) {
+      return '';
+    }
+
+    const parts: string[] = [];
+    
+    // Count by type
+    const studentCount = summary.assignments.filter((a: any) => a.targetType === 'STUDENT').length;
+    const groupCount = summary.assignments.filter((a: any) => a.targetType === 'GROUP').length;
+    const classCount = summary.assignments.filter((a: any) => a.targetType === 'CLASS').length;
+    const gradeCount = summary.assignments.filter((a: any) => a.targetType === 'GRADE').length;
+
+    // Build summary text
+    if (gradeCount > 0) {
+      const grades = summary.assignments
+        .filter((a: any) => a.targetType === 'GRADE')
+        .map((a: any) => `${a.targetName}. sınıflar`)
+        .join(', ');
+      parts.push(grades);
+    }
+    
+    if (classCount > 0) {
+      const classes = summary.assignments
+        .filter((a: any) => a.targetType === 'CLASS')
+        .map((a: any) => a.targetName)
+        .join(', ');
+      parts.push(classes);
+    }
+    
+    if (groupCount > 0) {
+      const groups = summary.assignments
+        .filter((a: any) => a.targetType === 'GROUP')
+        .map((a: any) => a.targetName);
+      
+      if (groups.length === 1) {
+        parts.push(groups[0]);
+      } else if (groups.length > 1) {
+        parts.push(`${groups.length} Grup`);
+      }
+    }
+    
+    if (studentCount > 0) {
+      if (studentCount === 1) {
+        const studentName = summary.assignments.find((a: any) => a.targetType === 'STUDENT')?.targetName;
+        parts.push(studentName || '1 Öğrenci');
+      } else {
+        parts.push(`${studentCount} Öğrenci`);
+      }
+    }
+
+    return parts.join(', ');
+  };
+
   const fetchAssignmentData = async () => {
     const token = localStorage.getItem('token');
-    
+
     try {
       // Fetch students
       const studentsRes = await fetch('http://localhost:3001/students', {
@@ -288,7 +370,7 @@ export default function StudyPlansPage() {
       if (userStr) {
         const userData = JSON.parse(userStr);
         const schoolId = userData.schoolId;
-        
+
         const classesRes = await fetch(`http://localhost:3001/schools/${schoolId}/classes`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -343,8 +425,8 @@ export default function StudyPlansPage() {
   };
 
   const toggleTarget = (id: string) => {
-    setSelectedTargets(prev => 
-      prev.includes(id) 
+    setSelectedTargets(prev =>
+      prev.includes(id)
         ? prev.filter(t => t !== id)
         : [...prev, id]
     );
@@ -353,7 +435,7 @@ export default function StudyPlansPage() {
   const getFilteredStudents = () => {
     if (!studentSearch) return students.slice(0, 20);
     const search = studentSearch.toLowerCase();
-    return students.filter(s => 
+    return students.filter(s =>
       s.user.firstName.toLowerCase().includes(search) ||
       s.user.lastName.toLowerCase().includes(search) ||
       s.studentNumber.includes(search)
@@ -361,17 +443,17 @@ export default function StudyPlansPage() {
   };
 
   const getMonthName = (month: number) => {
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     return months[month - 1];
   };
 
   const handleAssign = async () => {
     if (!selectedPlanForAssignment || selectedTargets.length === 0) return;
-    
+
     setAssigning(true);
     const token = localStorage.getItem('token');
-    
+
     try {
       const targets = selectedTargets.map(id => ({
         type: assignmentTargetType,
@@ -399,7 +481,7 @@ export default function StudyPlansPage() {
 
       const result = await response.json();
       const { summary } = result;
-      
+
       // Build detailed message
       const messageParts: string[] = [];
       if (summary.students.count > 0) {
@@ -435,7 +517,13 @@ export default function StudyPlansPage() {
     }
   };
 
-  // Delete functions
+  // Delete/Archive functions
+  const openArchiveModal = (plan: StudyPlan) => {
+    setSelectedPlanForDelete(plan);
+    setDeleteMode('archive');
+    setDeleteModalOpen(true);
+  };
+
   const openDeleteModal = (plan: StudyPlan) => {
     setSelectedPlanForDelete(plan);
     setDeleteMode('cancel');
@@ -450,26 +538,39 @@ export default function StudyPlansPage() {
 
   const handleDelete = async () => {
     if (!selectedPlanForDelete) return;
-    
+
     setDeleting(true);
     const token = localStorage.getItem('token');
-    
+
     try {
-      const response = await fetch(`http://localhost:3001/study/plans/${selectedPlanForDelete.id}?mode=${deleteMode}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      let response;
+
+      if (deleteMode === 'archive') {
+        response = await fetch(`http://localhost:3001/study/plans/${selectedPlanForDelete.id}/archive`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      } else {
+        response = await fetch(`http://localhost:3001/study/plans/${selectedPlanForDelete.id}?mode=${deleteMode}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Plan silinirken hata oluştu');
+        throw new Error(error.message || 'İşlem sırasında hata oluştu');
       }
 
       toast({
         title: 'Başarılı',
-        description: deleteMode === 'delete' ? 'Şablon silindi' : 'Atamalar iptal edildi',
+        description: deleteMode === 'archive'
+          ? 'Plan arşivlendi'
+          : (deleteMode === 'delete' ? 'Şablon silindi' : 'Atamalar iptal edildi'),
       });
 
       setDeleteModalOpen(false);
@@ -488,7 +589,7 @@ export default function StudyPlansPage() {
   // Duplicate function
   const handleDuplicate = async (plan: StudyPlan) => {
     const token = localStorage.getItem('token');
-    
+
     try {
       const response = await fetch(`http://localhost:3001/study/plans/${plan.id}/duplicate`, {
         method: 'POST',
@@ -540,7 +641,7 @@ export default function StudyPlansPage() {
         <div>
           <h1 className="text-3xl font-bold">Çalışma Planları</h1>
           <p className="text-muted-foreground mt-1">
-            {user?.role === 'STUDENT' 
+            {user?.role === 'STUDENT'
               ? 'Çalışma planlarınızı görüntüleyin ve takip edin'
               : 'Plan şablonları oluşturun ve öğrencilere atayın'}
           </p>
@@ -566,7 +667,7 @@ export default function StudyPlansPage() {
             <Link href="/dashboard/study-plans/new">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Yeni Şablon Oluştur
+                Yeni Çalışma Planı Hazırla
               </Button>
             </Link>
           </div>
@@ -720,6 +821,14 @@ export default function StudyPlansPage() {
                                 return <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>;
                               })()}
                             </div>
+                            
+                            {/* Assignment Info */}
+                            {assignmentSummaries[plan.id] && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Users className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <span className="text-muted-foreground">{assignmentSummaries[plan.id]}</span>
+                              </div>
+                            )}
                             <div className="flex justify-between pt-2">
                               <div className="flex gap-2">
                                 <Button
@@ -743,10 +852,10 @@ export default function StudyPlansPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => openDeleteModal(plan)}
-                                  className="text-red-600 hover:text-red-700"
+                                  onClick={() => openArchiveModal(plan)}
+                                  className="text-amber-600 hover:text-amber-700"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Archive className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -891,14 +1000,14 @@ export default function StudyPlansPage() {
                                 </Badge>
                               )}
                             </div>
-                            
+
                             {/* Teacher info */}
                             {plan.teacher && (
                               <div className="text-xs text-muted-foreground">
                                 Oluşturan: {plan.teacher.firstName} {plan.teacher.lastName}
                               </div>
                             )}
-                            
+
                             {/* Grade levels */}
                             <div className="flex flex-wrap gap-1">
                               {plan.gradeLevels.map(grade => (
@@ -907,28 +1016,38 @@ export default function StudyPlansPage() {
                                 </Badge>
                               ))}
                             </div>
+                            
+                            {/* Assignment Info */}
+                            {assignmentSummaries[plan.id] && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Users className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <span className="text-muted-foreground line-clamp-1">
+                                  Atanan: {assignmentSummaries[plan.id]}
+                                </span>
+                              </div>
+                            )}
 
                             {/* Actions */}
                             <div className="flex justify-between pt-2">
                               <div className="flex gap-2">
-                                <Button 
-                                  variant="ghost" 
+                                <Button
+                                  variant="ghost"
                                   size="sm"
                                   onClick={() => router.push(`/dashboard/study-plans/${plan.id}`)}
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   Detay
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
+                                <Button
+                                  variant="ghost"
                                   size="sm"
                                   onClick={() => handleDuplicate(plan)}
                                 >
                                   <Copy className="h-4 w-4 mr-1" />
                                   Kopyala ve Düzenle
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
+                                <Button
+                                  variant="ghost"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -940,7 +1059,7 @@ export default function StudyPlansPage() {
                                   Sil
                                 </Button>
                               </div>
-                              <Button 
+                              <Button
                                 size="sm"
                                 onClick={() => openAssignModal(plan)}
                               >
@@ -981,8 +1100,8 @@ export default function StudyPlansPage() {
                 {filteredPlans.map((plan) => {
                   const statusBadge = getStatusBadge(plan.status);
                   return (
-                    <Card 
-                      key={plan.id} 
+                    <Card
+                      key={plan.id}
                       className="cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => router.push(`/dashboard/study-plans/${plan.id}`)}
                     >
@@ -1017,94 +1136,117 @@ export default function StudyPlansPage() {
 
       {/* Assignment Modal */}
       <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Plan Ata: {selectedPlanForAssignment?.name}</DialogTitle>
             <DialogDescription>
-              Bu planı öğrencilere, gruplara veya sınıflara atayın
+              Adım adım atama işlemini tamamlayın
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-4">
-            {/* Target Type Selection */}
-            <div className="space-y-2">
-              <Label>Hedef Tipi</Label>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant={assignmentTargetType === 'STUDENT' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => { setAssignmentTargetType('STUDENT'); setSelectedTargets([]); }}
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Öğrenci
-                </Button>
-                <Button
-                  type="button"
-                  variant={assignmentTargetType === 'GROUP' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => { setAssignmentTargetType('GROUP'); setSelectedTargets([]); }}
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Mentör Grubu
-                </Button>
-                <Button
-                  type="button"
-                  variant={assignmentTargetType === 'CLASS' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => { setAssignmentTargetType('CLASS'); setSelectedTargets([]); }}
-                >
-                  <GraduationCap className="h-4 w-4 mr-1" />
-                  Şube
-                </Button>
-                <Button
-                  type="button"
-                  variant={assignmentTargetType === 'GRADE' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => { setAssignmentTargetType('GRADE'); setSelectedTargets([]); }}
-                >
-                  <GraduationCap className="h-4 w-4 mr-1" />
-                  Sınıf Seviyesi
-                </Button>
+            {/* Step Indicator */}
+            <div className="flex items-center justify-between mb-4 px-2">
+              <div className={`flex flex-col items-center ${assignmentTargetType ? 'text-primary' : 'text-muted-foreground'}`}>
+                <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold mb-1 bg-primary text-white border-primary">1</div>
+                <span className="text-xs">Hedef Tipi</span>
+              </div>
+              <div className="h-0.5 flex-1 bg-muted mx-4" />
+              <div className={`flex flex-col items-center ${selectedTargets.length > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold mb-1 ${selectedTargets.length > 0 ? 'bg-primary text-white border-primary' : 'border-muted-foreground'}`}>2</div>
+                <span className="text-xs">Seçim</span>
+              </div>
+              <div className="h-0.5 flex-1 bg-muted mx-4" />
+              <div className={`flex flex-col items-center ${assignmentYear ? 'text-primary' : 'text-muted-foreground'}`}>
+                <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold mb-1 border-muted-foreground">3</div>
+                <span className="text-xs">Tarih</span>
               </div>
             </div>
 
-            {/* Target Selection */}
-            <div className="space-y-2">
-              <Label>
-                {assignmentTargetType === 'STUDENT' && 'Öğrenci Seçimi'}
-                {assignmentTargetType === 'GROUP' && 'Grup Seçimi'}
-                {assignmentTargetType === 'CLASS' && 'Şube Seçimi'}
-                {assignmentTargetType === 'GRADE' && 'Sınıf Seviyesi Seçimi'}
+            {/* Step 1: Target Type Selection */}
+            <div className="space-y-4">
+              <Label className="text-base">Atama Yapılacak Grup/Kişi Tipi</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div
+                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'GRADE' ? 'border-primary bg-primary/5' : ''}`}
+                  onClick={() => { setAssignmentTargetType('GRADE'); setSelectedTargets([]); }}
+                >
+                  <GraduationCap className="h-6 w-6 mb-2 text-primary" />
+                  <div className="font-medium">Sınıf Seviyesi</div>
+                  <div className="text-xs text-muted-foreground">Tüm 12. sınıflar vb.</div>
+                </div>
+                <div
+                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'CLASS' ? 'border-primary bg-primary/5' : ''}`}
+                  onClick={() => { setAssignmentTargetType('CLASS'); setSelectedTargets([]); }}
+                >
+                  <Users className="h-6 w-6 mb-2 text-blue-600" />
+                  <div className="font-medium">Şube (Sınıf)</div>
+                  <div className="text-xs text-muted-foreground">12-A, 11-B vb.</div>
+                </div>
+                <div
+                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'GROUP' ? 'border-primary bg-primary/5' : ''}`}
+                  onClick={() => { setAssignmentTargetType('GROUP'); setSelectedTargets([]); }}
+                >
+                  <Users className="h-6 w-6 mb-2 text-green-600" />
+                  <div className="font-medium">Mentör Grubu</div>
+                  <div className="text-xs text-muted-foreground">Özel çalışma grupları</div>
+                </div>
+                <div
+                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'STUDENT' ? 'border-primary bg-primary/5' : ''}`}
+                  onClick={() => { setAssignmentTargetType('STUDENT'); setSelectedTargets([]); }}
+                >
+                  <Users className="h-6 w-6 mb-2 text-orange-600" />
+                  <div className="font-medium">Bireysel Öğrenci</div>
+                  <div className="text-xs text-muted-foreground">Tek tek seçim</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Selection */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-base flex justify-between">
+                <span>
+                  {assignmentTargetType === 'GRADE' && 'Sınıf Seviyelerini Seçin'}
+                  {assignmentTargetType === 'CLASS' && 'Şubeleri Seçin'}
+                  {assignmentTargetType === 'GROUP' && 'Mentör Gruplarını Seçin'}
+                  {assignmentTargetType === 'STUDENT' && 'Öğrencileri Seçin'}
+                </span>
+                {selectedTargets.length > 0 && (
+                  <Badge variant="secondary">{selectedTargets.length} Seçildi</Badge>
+                )}
               </Label>
 
-              {/* Student Search */}
-              {assignmentTargetType === 'STUDENT' && (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              {/* Filtering for Classes/Students */}
+              {(assignmentTargetType === 'CLASS' || assignmentTargetType === 'STUDENT') && (
+                <div className="flex gap-2 mb-2">
+                  {/* Grade Filter could go here if we fetch grades properly and filter classes */}
+                  {assignmentTargetType === 'CLASS' && (
+                    <div className="text-xs text-muted-foreground">
+                      * Listeden şubeleri seçiniz. Her şube için öğrenci sayısı bellidir.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Selection Lists */}
+              <div className="border rounded-md max-h-60 overflow-y-auto bg-slate-50">
+                {assignmentTargetType === 'STUDENT' && (
+                  <div className="p-2">
                     <Input
                       placeholder="Öğrenci ara..."
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
-                      className="pl-10"
+                      className="mb-2"
                     />
-                  </div>
-                  <div className="border rounded-md max-h-48 overflow-y-auto">
                     {getFilteredStudents().map(student => (
-                      <div 
-                        key={student.id}
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-muted border-b last:border-b-0"
-                      >
+                      <div key={student.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
                         <Checkbox
                           id={`student-${student.id}`}
                           checked={selectedTargets.includes(student.id)}
                           onCheckedChange={() => toggleTarget(student.id)}
                         />
                         <Label htmlFor={`student-${student.id}`} className="flex-1 cursor-pointer">
-                          <div className="font-medium">
-                            {student.user.firstName} {student.user.lastName}
-                          </div>
+                          <div className="font-medium">{student.user.firstName} {student.user.lastName}</div>
                           <div className="text-xs text-muted-foreground">
                             {student.studentNumber} - {student.class?.name || 'Sınıf yok'}
                           </div>
@@ -1112,168 +1254,111 @@ export default function StudyPlansPage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Group Selection */}
-              {assignmentTargetType === 'GROUP' && (
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  {groups.map(group => (
-                    <div 
-                      key={group.id}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-muted border-b last:border-b-0"
-                    >
-                      <Checkbox
-                        id={`group-${group.id}`}
-                        checked={selectedTargets.includes(group.id)}
-                        onCheckedChange={() => toggleTarget(group.id)}
-                      />
-                      <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer">
-                        <div className="font-medium">{group.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {group._count?.students || 0} öğrenci
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
-                  {groups.length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground">
-                      Henüz mentör grubunuz yok
-                    </div>
-                  )}
-                </div>
-              )}
+                {assignmentTargetType === 'GROUP' && groups.map(group => (
+                  <div key={group.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
+                    <Checkbox
+                      id={`group-${group.id}`}
+                      checked={selectedTargets.includes(group.id)}
+                      onCheckedChange={() => toggleTarget(group.id)}
+                    />
+                    <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer">
+                      <div className="font-medium">{group.name}</div>
+                      <div className="text-xs text-muted-foreground">{group._count?.students || 0} öğrenci</div>
+                    </Label>
+                  </div>
+                ))}
 
-              {/* Class Selection */}
-              {assignmentTargetType === 'CLASS' && (
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  {classes.map(cls => (
-                    <div 
-                      key={cls.id}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-muted border-b last:border-b-0"
-                    >
-                      <Checkbox
-                        id={`class-${cls.id}`}
-                        checked={selectedTargets.includes(cls.id)}
-                        onCheckedChange={() => toggleTarget(cls.id)}
-                      />
-                      <Label htmlFor={`class-${cls.id}`} className="flex-1 cursor-pointer">
-                        <div className="font-medium">{cls.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {cls.grade?.level}. Sınıf - {cls._count?.students || 0} öğrenci
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
-                  {classes.length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground">
-                      Şube bulunamadı
-                    </div>
-                  )}
-                </div>
-              )}
+                {assignmentTargetType === 'CLASS' && classes.map(cls => (
+                  <div key={cls.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
+                    <Checkbox
+                      id={`class-${cls.id}`}
+                      checked={selectedTargets.includes(cls.id)}
+                      onCheckedChange={() => toggleTarget(cls.id)}
+                    />
+                    <Label htmlFor={`class-${cls.id}`} className="flex-1 cursor-pointer">
+                      <div className="font-medium">{cls.name}</div>
+                      <div className="text-xs text-muted-foreground">{cls.grade?.level}. Sınıf - {cls._count?.students || 0} öğrenci</div>
+                    </Label>
+                  </div>
+                ))}
 
-              {/* Grade Selection */}
-              {assignmentTargetType === 'GRADE' && (
-                <div className="border rounded-md max-h-48 overflow-y-auto">
-                  {grades.map(grade => (
-                    <div 
-                      key={grade.id}
-                      className="flex items-center gap-2 px-3 py-2 hover:bg-muted border-b last:border-b-0"
-                    >
-                      <Checkbox
-                        id={`grade-${grade.id}`}
-                        checked={selectedTargets.includes(grade.id)}
-                        onCheckedChange={() => toggleTarget(grade.id)}
-                      />
-                      <Label htmlFor={`grade-${grade.id}`} className="flex-1 cursor-pointer">
-                        <div className="font-medium">{grade.level}. Sınıf</div>
-                        <div className="text-xs text-muted-foreground">
-                          Tüm {grade.level}. sınıf öğrencileri
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
-                  {grades.length === 0 && (
-                    <div className="p-4 text-center text-muted-foreground">
-                      Sınıf seviyesi bulunamadı
-                    </div>
-                  )}
-                </div>
-              )}
+                {assignmentTargetType === 'GRADE' && grades.map(grade => (
+                  <div key={grade.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
+                    <Checkbox
+                      id={`grade-${grade.id}`}
+                      checked={selectedTargets.includes(grade.id)}
+                      onCheckedChange={() => toggleTarget(grade.id)}
+                    />
+                    <Label htmlFor={`grade-${grade.id}`} className="flex-1 cursor-pointer">
+                      <div className="font-medium">{grade.level}. Sınıf</div>
+                      <div className="text-xs text-muted-foreground">Tüm {grade.level}. şubeleri</div>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              {/* Selected count */}
-              {selectedTargets.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Badge variant="secondary">{selectedTargets.length} seçildi</Badge>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setSelectedTargets([])}
+            {/* Step 3: Date Selection */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-base">Plan Başlangıç Tarihi</Label>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Yıl</Label>
+                  <Select
+                    value={assignmentYear.toString()}
+                    onValueChange={(v) => setAssignmentYear(parseInt(v))}
                   >
-                    <X className="h-3 w-3 mr-1" />
-                    Temizle
-                  </Button>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i).map(y => (
+                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
-            </div>
-
-            {/* Week Selection */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Yıl</Label>
-                <Select 
-                  value={assignmentYear.toString()} 
-                  onValueChange={(v) => setAssignmentYear(parseInt(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2025">2025</SelectItem>
-                    <SelectItem value="2026">2026</SelectItem>
-                    <SelectItem value="2027">2027</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label>Ay</Label>
+                  <Select
+                    value={assignmentMonth.toString()}
+                    onValueChange={(v) => setAssignmentMonth(parseInt(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                        <SelectItem key={m} value={m.toString()}>{getMonthName(m)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Hafta</Label>
+                  <Select
+                    value={assignmentWeek.toString()}
+                    onValueChange={(v) => setAssignmentWeek(parseInt(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1. Hafta</SelectItem>
+                      <SelectItem value="2">2. Hafta</SelectItem>
+                      <SelectItem value="3">3. Hafta</SelectItem>
+                      <SelectItem value="4">4. Hafta</SelectItem>
+                      <SelectItem value="5">5. Hafta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Ay</Label>
-                <Select 
-                  value={assignmentMonth.toString()} 
-                  onValueChange={(v) => setAssignmentMonth(parseInt(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
-                      <SelectItem key={m} value={m.toString()}>{getMonthName(m)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>Seçilen Başlangıç: <strong>{getMonthName(assignmentMonth)} {assignmentYear}, {assignmentWeek}. Hafta</strong></span>
               </div>
-              <div className="space-y-2">
-                <Label>Hafta</Label>
-                <Select 
-                  value={assignmentWeek.toString()} 
-                  onValueChange={(v) => setAssignmentWeek(parseInt(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1. Hafta</SelectItem>
-                    <SelectItem value="2">2. Hafta</SelectItem>
-                    <SelectItem value="3">3. Hafta</SelectItem>
-                    <SelectItem value="4">4. Hafta</SelectItem>
-                    <SelectItem value="5">5. Hafta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="p-3 bg-muted rounded-lg text-sm">
-              <strong>Seçilen Dönem:</strong> {getMonthName(assignmentMonth)} {assignmentYear}, {assignmentWeek}. Hafta
             </div>
           </div>
 
@@ -1281,9 +1366,10 @@ export default function StudyPlansPage() {
             <Button variant="outline" onClick={() => setAssignModalOpen(false)}>
               İptal
             </Button>
-            <Button 
-              onClick={handleAssign} 
+            <Button
+              onClick={handleAssign}
               disabled={assigning || selectedTargets.length === 0}
+              className="px-8"
             >
               {assigning ? (
                 <>
@@ -1293,7 +1379,7 @@ export default function StudyPlansPage() {
               ) : (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Planı Ata ({selectedTargets.length})
+                  Atamayı Tamamla ({selectedTargets.length})
                 </>
               )}
             </Button>
@@ -1309,15 +1395,34 @@ export default function StudyPlansPage() {
               {selectedPlanForDelete?.isTemplate ? 'Şablonu Sil' : 'Planı Sil'}: {selectedPlanForDelete?.name}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {selectedPlanForDelete?.isTemplate 
+              {selectedPlanForDelete?.isTemplate
                 ? 'Bu şablon kalıcı olarak silinecektir. Bu işlem geri alınamaz.'
-                : 'Bu işlem geri alınamaz. Lütfen silme seçeneğini belirleyin:'}
+                : (deleteMode === 'archive'
+                  ? 'Bu planı arşivlemek istediğinize emin misiniz?'
+                  : 'Bu işlem geri alınamaz. Lütfen silme seçeneğini belirleyin:')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
-          {!selectedPlanForDelete?.isTemplate && (
+
+          {!selectedPlanForDelete?.isTemplate && deleteMode === 'archive' && (
+            <div className="py-2">
+              <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
+                <div className="flex gap-3">
+                  <Archive className="h-5 w-5 text-amber-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-amber-900 mb-1">Planı Arşivle</h4>
+                    <p className="text-sm text-amber-800">
+                      Bu plan arşive kaldırılacak. Öğrenci performans verileri ve geçmiş kayıtlar korunacaktır.
+                      Plan artık aktif listesinde görünmeyecektir.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!selectedPlanForDelete?.isTemplate && deleteMode !== 'archive' && (
             <div className="space-y-3 py-4">
-              <div 
+              <div
                 className={`p-4 border rounded-lg cursor-pointer transition-colors ${deleteMode === 'cancel' ? 'border-primary bg-primary/5' : 'hover:border-muted-foreground'}`}
                 onClick={() => setDeleteMode('cancel')}
               >
@@ -1326,14 +1431,14 @@ export default function StudyPlansPage() {
                   <div>
                     <div className="font-medium">Sadece Atamaları İptal Et</div>
                     <div className="text-sm text-muted-foreground">
-                      Şablon korunur, ancak bu plana yapılan tüm atamalar iptal edilir. 
+                      Şablon korunur, ancak bu plana yapılan tüm atamalar iptal edilir.
                       Öğrenci performans verileri silinmez.
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <div 
+
+              <div
                 className={`p-4 border rounded-lg cursor-pointer transition-colors ${deleteMode === 'delete' ? 'border-destructive bg-destructive/5' : 'hover:border-muted-foreground'}`}
                 onClick={() => setDeleteMode('delete')}
               >
@@ -1379,7 +1484,7 @@ export default function StudyPlansPage() {
                   İşleniyor...
                 </>
               ) : (
-                deleteMode === 'cancel' ? 'Atamaları İptal Et' : 'Planı Sil'
+                deleteMode === 'archive' ? 'Arşivle' : (deleteMode === 'cancel' ? 'Atamaları İptal Et' : 'Planı Sil')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

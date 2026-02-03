@@ -75,6 +75,25 @@ export default function StudyPlanSettingsPage() {
 
     setSaving(true);
     const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (!token) {
+      toast({
+        title: 'Hata',
+        description: 'Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.',
+        variant: 'destructive',
+      });
+      setSaving(false);
+      router.push('/login/school');
+      return;
+    }
+
+    console.log('Saving settings:', { 
+      schoolId: school.id, 
+      autoCleanupEnabled, 
+      cleanupMonthsToKeep,
+      user: userStr ? JSON.parse(userStr) : null 
+    });
 
     try {
       const response = await fetch(`http://localhost:3001/schools/${school.id}`, {
@@ -89,9 +108,27 @@ export default function StudyPlanSettingsPage() {
         }),
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Ayarlar kaydedilirken hata oluştu');
+        let errorMessage = 'Ayarlar kaydedilirken hata oluştu';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || errorMessage;
+          console.error('Backend error:', error);
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+        }
+        
+        if (response.status === 404) {
+          errorMessage = 'Okul bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.';
+        } else if (response.status === 401 || response.status === 403) {
+          errorMessage = 'Bu işlem için yetkiniz yok. SCHOOL_ADMIN rolü gerekli.';
+          // Redirect to login if unauthorized
+          setTimeout(() => router.push('/login/school'), 2000);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       toast({
@@ -101,6 +138,7 @@ export default function StudyPlanSettingsPage() {
 
       fetchSchoolSettings();
     } catch (error: any) {
+      console.error('Save settings error:', error);
       toast({
         title: 'Hata',
         description: error.message || 'Bir hata oluştu',

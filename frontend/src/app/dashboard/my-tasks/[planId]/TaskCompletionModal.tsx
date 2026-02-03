@@ -205,36 +205,55 @@ export function TaskCompletionModal({
         </DialogHeader>
 
         {/* Task Info */}
-        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{task.subjectName || 'Ders belirtilmemiş'}</span>
+            <BookOpen className="h-5 w-5 text-blue-700" />
+            <span className="font-semibold text-blue-900">{task.subjectName || 'Ders belirtilmemiş'}</span>
           </div>
           {task.topicName && (
-            <div className="text-sm text-muted-foreground pl-6">
+            <div className="text-sm text-blue-800 pl-7 font-medium">
               Konu: {task.topicName}
             </div>
           )}
-          <div className="flex flex-wrap gap-3 text-sm pt-2">
-            {task.targetQuestionCount && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Target className="h-3 w-3" />
-                Hedef: {task.targetQuestionCount} soru
-              </Badge>
-            )}
-            {task.targetDuration && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Hedef: {formatDuration(task.targetDuration)}
-              </Badge>
-            )}
-            {task.targetResource && (
-              <Badge variant="outline" className="flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                Kaynak: {task.targetResource}
-              </Badge>
-            )}
-          </div>
+          
+          {/* Teacher-Defined Targets - Prominent Display */}
+          {(task.targetQuestionCount || task.targetDuration || task.targetResource) && (
+            <div className="bg-white rounded-lg p-3 border-2 border-blue-300 mt-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="h-4 w-4 text-blue-700" />
+                <span className="font-bold text-blue-900 text-sm">Öğretmeninizin Belirlediği Hedefler:</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {task.targetQuestionCount && (
+                  <div className="flex items-center gap-2 bg-blue-50 p-2 rounded">
+                    <Target className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm text-blue-600 font-medium">Soru Sayısı:</span>
+                      <span className="text-base font-bold text-blue-900 ml-2">{task.targetQuestionCount} soru</span>
+                    </div>
+                  </div>
+                )}
+                {task.targetDuration && (
+                  <div className="flex items-center gap-2 bg-blue-50 p-2 rounded">
+                    <Clock className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm text-blue-600 font-medium">Süre:</span>
+                      <span className="text-base font-bold text-blue-900 ml-2">{formatDuration(task.targetDuration)}</span>
+                    </div>
+                  </div>
+                )}
+                {task.targetResource && (
+                  <div className="flex items-center gap-2 bg-blue-50 p-2 rounded">
+                    <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm text-blue-600 font-medium">Kaynak:</span>
+                      <span className="text-base font-bold text-blue-900 ml-2">{task.targetResource}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (

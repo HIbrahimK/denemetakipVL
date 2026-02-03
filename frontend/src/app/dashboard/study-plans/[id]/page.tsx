@@ -9,13 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  ChevronLeft, 
-  Calendar, 
-  Users, 
-  BookOpen, 
-  Clock, 
-  HelpCircle, 
+import {
+  ChevronLeft,
+  Calendar,
+  Users,
+  BookOpen,
+  Clock,
+  HelpCircle,
   FileText,
   CheckCircle,
   XCircle,
@@ -66,6 +66,7 @@ interface StudyPlan {
   targetId: string | null;
   weekStartDate: string;
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+  isTemplate: boolean;
   planData: {
     rows: Array<{
       id: string;
@@ -84,6 +85,24 @@ interface StudyPlan {
       lastName: string;
     };
   };
+  assignedBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  assignments?: {
+    id: string;
+    targetType: string;
+    targetId: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    customPlanData: any;
+    assignedBy: {
+      firstName: string;
+      lastName: string;
+    };
+  }[];
   student?: {
     user: {
       firstName: string;
@@ -108,6 +127,7 @@ export default function StudyPlanDetailPage() {
   const planId = params.id as string;
 
   const [plan, setPlan] = useState<StudyPlan | null>(null);
+  const [assignmentSummary, setAssignmentSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
@@ -136,6 +156,16 @@ export default function StudyPlanDetailPage() {
       if (res.ok) {
         const data = await res.json();
         setPlan(data);
+
+        // If template, fetch assignment summary
+        if (data.isTemplate) {
+          const summaryRes = await fetch(`http://localhost:3001/study/plans/${planId}/assignment-summary`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (summaryRes.ok) {
+            setAssignmentSummary(await summaryRes.json());
+          }
+        }
       } else {
         toast({
           title: 'Hata',
@@ -178,28 +208,28 @@ export default function StudyPlanDetailPage() {
 
   const getCellProgress = (rowIndex: number, dayIndex: number) => {
     if (!plan) return { total: 0, completed: 0, percentage: 0 };
-    
+
     const cellTasks = plan.tasks.filter(
       t => t.rowIndex === rowIndex && t.dayIndex === dayIndex
     );
-    
+
     if (cellTasks.length === 0) return { total: 0, completed: 0, percentage: 0 };
-    
+
     // Calculate weighted percentage based on question counts
-    const totalTargetQuestions = cellTasks.reduce((sum, t) => 
+    const totalTargetQuestions = cellTasks.reduce((sum, t) =>
       sum + (t.targetQuestionCount || 0), 0
     );
-    const totalCompletedQuestions = cellTasks.reduce((sum, t) => 
+    const totalCompletedQuestions = cellTasks.reduce((sum, t) =>
       sum + (t.completedQuestionCount || 0), 0
     );
-    
+
     const completed = cellTasks.filter(t => t.status === 'COMPLETED' || t.status === 'VERIFIED').length;
-    
+
     // Use question-based percentage if targets exist, otherwise use task count
     const percentage = totalTargetQuestions > 0
       ? Math.round((totalCompletedQuestions / totalTargetQuestions) * 100)
       : Math.round((completed / cellTasks.length) * 100);
-    
+
     return {
       total: cellTasks.length,
       completed,
@@ -225,7 +255,7 @@ export default function StudyPlanDetailPage() {
 
   const handleBulkApproval = async () => {
     if (selectedTasks.length === 0) return;
-    
+
     setProcessing(true);
     const token = localStorage.getItem('token');
 
@@ -270,6 +300,29 @@ export default function StudyPlanDetailPage() {
   const pendingTasks = plan?.tasks.filter(
     t => t.status === 'COMPLETED' && !t.teacherApproved
   ) || [];
+
+  const handleCancelAssignment = async (assignmentId: string) => {
+    if (!confirm('Bu atamayı iptal etmek istediğinize emin misiniz?')) return;
+
+    setProcessing(true);
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`http://localhost:3001/study/plans/assignments/${assignmentId}/cancel`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        toast({ title: 'Başarılı', description: 'Atama iptal edildi' });
+        fetchPlan();
+      } else {
+        throw new Error('İptal işlemi başarısız');
+      }
+    } catch (error) {
+      toast({ title: 'Hata', description: 'Atama iptal edilemedi', variant: 'destructive' });
+    } finally {
+      setProcessing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -322,6 +375,18 @@ export default function StudyPlanDetailPage() {
             Planı Aktifleştir
           </Button>
         )}
+        {user?.role === 'TEACHER' && plan.isTemplate && (
+          <Button variant="outline" onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}>  
+            <FileText className="mr-2 h-4 w-4" />
+            Şablonu Düzenle
+          </Button>
+        )}
+        {user?.role === 'TEACHER' && !plan.isTemplate && (
+          <Button variant="outline" onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}>  
+            <FileText className="mr-2 h-4 w-4" />
+            Planı Düzenle
+          </Button>
+        )}
       </div>
 
       {/* Info Cards */}
@@ -333,14 +398,20 @@ export default function StudyPlanDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="text-lg font-semibold">
-              {plan.targetType === 'INDIVIDUAL' 
-                ? plan.student?.user 
+              {plan.targetType === 'INDIVIDUAL'
+                ? plan.student?.user
                   ? `${plan.student.user.firstName} ${plan.student.user.lastName}`
                   : 'Bireysel'
-                : plan.group?.name || 'Grup'}
+                : plan.targetType === 'GROUP'
+                  ? plan.group?.name || 'Grup'
+                  : plan.isTemplate
+                    ? 'Şablon'
+                    : plan.targetType}
             </div>
             <p className="text-xs text-muted-foreground">
-              {plan.targetType === 'INDIVIDUAL' ? 'Öğrenci' : 'Grup'}
+              {plan.isTemplate
+                ? (assignmentSummary ? assignmentSummary.summary : 'Atama Bilgisi Bekleniyor')
+                : (plan.targetType === 'INDIVIDUAL' ? 'Öğrenci' : plan.targetType)}
             </p>
           </CardContent>
         </Card>
@@ -385,11 +456,68 @@ export default function StudyPlanDetailPage() {
       <Tabs defaultValue="table" className="space-y-4">
         <TabsList>
           <TabsTrigger value="table">Tablo Görünümü</TabsTrigger>
+          {plan.isTemplate && <TabsTrigger value="assignments">Aktif Atamalar ({plan.assignments?.filter(a => a.status !== 'CANCELLED').length || 0})</TabsTrigger>}
           <TabsTrigger value="pending">
             Onay Bekleyen ({pendingTasks.length})
           </TabsTrigger>
           <TabsTrigger value="all">Tüm Görevler</TabsTrigger>
         </TabsList>
+
+        {/* Assignments Tab */}
+        {plan.isTemplate && (
+          <TabsContent value="assignments">
+            <Card>
+              <CardHeader>
+                <CardTitle>Aktif Atamalar</CardTitle>
+                <CardDescription>Bu şablonun kullanıldığı aktif atamalar</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {plan.assignments?.filter(a => a.status === 'ACTIVE').length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">Aktif atama bulunamadı.</div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="p-3 text-left">Hedef</th>
+                            <th className="p-3 text-left">Tarih Aralığı</th>
+                            <th className="p-3 text-left">Atayan</th>
+                            <th className="p-3 text-right">İşlem</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {plan.assignments?.filter(a => a.status === 'ACTIVE').map(assignment => (
+                            <tr key={assignment.id} className="border-t">
+                              <td className="p-3 font-medium">
+                                {assignment.targetType === 'STUDENT' ? 'Öğrenci' :
+                                  assignment.targetType === 'GROUP' ? 'Grup' :
+                                    assignment.targetType === 'CLASS' ? 'Sınıf' :
+                                      assignment.targetType === 'GRADE' ? 'Tüm Sınıf Seviyesi' : assignment.targetType}
+                                {/* ID lookup would be nicer but basic info is ok */}
+                              </td>
+                              <td className="p-3 text-muted-foreground">
+                                {format(new Date(assignment.startDate), 'dd MMM')} - {format(new Date(assignment.endDate), 'dd MMM yyyy', { locale: tr })}
+                              </td>
+                              <td className="p-3 text-muted-foreground">
+                                {assignment.assignedBy?.firstName} {assignment.assignedBy?.lastName}
+                              </td>
+                              <td className="p-3 text-right">
+                                <Button variant="ghost" size="sm" onClick={() => handleCancelAssignment(assignment.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                                  <XCircle className="h-4 w-4 mr-1" /> İptal Et
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Table View */}
         <TabsContent value="table">
@@ -423,17 +551,16 @@ export default function StudyPlanDetailPage() {
                         {row.cells.map((cell, dayIndex) => {
                           const progress = getCellProgress(rowIndex, dayIndex);
                           const hasContent = cell || progress.total > 0;
-                          
+
                           return (
                             <td key={dayIndex} className="p-2">
                               {hasContent ? (
-                                <div className={`p-3 rounded-md text-sm ${
-                                  progress.percentage === 100 
-                                    ? 'bg-green-50 border border-green-200' 
-                                    : progress.percentage > 0
+                                <div className={`p-3 rounded-md text-sm ${progress.percentage === 100
+                                  ? 'bg-green-50 border border-green-200'
+                                  : progress.percentage > 0
                                     ? 'bg-yellow-50 border border-yellow-200'
                                     : 'bg-muted/50 border border-muted'
-                                }`}>
+                                  }`}>
                                   {cell && (
                                     <div className="space-y-1 mb-2">
                                       {cell.subjectName && (
@@ -489,8 +616,8 @@ export default function StudyPlanDetailPage() {
                   <Button variant="outline" size="sm" onClick={selectAllPending}>
                     Tümünü Seç
                   </Button>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     disabled={selectedTasks.length === 0}
                     onClick={() => { setApprovalAction('approve'); setApprovalModalOpen(true); }}
                   >
@@ -512,8 +639,8 @@ export default function StudyPlanDetailPage() {
               ) : (
                 <div className="space-y-3">
                   {pendingTasks.map(task => (
-                    <div 
-                      key={task.id} 
+                    <div
+                      key={task.id}
                       className="flex items-start gap-4 p-4 border rounded-lg hover:bg-accent/50"
                     >
                       {user?.role === 'TEACHER' && (
@@ -536,7 +663,7 @@ export default function StudyPlanDetailPage() {
                             {getTaskStatusBadge(task).label}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <span className="text-muted-foreground">Ders:</span>
@@ -586,8 +713,8 @@ export default function StudyPlanDetailPage() {
             <CardContent>
               <div className="space-y-3">
                 {plan.tasks.map(task => (
-                  <div 
-                    key={task.id} 
+                  <div
+                    key={task.id}
                     className="flex items-start gap-4 p-4 border rounded-lg"
                   >
                     <div className="flex-1 space-y-2">
@@ -604,7 +731,7 @@ export default function StudyPlanDetailPage() {
                           {getTaskStatusBadge(task).label}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-muted-foreground">Ders:</span>
@@ -677,7 +804,7 @@ export default function StudyPlanDetailPage() {
             <Button variant="outline" onClick={() => setApprovalModalOpen(false)}>
               İptal
             </Button>
-            <Button 
+            <Button
               variant={approvalAction === 'approve' ? 'default' : 'destructive'}
               onClick={handleBulkApproval}
               disabled={processing}

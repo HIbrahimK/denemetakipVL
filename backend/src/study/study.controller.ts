@@ -24,6 +24,8 @@ import {
   VerifyStudyTaskDto,
   LogStudySessionDto,
   AssignStudyPlanDto,
+  ApproveTaskDto,
+  RejectTaskDto,
 } from './dto';
 
 @Controller('study')
@@ -34,7 +36,7 @@ export class StudyController {
     private readonly studyTaskService: StudyTaskService,
     private readonly studySessionService: StudySessionService,
     private readonly studyRecommendationService: StudyRecommendationService,
-  ) {}
+  ) { }
 
   // Study Plans
   @Post('plans')
@@ -69,7 +71,7 @@ export class StudyController {
     if (status) filters.status = status;
     if (isShared !== undefined) filters.isShared = isShared === 'true';
     if (examType) filters.examType = examType;
-    
+
     return this.studyPlanService.findAll(req.user.id, req.user.role, req.user.schoolId, filters);
   }
 
@@ -113,7 +115,7 @@ export class StudyController {
   @Delete('plans/:id')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
   removePlan(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Request() req,
     @Query('mode') mode?: string,
   ) {
@@ -127,20 +129,32 @@ export class StudyController {
     return this.studyPlanService.assign(id, dto, req.user.id, req.user.schoolId);
   }
 
+  @Get('plans/:id/assignment-summary')
+  @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
+  getAssignmentSummary(@Param('id') id: string, @Request() req) {
+    return this.studyPlanService.getAssignmentSummary(id, req.user.schoolId);
+  }
+
   @Post('plans/:id/duplicate')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
   duplicatePlan(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Request() req,
     @Body('name') name?: string,
   ) {
     return this.studyPlanService.duplicate(id, req.user.id, req.user.schoolId, name);
   }
 
+  @Post('plans/:id/archive')
+  @Roles('TEACHER', 'SCHOOL_ADMIN')
+  archivePlan(@Param('id') id: string, @Request() req) {
+    return this.studyPlanService.archive(id, req.user.id, req.user.schoolId);
+  }
+
   @Post('plans/:id/share')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
   sharePlan(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Request() req,
     @Body('isPublic') isPublic?: boolean,
   ) {
@@ -204,6 +218,24 @@ export class StudyController {
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   removeTask(@Param('id') id: string, @Request() req) {
     return this.studyTaskService.remove(id, req.user.id, req.user.role, req.user.schoolId);
+  }
+
+  @Post('tasks/:id/approve')
+  @Roles('TEACHER', 'SCHOOL_ADMIN')
+  approveTask(@Param('id') id: string, @Body() dto: ApproveTaskDto, @Request() req) {
+    return this.studyTaskService.approveTask(id, req.user.id, req.user.schoolId, dto.comment);
+  }
+
+  @Post('tasks/:id/reject')
+  @Roles('TEACHER', 'SCHOOL_ADMIN')
+  rejectTask(@Param('id') id: string, @Body() dto: RejectTaskDto, @Request() req) {
+    return this.studyTaskService.rejectTask(id, req.user.id, req.user.schoolId, dto.comment);
+  }
+
+  @Get('tasks/pending-approval')
+  @Roles('TEACHER', 'SCHOOL_ADMIN')
+  getPendingApprovalTasks(@Request() req) {
+    return this.studyTaskService.getPendingApprovalTasks(req.user.id, req.user.schoolId);
   }
 
   // Study Sessions

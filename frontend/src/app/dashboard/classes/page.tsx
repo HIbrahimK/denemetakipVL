@@ -13,15 +13,13 @@ import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 
-interface Grade {
-  id: string;
-  name: string;
-}
-
 interface Class {
   id: string;
   name: string;
-  grade: Grade;
+  grade: {
+    id: string;
+    name: string;
+  };
   gradeId: string;
   _count: {
     students: number;
@@ -37,11 +35,22 @@ interface Student {
   };
 }
 
+// Sabit sınıf seviyeleri (5-12)
+const FIXED_GRADES = [
+  { id: '5', name: '5' },
+  { id: '6', name: '6' },
+  { id: '7', name: '7' },
+  { id: '8', name: '8' },
+  { id: '9', name: '9' },
+  { id: '10', name: '10' },
+  { id: '11', name: '11' },
+  { id: '12', name: '12' },
+];
+
 export default function ClassesPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [classes, setClasses] = useState<Class[]>([]);
-  const [grades, setGrades] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(false);
   const [schoolId, setSchoolId] = useState<string>('');
   
@@ -52,8 +61,8 @@ export default function ClassesPage() {
   const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   
-  // Form states
-  const [formData, setFormData] = useState({ name: '', gradeId: '' });
+  // Form states - Yeni format: gradeLevel ve section
+  const [formData, setFormData] = useState({ gradeLevel: '', section: '' });
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [mergeData, setMergeData] = useState({ sourceClassId: '', targetClassId: '' });
   const [transferData, setTransferData] = useState({ targetClassId: '' });
@@ -77,24 +86,8 @@ export default function ClassesPage() {
     }
 
     setSchoolId(user.schoolId);
-    fetchGrades(user.schoolId);
     fetchClasses(user.schoolId);
   }, []);
-
-  const fetchGrades = async (schoolId: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/schools/${schoolId}/grades`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setGrades(data);
-      }
-    } catch (error) {
-      console.error('Error fetching grades:', error);
-    }
-  };
 
   const fetchClasses = async (schoolId: string) => {
     setLoading(true);
@@ -114,8 +107,19 @@ export default function ClassesPage() {
     }
   };
 
+  // Grade level'dan grade ID bul
+  const getGradeIdByLevel = (gradeLevel: string) => {
+    const grade = classes.find(c => c.grade.name === gradeLevel);
+    return grade?.gradeId || '';
+  };
+
+  // Sınıf adını "5/A" formatında göster
+  const displayClassName = (classItem: Class) => {
+    return `${classItem.grade.name}/${classItem.name}`;
+  };
+
   const handleAddClass = async () => {
-    if (!formData.name || !formData.gradeId) return;
+    if (!formData.gradeLevel || !formData.section) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -125,12 +129,15 @@ export default function ClassesPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          gradeLevel: parseInt(formData.gradeLevel),
+          section: formData.section,
+        }),
       });
 
       if (response.ok) {
         setIsAddDialogOpen(false);
-        setFormData({ name: '', gradeId: '' });
+        setFormData({ gradeLevel: '', section: '' });
         fetchClasses(schoolId);
         toast({
           title: "Başarılı",
@@ -150,7 +157,7 @@ export default function ClassesPage() {
   };
 
   const handleEditClass = async () => {
-    if (!selectedClass || !formData.name || !formData.gradeId) return;
+    if (!selectedClass || !formData.gradeLevel || !formData.section) return;
 
     try {
       const token = localStorage.getItem('token');
@@ -160,13 +167,16 @@ export default function ClassesPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          gradeLevel: parseInt(formData.gradeLevel),
+          section: formData.section,
+        }),
       });
 
       if (response.ok) {
         setIsEditDialogOpen(false);
         setSelectedClass(null);
-        setFormData({ name: '', gradeId: '' });
+        setFormData({ gradeLevel: '', section: '' });
         fetchClasses(schoolId);
         toast({
           title: "Başarılı",
@@ -222,13 +232,17 @@ export default function ClassesPage() {
   };
 
   const openAddDialog = () => {
-    setFormData({ name: '', gradeId: '' });
+    setFormData({ gradeLevel: '', section: '' });
     setIsAddDialogOpen(true);
   };
 
   const openEditDialog = (classItem: Class) => {
     setSelectedClass(classItem);
-    setFormData({ name: classItem.name, gradeId: classItem.gradeId });
+    // Mevcut sınıfın grade ve section değerlerini ayır
+    setFormData({ 
+      gradeLevel: classItem.grade.name, 
+      section: classItem.name 
+    });
     setIsEditDialogOpen(true);
   };
 
@@ -418,7 +432,7 @@ export default function ClassesPage() {
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{grades.length}</div>
+            <div className="text-2xl font-bold">{FIXED_GRADES.length}</div>
             <p className="text-xs text-muted-foreground">Farklı sınıf seviyesi</p>
           </CardContent>
         </Card>
@@ -434,7 +448,7 @@ export default function ClassesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sınıf Seviyesi</TableHead>
+                <TableHead>Sınıf</TableHead>
                 <TableHead>Şube</TableHead>
                 <TableHead>Öğrenci Sayısı</TableHead>
                 <TableHead className="text-right">İşlemler</TableHead>
@@ -453,7 +467,7 @@ export default function ClassesPage() {
                 classes.map((classItem) => (
                   <TableRow key={classItem.id}>
                     <TableCell className="font-medium">{classItem.grade.name}. Sınıf</TableCell>
-                    <TableCell>{classItem.name}</TableCell>
+                    <TableCell>{displayClassName(classItem)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
@@ -507,14 +521,14 @@ export default function ClassesPage() {
             <div className="space-y-2">
               <Label htmlFor="grade">Sınıf Seviyesi</Label>
               <Select
-                value={formData.gradeId}
-                onValueChange={(value) => setFormData({ ...formData, gradeId: value })}
+                value={formData.gradeLevel}
+                onValueChange={(value) => setFormData({ ...formData, gradeLevel: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
-                  {grades.map((grade) => (
+                  {FIXED_GRADES.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id}>
                       {grade.name}. Sınıf
                     </SelectItem>
@@ -523,12 +537,12 @@ export default function ClassesPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Şube Adı</Label>
+              <Label htmlFor="section">Şube Adı</Label>
               <Input
-                id="name"
-                placeholder="Örn: A, B, C"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                id="section"
+                placeholder="Örn: A, B, Sözel, Sayısal"
+                value={formData.section}
+                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
               />
             </div>
           </div>
@@ -552,14 +566,14 @@ export default function ClassesPage() {
             <div className="space-y-2">
               <Label htmlFor="edit-grade">Sınıf Seviyesi</Label>
               <Select
-                value={formData.gradeId}
-                onValueChange={(value) => setFormData({ ...formData, gradeId: value })}
+                value={formData.gradeLevel}
+                onValueChange={(value) => setFormData({ ...formData, gradeLevel: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
-                  {grades.map((grade) => (
+                  {FIXED_GRADES.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id}>
                       {grade.name}. Sınıf
                     </SelectItem>
@@ -568,12 +582,12 @@ export default function ClassesPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Şube Adı</Label>
+              <Label htmlFor="edit-section">Şube Adı</Label>
               <Input
-                id="edit-name"
-                placeholder="Örn: A, B, C"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                id="edit-section"
+                placeholder="Örn: A, B, Sözel, Sayısal"
+                value={formData.section}
+                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
               />
             </div>
           </div>
@@ -592,7 +606,7 @@ export default function ClassesPage() {
           <DialogHeader>
             <DialogTitle>Sınıfı Sil</DialogTitle>
             <DialogDescription>
-              {selectedClass?.grade.name}. Sınıf {selectedClass?.name} şubesini silmek istediğinizden emin misiniz?
+              {selectedClass && displayClassName(selectedClass)} sınıfını silmek istediğinizden emin misiniz?
               Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
@@ -629,7 +643,7 @@ export default function ClassesPage() {
                 <SelectContent>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.grade.name}. Sınıf {cls.name} ({cls._count.students} öğrenci)
+                      {displayClassName(cls)} ({cls._count.students} öğrenci)
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -649,7 +663,7 @@ export default function ClassesPage() {
                     .filter(cls => cls.id !== mergeData.sourceClassId)
                     .map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.grade.name}. Sınıf {cls.name} ({cls._count.students} öğrenci)
+                        {displayClassName(cls)} ({cls._count.students} öğrenci)
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -671,7 +685,7 @@ export default function ClassesPage() {
           <DialogHeader>
             <DialogTitle>Öğrenci Aktar</DialogTitle>
             <DialogDescription>
-              {selectedClass?.grade.name}. Sınıf {selectedClass?.name} şubesinden öğrenci aktarın
+              {selectedClass && displayClassName(selectedClass)} sınıfından öğrenci aktarın
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -689,7 +703,7 @@ export default function ClassesPage() {
                     .filter(cls => cls.id !== selectedClass?.id)
                     .map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {cls.grade.name}. Sınıf {cls.name} ({cls._count.students} öğrenci)
+                        {displayClassName(cls)} ({cls._count.students} öğrenci)
                       </SelectItem>
                     ))}
                 </SelectContent>

@@ -100,6 +100,39 @@ export class SchoolsService {
     }
 
     async createClass(schoolId: string, dto: any) {
+        // Yeni format: gradeLevel (5-12) ve section (A, B, vb.)
+        if (dto.gradeLevel && dto.section) {
+            // Grade'i name'e göre bul, yoksa oluştur
+            let grade = await this.prisma.grade.findFirst({
+                where: { schoolId, name: String(dto.gradeLevel) }
+            });
+            
+            if (!grade) {
+                // Grade yoksa oluştur
+                grade = await this.prisma.grade.create({
+                    data: {
+                        name: String(dto.gradeLevel),
+                        schoolId,
+                    }
+                });
+            }
+            
+            return this.prisma.class.create({
+                data: {
+                    name: dto.section,
+                    schoolId,
+                    gradeId: grade.id,
+                },
+                include: {
+                    grade: true,
+                    _count: {
+                        select: { students: true }
+                    }
+                }
+            });
+        }
+
+        // Eski format: name ve gradeId
         return this.prisma.class.create({
             data: {
                 name: dto.name,
@@ -124,6 +157,38 @@ export class SchoolsService {
             throw new NotFoundException('Sınıf bulunamadı');
         }
 
+        // Yeni format: gradeLevel (5-12) ve section (A, B, vb.)
+        if (dto.gradeLevel && dto.section) {
+            let grade = await this.prisma.grade.findFirst({
+                where: { schoolId, name: String(dto.gradeLevel) }
+            });
+            
+            if (!grade) {
+                // Grade yoksa oluştur
+                grade = await this.prisma.grade.create({
+                    data: {
+                        name: String(dto.gradeLevel),
+                        schoolId,
+                    }
+                });
+            }
+            
+            return this.prisma.class.update({
+                where: { id: classId },
+                data: {
+                    name: dto.section,
+                    gradeId: grade.id,
+                },
+                include: {
+                    grade: true,
+                    _count: {
+                        select: { students: true }
+                    }
+                }
+            });
+        }
+
+        // Eski format: name ve gradeId
         return this.prisma.class.update({
             where: { id: classId },
             data: {

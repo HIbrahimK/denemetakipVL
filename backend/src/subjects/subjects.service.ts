@@ -154,6 +154,17 @@ export class SubjectsService {
     });
   }
 
+  async findSpecialActivities() {
+    // Get topics that are not associated with any subject (special activities like MEBİ, TYT, AYT exams)
+    return this.prisma.topic.findMany({
+      where: {
+        isSpecialActivity: true,
+        subjectId: null,
+      },
+      orderBy: { order: 'asc' },
+    });
+  }
+
   async updateTopic(id: string, name: string, order?: number) {
     const topic = await this.prisma.topic.findUnique({
       where: { id },

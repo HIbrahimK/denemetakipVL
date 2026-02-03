@@ -75,6 +75,12 @@ export class SubjectsController {
     return this.subjectsService.findTopics(subjectId, parentTopicId);
   }
 
+  @Get('special-activities/all')
+  @Roles('SUPER_ADMIN', 'SCHOOL_ADMIN', 'TEACHER', 'STUDENT')
+  findSpecialActivities() {
+    return this.subjectsService.findSpecialActivities();
+  }
+
   @Patch('topics/:topicId')
   @Roles('SUPER_ADMIN', 'SCHOOL_ADMIN')
   updateTopic(

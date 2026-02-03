@@ -11,6 +11,7 @@ enum StudyPlanStatus {
   ACTIVE = 'ACTIVE',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
+  ARCHIVED = 'ARCHIVED',
 }
 
 // Assignment target type enum
@@ -29,7 +30,7 @@ export enum DeleteMode {
 
 @Injectable()
 export class StudyPlanService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateStudyPlanDto, teacherId: string, schoolId: string) {
     console.log('[StudyPlanService] Creating study plan:', { dto, teacherId, schoolId });
@@ -85,13 +86,13 @@ export class StudyPlanService {
     }
   }
 
-  async findAll(userId: string, userRole: string, schoolId: string, filters?: { 
+  async findAll(userId: string, userRole: string, schoolId: string, filters?: {
     isTemplate?: boolean;
     status?: string;
     isShared?: boolean;
     examType?: string;
   }) {
-    const where: any = { 
+    const where: any = {
       schoolId,
       deletedAt: null, // Soft delete kontrolü
     };
@@ -148,8 +149,8 @@ export class StudyPlanService {
             // Sınıf seviyesi atamaları için
             {
               targetType: 'GRADE',
-              targetId: user.student.classId ? 
-                (await this.prisma.class.findUnique({ 
+              targetId: user.student.classId ?
+                (await this.prisma.class.findUnique({
                   where: { id: user.student.classId },
                   select: { gradeId: true }
                 }))?.gradeId ?? '' : ''
@@ -276,6 +277,9 @@ export class StudyPlanService {
     }
 
     // Check if template has active assignments
+    // Restriction removed: Templates CAN be updated even if they have active assignments.
+    // Existing assignments use a copy of the plan data, so they are mostly unaffected.
+    /*
     if ((plan as any).isTemplate) {
       const activeAssignmentsCount = await this.prisma.studyPlanAssignment.count({
         where: { 
@@ -290,9 +294,10 @@ export class StudyPlanService {
         );
       }
     }
+    */
 
     const updateData: any = {};
-    
+
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.description !== undefined) updateData.description = dto.description;
     if (dto.examType !== undefined) updateData.examType = dto.examType;
@@ -332,6 +337,31 @@ export class StudyPlanService {
     });
   }
 
+  async archive(id: string, userId: string, schoolId: string) {
+    const plan = await this.prisma.studyPlan.findUnique({
+      where: { id },
+    });
+
+    if (!plan) {
+      throw new NotFoundException('Study plan not found');
+    }
+
+    if (plan.schoolId !== schoolId || plan.teacherId !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    // Set status to ARCHIVED
+    await this.prisma.studyPlan.update({
+      where: { id },
+      data: {
+        status: 'ARCHIVED',
+        updatedAt: new Date(),
+      },
+    });
+
+    return { message: 'Study plan archived successfully' };
+  }
+
   async remove(id: string, userId: string, schoolId: string, mode: DeleteMode = DeleteMode.CANCEL_ASSIGNMENTS) {
     const plan = await this.prisma.studyPlan.findUnique({
       where: { id },
@@ -355,8 +385,8 @@ export class StudyPlanService {
     const completedTasks = plan.tasks;
     if (completedTasks.length > 0) {
       // Her öğrenci için performans özetini kaydet
-      const studentPerformance: Record<string, { 
-        completedQuestions: number; 
+      const studentPerformance: Record<string, {
+        completedQuestions: number;
         totalDuration: number;
         completedTasks: number;
       }> = {};
@@ -434,7 +464,7 @@ export class StudyPlanService {
         // Template'i soft delete yap
         this.prisma.studyPlan.update({
           where: { id },
-          data: { 
+          data: {
             deletedAt: new Date(),
             status: 'CANCELLED',
           },
@@ -458,13 +488,45 @@ export class StudyPlanService {
     // 1. User owns the template (templatePlan.teacherId === userId)
     // 2. Template is shared with the school (isShared=true and same schoolId)
     // 3. Template is public (isPublic=true)
-    const canAssign = 
-      templatePlan.teacherId === userId || 
+    const canAssign =
+      templatePlan.teacherId === userId ||
       ((templatePlan as any).isShared && templatePlan.schoolId === schoolId) ||
       (templatePlan as any).isPublic;
 
     if (!canAssign) {
       throw new ForbiddenException('You do not have permission to assign this template');
+    }
+
+    // Tarih hesaplama (yıl, ay, hafta'dan) - Do this BEFORE creating the plan
+    let weekStartDate: Date;
+    let weekEndDate: Date;
+
+    if (dto.year && dto.month && dto.weekNumber) {
+      // Ayın ilk gününü bul
+      const firstDayOfMonth = new Date(dto.year, dto.month - 1, 1);
+      // İlk pazartesiyi bul
+      const dayOfWeek = firstDayOfMonth.getDay();
+      const daysUntilMonday = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
+      const firstMonday = new Date(firstDayOfMonth);
+      firstMonday.setDate(firstDayOfMonth.getDate() + daysUntilMonday);
+
+      // İstenen haftanın pazartesisini bul
+      weekStartDate = new Date(firstMonday);
+      weekStartDate.setDate(firstMonday.getDate() + (dto.weekNumber - 1) * 7);
+
+      // Hafta sonu (Pazar)
+      weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
+    } else {
+      // Varsayılan: Bu hafta
+      weekStartDate = new Date();
+      weekStartDate.setHours(0, 0, 0, 0);
+      const dayOfWeek = weekStartDate.getDay();
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      weekStartDate.setDate(weekStartDate.getDate() + diff);
+
+      weekEndDate = new Date(weekStartDate);
+      weekEndDate.setDate(weekStartDate.getDate() + 6);
     }
 
     // Create a copy of the template as an active plan (not a template)
@@ -482,47 +544,21 @@ export class StudyPlanService {
         isShared: false,
         isPublic: false,
         status: 'ACTIVE',
-        startDate: new Date(),
+        startDate: weekStartDate,
+        endDate: weekEndDate,
+        weekStartDate: weekStartDate, // FIX: Set weekStartDate to prevent "01 Jan 1970" display
         createdAt: new Date(),
         updatedAt: new Date(),
       },
     });
 
-    // Tarih hesaplama (yıl, ay, hafta'dan)
-    let startDate: Date;
-    let endDate: Date;
-    
-    if (dto.year && dto.month && dto.weekNumber) {
-      // Ayın ilk gününü bul
-      const firstDayOfMonth = new Date(dto.year, dto.month - 1, 1);
-      // İlk pazartesiyi bul
-      const dayOfWeek = firstDayOfMonth.getDay();
-      const daysUntilMonday = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
-      const firstMonday = new Date(firstDayOfMonth);
-      firstMonday.setDate(firstDayOfMonth.getDate() + daysUntilMonday);
-      
-      // İstenen haftanın pazartesisini bul
-      startDate = new Date(firstMonday);
-      startDate.setDate(firstMonday.getDate() + (dto.weekNumber - 1) * 7);
-      
-      // Hafta sonu (Pazar)
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-    } else {
-      // Varsayılan: Bu hafta
-      startDate = new Date();
-      startDate.setHours(0, 0, 0, 0);
-      const dayOfWeek = startDate.getDay();
-      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      startDate.setDate(startDate.getDate() + diff);
-      
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-    }
+    // Use same variables for assignment dates
+    const startDate = weekStartDate;
+    const endDate = weekEndDate;
 
     const createdTasks: string[] = [];
     const createdAssignments: string[] = [];
-    
+
     // Summary tracking
     const summary = {
       students: { count: 0, names: [] as string[] },
@@ -538,7 +574,7 @@ export class StudyPlanService {
     // Helper function: Bir öğrenci için task'ları oluştur
     const createTasksForStudent = async (studentId: string, assignmentId: string, customPlanData?: any) => {
       const taskRows = customPlanData?.rows ?? rows;
-      
+
       for (let rowIndex = 0; rowIndex < taskRows.length; rowIndex++) {
         const row = taskRows[rowIndex];
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
@@ -593,7 +629,7 @@ export class StudyPlanService {
 
         // Hedef tipine göre öğrencileri bul ve task oluştur
         const studentIds = await this.getStudentsForTarget(target.type as AssignmentTargetType, target.id, schoolId);
-        
+
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id, target.customPlanData);
         }
@@ -607,7 +643,7 @@ export class StudyPlanService {
           where: { id: studentId },
           include: { user: true },
         });
-        
+
         const assignment = await this.prisma.studyPlanAssignment.create({
           data: {
             id: randomUUID(),
@@ -625,7 +661,7 @@ export class StudyPlanService {
         createdAssignments.push(assignment.id);
 
         await createTasksForStudent(studentId, assignment.id);
-        
+
         // Update summary
         if (student) {
           summary.students.count++;
@@ -640,7 +676,7 @@ export class StudyPlanService {
           where: { id: groupId },
           include: { _count: { select: { memberships: true } } },
         });
-        
+
         const assignment = await this.prisma.studyPlanAssignment.create({
           data: {
             id: randomUUID(),
@@ -661,7 +697,7 @@ export class StudyPlanService {
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id);
         }
-        
+
         // Update summary
         if (group) {
           summary.groups.count++;
@@ -687,12 +723,12 @@ export class StudyPlanService {
       for (const classId of dto.classIds) {
         const classInfo = await this.prisma.class.findUnique({
           where: { id: classId },
-          include: { 
+          include: {
             grade: { select: { id: true, name: true } },
             _count: { select: { students: true } },
           },
         });
-        
+
         const assignment = await this.prisma.studyPlanAssignment.create({
           data: {
             id: randomUUID(),
@@ -713,7 +749,7 @@ export class StudyPlanService {
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id);
         }
-        
+
         // Update summary
         if (classInfo) {
           summary.classes.count++;
@@ -732,7 +768,7 @@ export class StudyPlanService {
           where: { id: gradeId },
           select: { id: true, name: true },
         });
-        
+
         const assignment = await this.prisma.studyPlanAssignment.create({
           data: {
             id: randomUUID(),
@@ -753,7 +789,7 @@ export class StudyPlanService {
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id);
         }
-        
+
         // Update summary
         if (gradeInfo) {
           summary.grades.count++;
@@ -767,15 +803,15 @@ export class StudyPlanService {
     }
 
     // Calculate total unique students
-    const totalStudents = summary.students.count + 
-                         summary.groups.totalStudents + 
-                         summary.classes.totalStudents + 
-                         summary.grades.totalStudents;
+    const totalStudents = summary.students.count +
+      summary.groups.totalStudents +
+      summary.classes.totalStudents +
+      summary.grades.totalStudents;
 
     // Template stays as is, new active plan created
     // No need to update template status
 
-    return { 
+    return {
       message: 'Study plan assigned successfully',
       activePlanId: activePlan.id, // Return the new active plan ID
       templateId: planId, // Return original template ID
@@ -795,8 +831,8 @@ export class StudyPlanService {
 
   // Hedef tipine göre öğrenci ID'lerini getir
   private async getStudentsForTarget(
-    targetType: AssignmentTargetType, 
-    targetId: string, 
+    targetType: AssignmentTargetType,
+    targetId: string,
     schoolId: string
   ): Promise<string[]> {
     switch (targetType) {
@@ -833,7 +869,7 @@ export class StudyPlanService {
           select: { id: true },
         });
         const gradeStudents = await this.prisma.student.findMany({
-          where: { 
+          where: {
             classId: { in: classes.map(c => c.id) },
             schoolId,
           },
@@ -847,10 +883,10 @@ export class StudyPlanService {
   }
 
   async findTemplates(
-    schoolId: string, 
+    schoolId: string,
     userId: string,
-    examType?: string, 
-    gradeLevel?: number, 
+    examType?: string,
+    gradeLevel?: number,
     includeShared: boolean = true,
     month?: number,
     year?: number,
@@ -862,7 +898,7 @@ export class StudyPlanService {
     const filterMonth = month !== undefined ? month : now.getMonth() + 1; // 1-12
     const filterYear = year !== undefined ? year : now.getFullYear();
 
-    const where: any = { 
+    const where: any = {
       isTemplate: true,
       deletedAt: null,
     };
@@ -1051,7 +1087,7 @@ export class StudyPlanService {
     const assignmentsWithDetails = await Promise.all(
       assignments.map(async (assignment) => {
         let targetDetails: any = null;
-        
+
         switch (assignment.targetType) {
           case 'STUDENT':
             const student = await this.prisma.student.findUnique({
@@ -1155,5 +1191,71 @@ export class StudyPlanService {
     ]);
 
     return { message: 'Assignment cancelled successfully' };
+  }
+
+  // Get assignment summary for a plan
+  async getAssignmentSummary(planId: string, schoolId: string) {
+    const assignments = await this.prisma.studyPlanAssignment.findMany({
+      where: {
+        planId,
+        schoolId,
+        status: { in: ['ACTIVE', 'ASSIGNED'] },
+      },
+      select: {
+        id: true,
+        targetType: true,
+        targetId: true,
+      },
+    });
+
+    if (assignments.length === 0) {
+      return { assignments: [] };
+    }
+
+    // Fetch target details for each assignment
+    const assignmentsWithDetails = await Promise.all(
+      assignments.map(async (assignment) => {
+        let targetName = '';
+        
+        switch (assignment.targetType) {
+          case 'STUDENT':
+            const student = await this.prisma.student.findUnique({
+              where: { id: assignment.targetId },
+              include: { user: true },
+            });
+            targetName = student ? `${student.user.firstName} ${student.user.lastName}` : 'Öğrenci';
+            break;
+            
+          case 'GROUP':
+            const group = await this.prisma.mentorGroup.findUnique({
+              where: { id: assignment.targetId },
+            });
+            targetName = group?.name || 'Grup';
+            break;
+            
+          case 'CLASS':
+            const classEntity = await this.prisma.class.findUnique({
+              where: { id: assignment.targetId },
+              include: { grade: true },
+            });
+            targetName = classEntity ? `${classEntity.grade.name}-${classEntity.name}` : 'Sınıf';
+            break;
+            
+          case 'GRADE':
+            const grade = await this.prisma.grade.findUnique({
+              where: { id: assignment.targetId },
+            });
+            targetName = grade?.name || 'Sınıf Seviyesi';
+            break;
+        }
+
+        return {
+          targetType: assignment.targetType,
+          targetName,
+        };
+      })
+    );
+
+    return { assignments: assignmentsWithDetails };
   }
 }

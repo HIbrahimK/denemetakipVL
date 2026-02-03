@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +33,20 @@ interface Topic {
   id: string;
   name: string;
   subjectId: string;
+  parentTopicId?: string | null;
+}
+
+interface Grade {
+  id: string;
+  name: string;
+  level: number;
+}
+
+interface Class {
+  id: string;
+  name: string;
+  gradeId: string;
+  grade: Grade;
 }
 
 interface CellData {
@@ -41,6 +55,7 @@ interface CellData {
   targetQuestionCount?: number;
   targetDuration?: number;
   targetResource?: string;
+  customContent?: string;
 }
 
 interface PlanRow {
@@ -68,11 +83,16 @@ const EXAM_TYPES = [
 
 export default function NewStudyPlanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  
+
+  // Edit mode
+  const editPlanId = searchParams.get('edit');
+  const isEditMode = !!editPlanId;
+
   // Step state
   const [currentStep, setCurrentStep] = useState<Step>(1);
-  
+
   // Step 1: Plan Info (no target selection)
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -80,15 +100,19 @@ export default function NewStudyPlanPage() {
   const [gradeLevels, setGradeLevels] = useState<number[]>([]);
   const [isTemplate, setIsTemplate] = useState(true);
   const [isPublic, setIsPublic] = useState(false);
-  
+
   // Step 2: Template Selection
   const [templates, setTemplates] = useState<StudyPlanTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<StudyPlanTemplate | null>(null);
-  
+
   // Step 3: Table Editing
   const [rows, setRows] = useState<PlanRow[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [grades, setGrades] = useState<Grade[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [selectedGradeId, setSelectedGradeId] = useState<string>('');
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number; dayIndex: number } | null>(null);
   const [cellModalOpen, setCellModalOpen] = useState(false);
   const [editingCellData, setEditingCellData] = useState<CellData>({});
@@ -96,7 +120,7 @@ export default function NewStudyPlanPage() {
   const [filteredTopics, setFilteredTopics] = useState<Topic[]>([]);
   const [contextMenuCell, setContextMenuCell] = useState<{ rowIndex: number; dayIndex: number } | null>(null);
   const [draggedCell, setDraggedCell] = useState<{ rowIndex: number; dayIndex: number } | null>(null);
-  
+
   // Loading states
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -115,7 +139,62 @@ export default function NewStudyPlanPage() {
     fetchTemplates();
     fetchSubjects();
     fetchTopics();
+    fetchGrades();
+    fetchClasses();
+    
+    // Load plan if in edit mode
+    if (isEditMode && editPlanId) {
+      loadPlanForEdit(editPlanId);
+    }
   }, []);
+
+  const loadPlanForEdit = async (planId: string) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:3001/study/plans/${planId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (res.ok) {
+        const plan = await res.json();
+        
+        // Populate form with existing plan data
+        setName(plan.name);
+        setDescription(plan.description || '');
+        setExamType(plan.examType);
+        setGradeLevels(plan.gradeLevels || []);
+        setIsTemplate(plan.isTemplate);
+        setIsPublic(plan.isPublic || false);
+        
+        // Load plan data (rows)
+        if (plan.planData && plan.planData.rows) {
+          setRows(plan.planData.rows);
+          setCurrentStep(3); // Go directly to editing
+        }
+        
+        toast({
+          title: 'Plan Yüklendi',
+          description: 'Plan düzenleme için yüklendi',
+        });
+      } else {
+        toast({
+          title: 'Hata',
+          description: 'Plan yüklenemedi',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading plan:', error);
+      toast({
+        title: 'Hata',
+        description: 'Plan yüklenirken bir hata oluştu',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter topics when subject changes
   useEffect(() => {
@@ -184,6 +263,44 @@ export default function NewStudyPlanPage() {
     }
   };
 
+  const fetchGrades = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+      
+      const user = JSON.parse(userStr);
+      const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/grades`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setGrades(data);
+      }
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+      
+      const user = JSON.parse(userStr);
+      const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/classes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setClasses(data);
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    }
+  };
+
   const getAvailableGrades = () => {
     const exam = EXAM_TYPES.find(e => e.value === examType);
     return exam?.grades || [];
@@ -195,10 +312,22 @@ export default function NewStudyPlanPage() {
   };
 
   const toggleGrade = (grade: number) => {
-    setGradeLevels(prev => 
-      prev.includes(grade) 
+    setGradeLevels(prev =>
+      prev.includes(grade)
         ? prev.filter(g => g !== grade)
         : [...prev, grade]
+    );
+  };
+
+  const getClassesByGrade = (gradeId: string) => {
+    return classes.filter(c => c.gradeId === gradeId);
+  };
+
+  const toggleClass = (classId: string) => {
+    setSelectedClassIds(prev =>
+      prev.includes(classId)
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
     );
   };
 
@@ -252,17 +381,18 @@ export default function NewStudyPlanPage() {
 
   const saveCellData = () => {
     if (!selectedCell) return;
-    
+
     const { rowIndex, dayIndex } = selectedCell;
     setRows(prev => {
       const newRows = [...prev];
       // Only save if at least one field has value
-      const hasData = editingCellData.subjectName || 
-                      editingCellData.topicName || 
-                      editingCellData.targetQuestionCount || 
-                      editingCellData.targetDuration || 
-                      editingCellData.targetResource;
-      
+      const hasData = editingCellData.subjectName ||
+        editingCellData.topicName ||
+        editingCellData.targetQuestionCount ||
+        editingCellData.targetDuration ||
+        editingCellData.targetResource ||
+        editingCellData.customContent;
+
       newRows[rowIndex].cells[dayIndex] = hasData ? { ...editingCellData } : null;
       return newRows;
     });
@@ -278,7 +408,7 @@ export default function NewStudyPlanPage() {
   const copyCellToClipboard = (rowIndex: number, dayIndex: number) => {
     const cellData = rows[rowIndex]?.cells[dayIndex];
     if (!cellData) return;
-    
+
     setEditingCellData({ ...cellData });
     toast({
       title: 'Kopyalandı',
@@ -295,13 +425,13 @@ export default function NewStudyPlanPage() {
       });
       return;
     }
-    
+
     setRows(prev => {
       const newRows = [...prev];
       newRows[rowIndex].cells[dayIndex] = { ...editingCellData };
       return newRows;
     });
-    
+
     toast({
       title: 'Yapıştırıldı',
       description: 'Hücre içeriği başarıyla yapıştırıldı.',
@@ -319,7 +449,7 @@ export default function NewStudyPlanPage() {
   const duplicateToAllDays = (rowIndex: number, dayIndex: number) => {
     const cellData = rows[rowIndex]?.cells[dayIndex];
     if (!cellData) return;
-    
+
     setRows(prev => {
       const newRows = [...prev];
       for (let i = 0; i < 7; i++) {
@@ -327,7 +457,7 @@ export default function NewStudyPlanPage() {
       }
       return newRows;
     });
-    
+
     toast({
       title: 'Tüm Günlere Kopyalandı',
       description: 'Hücre içeriği tüm günlere başarıyla kopyalandı.',
@@ -336,18 +466,18 @@ export default function NewStudyPlanPage() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (!over || active.id === over.id) return;
-    
+
     // Parse IDs (format: "cell-rowIndex-dayIndex")
     const [, activeRow, activeDay] = active.id.toString().split('-').map(Number);
     const [, overRow, overDay] = over.id.toString().split('-').map(Number);
-    
+
     if (isNaN(activeRow) || isNaN(activeDay) || isNaN(overRow) || isNaN(overDay)) return;
-    
+
     const activeCellData = rows[activeRow]?.cells[activeDay];
     const overCellData = rows[overRow]?.cells[overDay];
-    
+
     // Swap cells
     setRows(prev => {
       const newRows = [...prev];
@@ -383,8 +513,14 @@ export default function NewStudyPlanPage() {
         isPublic: isTemplate ? isPublic : false, // Only templates can be public
       };
 
-      const res = await fetch('http://localhost:3001/study/plans', {
-        method: 'POST',
+      const url = isEditMode 
+        ? `http://localhost:3001/study/plans/${editPlanId}`
+        : 'http://localhost:3001/study/plans';
+      
+      const method = isEditMode ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -399,9 +535,11 @@ export default function NewStudyPlanPage() {
 
       toast({
         title: 'Başarılı',
-        description: isTemplate 
-          ? 'Çalışma planı şablon olarak kaydedildi. Artık öğrencilere atayabilirsiniz.'
-          : 'Çalışma planı aktif plan olarak kaydedildi.',
+        description: isEditMode
+          ? 'Plan başarıyla güncellendi'
+          : isTemplate
+            ? 'Çalışma planı şablon olarak kaydedildi. Artık öğrencilere atayabilirsiniz.'
+            : 'Çalışma planı aktif plan olarak kaydedildi.',
       });
 
       router.push('/dashboard/study-plans');
@@ -480,6 +618,63 @@ export default function NewStudyPlanPage() {
         </div>
       )}
 
+      {/* Class and Section Selection */}
+      {gradeLevels.length > 0 && grades.length > 0 && (
+        <div className="space-y-4 p-4 border rounded-lg">
+          <Label>Sınıf ve Şube Seçimi (Opsiyonel)</Label>
+          <p className="text-sm text-muted-foreground">Plan oluştururken belirli sınıf ve şubeleri seçebilirsiniz</p>
+          
+          {/* Grade Selector */}
+          <div className="space-y-2">
+            <Label>Sınıf Seviyesi</Label>
+            <Select value={selectedGradeId} onValueChange={setSelectedGradeId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sınıf seviyesi seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                {grades
+                  .filter(g => gradeLevels.includes(g.level))
+                  .map(grade => (
+                    <SelectItem key={grade.id} value={grade.id}>
+                      {grade.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Class/Section Selector */}
+          {selectedGradeId && (
+            <div className="space-y-2">
+              <Label>Şubeler</Label>
+              <div className="flex flex-wrap gap-3 p-3 border rounded-lg">
+                {getClassesByGrade(selectedGradeId).length > 0 ? (
+                  getClassesByGrade(selectedGradeId).map(cls => (
+                    <div key={cls.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`class-${cls.id}`}
+                        checked={selectedClassIds.includes(cls.id)}
+                        onCheckedChange={() => toggleClass(cls.id)}
+                      />
+                      <Label htmlFor={`class-${cls.id}`} className="cursor-pointer">
+                        {cls.grade.level}. Sınıf - {cls.name} Şubesi
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Bu sınıf seviyesinde kayıtlı şube bulunmuyor</p>
+                )}
+              </div>
+              {selectedClassIds.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedClassIds.length} şube seçildi
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Template Checkbox */}
       <div className="space-y-2">
         <Label>Plan Tipi</Label>
@@ -504,7 +699,7 @@ export default function NewStudyPlanPage() {
               )}
             </Label>
             <p className="text-sm text-muted-foreground mt-1">
-              {isTemplate 
+              {isTemplate
                 ? 'Bu plan şablon olarak kaydedilecek ve ilerleyen zamanlarda tekrar kullanılabilecek.'
                 : 'Bu plan doğrudan aktif plan olarak kaydedilecek ve şablon olarak kullanılamayacak.'}
             </p>
@@ -537,7 +732,7 @@ export default function NewStudyPlanPage() {
                 )}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                {isPublic 
+                {isPublic
                   ? 'Bu plan okuldaki diğer öğretmenler tarafından da görülebilir ve kullanılabilir.'
                   : 'Bu plan sadece sizin tarafınızdan görülebilir ve düzenlenebilir.'}
               </p>
@@ -561,7 +756,7 @@ export default function NewStudyPlanPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Empty Table Option */}
-        <Card 
+        <Card
           className={`cursor-pointer hover:border-primary transition-colors ${!selectedTemplate ? 'border-primary bg-primary/5' : ''}`}
           onClick={() => setSelectedTemplate(null)}
         >
@@ -580,7 +775,7 @@ export default function NewStudyPlanPage() {
         {templates
           .filter(t => t.examType === examType && gradeLevels.some(g => t.gradeLevels.includes(g)))
           .map(template => (
-            <Card 
+            <Card
               key={template.id}
               className={`cursor-pointer hover:border-primary transition-colors ${selectedTemplate?.id === template.id ? 'border-primary bg-primary/5' : ''}`}
               onClick={() => setSelectedTemplate(template)}
@@ -685,7 +880,7 @@ export default function NewStudyPlanPage() {
                 {cell && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={(e) => { e.stopPropagation(); deleteCell(rowIndex, dayIndex); }}
                       className="text-destructive"
                     >
@@ -697,17 +892,16 @@ export default function NewStudyPlanPage() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
+
           <button
             type="button"
             onClick={() => openCellModal(rowIndex, dayIndex)}
             {...attributes}
             {...listeners}
-            className={`w-full min-h-[60px] p-2 rounded-md text-left text-sm transition-colors cursor-move ${
-              cell 
-                ? 'bg-primary/10 hover:bg-primary/20 border border-primary/30' 
-                : 'bg-muted/50 hover:bg-muted border border-dashed border-muted-foreground/30'
-            }`}
+            className={`w-full min-h-[60px] p-2 rounded-md text-left text-sm transition-colors cursor-move ${cell
+              ? 'bg-primary/10 hover:bg-primary/20 border border-primary/30'
+              : 'bg-muted/50 hover:bg-muted border border-dashed border-muted-foreground/30'
+              }`}
           >
             {cell ? (
               <div className="space-y-1">
@@ -731,6 +925,11 @@ export default function NewStudyPlanPage() {
                     </span>
                   )}
                 </div>
+                {cell.customContent && (
+                  <div className="text-xs text-blue-600 truncate mt-1 border-t border-blue-100 pt-1 font-medium">
+                    {cell.customContent}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -748,8 +947,8 @@ export default function NewStudyPlanPage() {
     );
 
     return (
-      <DndContext 
-        sensors={sensors} 
+      <DndContext
+        sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
@@ -826,8 +1025,8 @@ export default function NewStudyPlanPage() {
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Geri
               </Button>
-              <Button 
-                onClick={() => savePlan()} 
+              <Button
+                onClick={() => savePlan()}
                 disabled={saving}
               >
                 <Save className="mr-2 h-4 w-4" />
@@ -837,141 +1036,193 @@ export default function NewStudyPlanPage() {
 
             {/* Cell Edit Modal */}
             <Dialog open={cellModalOpen} onOpenChange={setCellModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCell && `${DAYS[selectedCell.dayIndex]} - Satır ${selectedCell.rowIndex + 1}`}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {/* Subject */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Çalışılacak Ders
-              </Label>
-              <Select 
-                value={selectedSubjectForTopics} 
-                onValueChange={(value) => {
-                  setSelectedSubjectForTopics(value);
-                  setEditingCellData(prev => ({ ...prev, subjectName: value, topicName: '' }));
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Ders seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {/* Seçilen sınav tipine ait dersler */}
-                  {subjects
-                    .filter(s => s.examType === examType)
-                    .map(subject => (
-                      <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
-                    ))}
-                  {/* Aktiviteler grubu */}
-                  {subjects.some(s => s.examType === 'COMMON') && (
-                    <>
-                      <SelectItem value="---" disabled className="font-semibold text-muted-foreground border-t mt-2 pt-2">
-                        ── Aktiviteler ──
-                      </SelectItem>
-                      <SelectItem value="Aktiviteler" className="font-medium text-orange-600">
-                        📋 Aktiviteler (Tatil, Mola, vb.)
-                      </SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedCell && `${DAYS[selectedCell.dayIndex]} - Satır ${selectedCell.rowIndex + 1}`}
+                  </DialogTitle>
+                </DialogHeader>
 
-            {/* Topic / Aktivite */}
-            <div className="space-y-2">
-              <Label>{selectedSubjectForTopics === 'Aktiviteler' ? 'Aktivite Türü' : 'Konu'}</Label>
-              <Select 
-                value={editingCellData.topicName || ''} 
-                onValueChange={(value) => setEditingCellData(prev => ({ ...prev, topicName: value }))}
-                disabled={!selectedSubjectForTopics}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={
-                    !selectedSubjectForTopics 
-                      ? "Önce ders seçin" 
-                      : selectedSubjectForTopics === 'Aktiviteler' 
-                        ? "Aktivite seçin" 
-                        : "Konu seçin"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredTopics.map(topic => (
-                    <SelectItem key={topic.id} value={topic.name}>{topic.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="space-y-4 py-4">
+                  {/* Subject */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Çalışılacak Ders
+                    </Label>
+                    <Select
+                      value={selectedSubjectForTopics}
+                      onValueChange={(value) => {
+                        setSelectedSubjectForTopics(value);
+                        setEditingCellData(prev => ({ ...prev, subjectName: value, topicName: '' }));
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Ders seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Seçilen sınav tipine ait dersler */}
+                        {subjects
+                          .filter(s => s.examType === examType)
+                          .map(subject => (
+                            <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
+                          ))}
+                        {/* Aktiviteler grubu */}
+                        {subjects.some(s => s.examType === 'COMMON') && (
+                          <>
+                            <SelectItem value="---" disabled className="font-semibold text-muted-foreground border-t mt-2 pt-2">
+                              ── Aktiviteler ──
+                            </SelectItem>
+                            <SelectItem value="Aktiviteler" className="font-medium text-orange-600">
+                              📋 Aktiviteler (Tatil, Mola, vb.)
+                            </SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            {/* Question Count */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Hedeflenen Soru Sayısı
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                placeholder="Örn: 20"
-                value={editingCellData.targetQuestionCount || ''}
-                onChange={(e) => setEditingCellData(prev => ({ 
-                  ...prev, 
-                  targetQuestionCount: e.target.value ? parseInt(e.target.value) : undefined 
-                }))}
-              />
-            </div>
+                  {/* Topic / Aktivite */}
+                  <div className="space-y-2">
+                    <Label>{selectedSubjectForTopics === 'Aktiviteler' ? 'Aktivite Türü' : 'Konu'}</Label>
+                    <Select
+                      value={editingCellData.topicName || ''}
+                      onValueChange={(value) => setEditingCellData(prev => ({ ...prev, topicName: value }))}
+                      disabled={!selectedSubjectForTopics}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          !selectedSubjectForTopics
+                            ? "Önce ders seçin"
+                            : selectedSubjectForTopics === 'Aktiviteler'
+                              ? "Aktivite seçin"
+                              : "Konu seçin"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Group topics by hierarchy */}
+                        {(() => {
+                          // Find root topics (units) and child topics
+                          const rootTopics = filteredTopics.filter(t => !t.parentTopicId);
+                          const childTopics = filteredTopics.filter(t => t.parentTopicId);
 
-            {/* Duration */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Hedeflenen Süre (dakika)
-              </Label>
-              <Input
-                type="number"
-                min={0}
-                placeholder="Örn: 45"
-                value={editingCellData.targetDuration || ''}
-                onChange={(e) => setEditingCellData(prev => ({ 
-                  ...prev, 
-                  targetDuration: e.target.value ? parseInt(e.target.value) : undefined 
-                }))}
-              />
-            </div>
+                          // If no hierarchy (all roots or no roots logic match), just list them
+                          if (rootTopics.length === 0 && childTopics.length > 0) {
+                            return childTopics.map(topic => (
+                              <SelectItem key={topic.id} value={topic.name}>{topic.name}</SelectItem>
+                            ));
+                          }
 
-            {/* Resource */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Kaynak Kitap
-              </Label>
-              <Input
-                placeholder="Örn: Karekök Yayınları TYT Matematik"
-                value={editingCellData.targetResource || ''}
-                onChange={(e) => setEditingCellData(prev => ({ ...prev, targetResource: e.target.value }))}
-              />
-            </div>
+                          if (rootTopics.length === 0 && childTopics.length === 0) {
+                            return <div className="p-2 text-sm text-muted-foreground">Konu bulunamadı</div>;
+                          }
+
+                          return (
+                            <>
+                              {rootTopics.map(root => {
+                                const children = childTopics.filter(c => c.parentTopicId === root.id);
+                                return (
+                                  <div key={root.id}>
+                                    <SelectItem value={root.name} className="font-semibold text-primary/80">
+                                      {root.name}
+                                    </SelectItem>
+                                    {children.map(child => (
+                                      <SelectItem key={child.id} value={child.name} className="pl-6 text-sm">
+                                        • {child.name}
+                                      </SelectItem>
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                              {/* Orphan children (shouldn't happen strictly but safe to handle) */}
+                              {childTopics.filter(c => !rootTopics.find(r => r.id === c.parentTopicId)).map(orphan => (
+                                <SelectItem key={orphan.id} value={orphan.name}>{orphan.name}</SelectItem>
+                              ))}
+                            </>
+                          );
+                        })()}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Question Count */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4" />
+                      Hedeflenen Soru Sayısı
+                    </Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Örn: 20"
+                      value={editingCellData.targetQuestionCount || ''}
+                      onChange={(e) => setEditingCellData(prev => ({
+                        ...prev,
+                        targetQuestionCount: e.target.value ? parseInt(e.target.value) : undefined
+                      }))}
+                    />
+                  </div>
+
+                  {/* Duration */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Hedeflenen Süre (dakika)
+                    </Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Örn: 45"
+                      value={editingCellData.targetDuration || ''}
+                      onChange={(e) => setEditingCellData(prev => ({
+                        ...prev,
+                        targetDuration: e.target.value ? parseInt(e.target.value) : undefined
+                      }))}
+                    />
+                  </div>
+
+                  {/* Resource */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Kaynak Kitap
+                    </Label>
+                    <Input
+                      placeholder="Örn: Karekök Yayınları TYT Matematik"
+                      value={editingCellData.targetResource || ''}
+                      onChange={(e) => setEditingCellData(prev => ({ ...prev, targetResource: e.target.value }))}
+                    />
+                  </div>
+
+                  {/* Custom Content */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Özel İçerik / Not
+                    </Label>
+                    <Textarea
+                      placeholder="Örn: Video izle, Sayfa 45-50 arası oku..."
+                      value={editingCellData.customContent || ''}
+                      onChange={(e) => setEditingCellData(prev => ({ ...prev, customContent: e.target.value }))}
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={clearCellData}>
+                    Temizle
+                  </Button>
+                  <Button type="button" onClick={saveCellData}>
+                    Kaydet
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={clearCellData}>
-              Temizle
-            </Button>
-            <Button type="button" onClick={saveCellData}>
-              Kaydet
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-        </div>
-      </SortableContext>
-    </DndContext>
-  );
+        </SortableContext>
+      </DndContext>
+    );
   };
 
   return (
