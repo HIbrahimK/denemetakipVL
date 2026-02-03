@@ -538,6 +538,7 @@ export class StudentsService {
                 score: score.score,
                 rankSchool: score.rankSchool,
                 rankClass: score.rankClass,
+                rankDistrict: score.rankDistrict,
                 rankCity: score.rankCity,
                 rankGen: score.rankGen,
             }));

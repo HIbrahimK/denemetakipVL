@@ -159,6 +159,7 @@ model ExamScore {
   score       Float
   rankSchool  Int?
   rankClass   Int?
+  rankDistrict Int?
   rankCity    Int?
   rankGen     Int?
   schoolId    String?

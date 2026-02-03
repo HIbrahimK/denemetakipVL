@@ -75,13 +75,13 @@ const TYT_COLUMN_MAP = {
         lessons: {
             'Türkçe': [4, 5, 6], 'Tarih': [7, 8, 9], 'Coğrafya': [10, 11, 12],
             'Felsefe': [13, 14, 15], 'Din Kültürü': [16, 17, 18],
-            'Matematik': [28, 29, 30], 'Fizik': [31, 32, 33],
-            'Kimya': [34, 35, 36], 'Biyoloji': [37, 38, 39]
+            'Matematik': [31, 32, 33], 'Fizik': [34, 35, 36],
+            'Kimya': [37, 38, 39], 'Biyoloji': [40, 41, 42]
         },
-        scores: { 'TYT': 46 },
+        scores: { 'TYT': 49 },
         // TYT Raw dosyasında sıralamalar 47-51 arasındadır
         ranks: {
-            'Sınıf': 47, 'Okul': 48, 'İlçe': 49, 'İl': 50, 'Genel': 51
+            'Sınıf': 50, 'Okul': 51, 'İlçe': 52, 'İl': 53, 'Genel': 54
         }
     }
 };

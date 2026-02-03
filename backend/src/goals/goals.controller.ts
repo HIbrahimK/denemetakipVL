@@ -35,31 +35,31 @@ export class GoalsController {
   @Get()
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT', 'PARENT')
   findAllGoals(@Request() req, @Query() filters) {
-    return this.goalsService.findAll(req.user.userId, req.user.role, req.user.schoolId, filters);
+    return this.goalsService.findAll(req.user.id, req.user.role, req.user.schoolId, filters);
   }
 
   @Get(':id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT', 'PARENT')
   findOneGoal(@Param('id') id: string, @Request() req) {
-    return this.goalsService.findOne(id, req.user.userId, req.user.role, req.user.schoolId);
+    return this.goalsService.findOne(id, req.user.id, req.user.role, req.user.schoolId);
   }
 
   @Patch(':id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   updateGoal(@Param('id') id: string, @Body() dto: UpdateStudyGoalDto, @Request() req) {
-    return this.goalsService.update(id, dto, req.user.userId, req.user.role, req.user.schoolId);
+    return this.goalsService.update(id, dto, req.user.id, req.user.role, req.user.schoolId);
   }
 
   @Post(':id/progress')
   @Roles('STUDENT')
   updateProgress(@Param('id') id: string, @Body() dto: UpdateGoalProgressDto, @Request() req) {
-    return this.goalsService.updateProgress(id, dto, req.user.userId, req.user.schoolId);
+    return this.goalsService.updateProgress(id, dto, req.user.id, req.user.schoolId);
   }
 
   @Delete(':id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   removeGoal(@Param('id') id: string, @Request() req) {
-    return this.goalsService.remove(id, req.user.userId, req.user.role, req.user.schoolId);
+    return this.goalsService.remove(id, req.user.id, req.user.role, req.user.schoolId);
   }
 
   // Achievements
@@ -72,12 +72,12 @@ export class GoalsController {
   @Get('achievements/my')
   @Roles('STUDENT')
   findMyAchievements(@Request() req) {
-    return this.achievementsService.findStudentAchievements(req.user.userId, req.user.schoolId);
+    return this.achievementsService.findStudentAchievements(req.user.id, req.user.schoolId);
   }
 
   @Get('achievements/progress')
   @Roles('STUDENT')
   getAchievementProgress(@Request() req) {
-    return this.achievementsService.getStudentProgress(req.user.userId, req.user.schoolId);
+    return this.achievementsService.getStudentProgress(req.user.id, req.user.schoolId);
   }
 }

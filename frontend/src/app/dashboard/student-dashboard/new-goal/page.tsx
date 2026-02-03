@@ -15,20 +15,21 @@ import { useToast } from '@/hooks/use-toast';
 export default function NewGoalPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    title: '',
     type: '',
     targetValue: '',
     deadline: '',
     description: '',
-    targetData: {},
   });
   const router = useRouter();
   const { toast } = useToast();
 
+  // Backend accepted types (StudyGoalType):
+  // STUDENT_SCORE, STUDENT_NET, STUDENT_UNIVERSITY, TEACHER_CLASS_AVERAGE
   const goalTypes = [
-    { value: 'EXAM_SCORE', label: 'Sınav Puanı Hedefi' },
-    { value: 'STUDY_TIME', label: 'Çalışma Süresi Hedefi' },
-    { value: 'TASK_COMPLETION', label: 'Görev Tamamlama Hedefi' },
-    { value: 'SUBJECT_MASTERY', label: 'Konu Hakimiyeti Hedefi' },
+    { value: 'STUDENT_SCORE', label: 'Puan Hedefi' },
+    { value: 'STUDENT_NET', label: 'Net Hedefi' },
+    { value: 'STUDENT_UNIVERSITY', label: 'Üniversite Hedefi' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +38,31 @@ export default function NewGoalPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userStr = localStorage.getItem('user');
+      
+      if (!userStr) {
+        throw new Error('Kullanıcı bilgisi bulunamadı');
+      }
+      
+      const user = JSON.parse(userStr);
+      
+      if (!user?.student?.id) {
+        console.error('User object:', user);
+        throw new Error('Öğrenci bilgisi bulunamadı');
+      }
+      
+      const payload = {
+        studentId: user.student.id,
+        type: formData.type,
+        title: formData.title,
+        description: formData.description || undefined,
+        targetData: { metric: formData.type },
+        targetValue: parseFloat(formData.targetValue),
+        targetUnit: formData.type === 'STUDENT_SCORE' ? 'puan' : formData.type === 'STUDENT_NET' ? 'net' : undefined,
+        targetDate: new Date(formData.deadline).toISOString(),
+      };
+      
+      console.log('Submitting goal with payload:', payload);
       
       const response = await fetch('http://localhost:3001/goals', {
         method: 'POST',
@@ -45,13 +70,7 @@ export default function NewGoalPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          userId: user.id,
-          targetValue: parseFloat(formData.targetValue),
-          currentValue: 0,
-          status: 'ACTIVE',
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -104,6 +123,17 @@ export default function NewGoalPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
+              <Label htmlFor="title">Başlık *</nLabel>
+              <Input
+                id="title"
+                type="text"
+                placeholder="Örn: Mart TYT Puan Hedefi"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="type">Hedef Tipi *</Label>
               <Select
                 value={formData.type}
@@ -136,7 +166,7 @@ export default function NewGoalPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="deadline">Son Tarih *</Label>
+              <Label htmlFor="deadline">Hedef Tarihi *</Label>
               <Input
                 id="deadline"
                 type="date"

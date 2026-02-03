@@ -91,6 +91,15 @@ export class StudySessionService {
         gte: new Date(filters.startDate),
         lte: new Date(filters.endDate),
       };
+    } else if (filters?.startDate) {
+      // If only startDate is provided, get sessions from that date onwards
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.startDate);
+      endDate.setDate(endDate.getDate() + 1); // Next day
+      where.startTime = {
+        gte: startDate,
+        lt: endDate,
+      };
     }
 
     return this.prisma.studySession.findMany({

@@ -110,7 +110,13 @@ export default function ExamsPage() {
             : `http://localhost:3001/exams/${deleteId}/results`;
 
         try {
-            const res = await fetch(endpoint, { method: 'DELETE' });
+            const token = localStorage.getItem('token');
+            const res = await fetch(endpoint, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                },
+            });
             if (res.ok) {
                 fetchExams();
             }
@@ -163,7 +169,7 @@ export default function ExamsPage() {
                             Deneme Takvimi
                         </Link>
                     </Button>
-                    {userRole !== 'TEACHER' && <CreateExamModal onSuccess={fetchExams} />}
+                    {userRole === 'SCHOOL_ADMIN' && <CreateExamModal onSuccess={fetchExams} />}
                 </div>
             </div>
 
@@ -267,7 +273,7 @@ export default function ExamsPage() {
                                                 <BarChart2 className="mr-2 h-4 w-4" /> İstatistikler
                                             </Link>
                                         </DropdownMenuItem>
-                                        {userRole !== 'TEACHER' && (
+                                        {userRole === 'SCHOOL_ADMIN' && (
                                             <>
                                                 <DropdownMenuItem className="cursor-pointer" onClick={() => setEditExam(exam)}>
                                                     <Edit className="mr-2 h-4 w-4" /> Düzenle

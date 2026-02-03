@@ -204,17 +204,19 @@ export class ImportService {
                         for (const [scoreType, scoreVal] of Object.entries(row.scores)) {
                             // AYT'de sıralamalar "SAY Sınıf", "SAY Okul" şeklinde kaydedilir
                             // Diğer türlerde "Sınıf", "Okul" şeklinde kaydedilir
-                            let rankClass, rankSchool, rankCity, rankGen;
+                            let rankClass, rankSchool, rankDistrict, rankCity, rankGen;
                             
                             if (examType === 'AYT') {
                                 rankClass = row.ranks[`${scoreType} Sınıf`] || null;
                                 rankSchool = row.ranks[`${scoreType} Okul`] || null;
-                                rankCity = row.ranks[`${scoreType} İlçe`] || null;
+                                rankDistrict = row.ranks[`${scoreType} İlçe`] || null;
+                                rankCity = row.ranks[`${scoreType} İl`] || null;
                                 rankGen = row.ranks[`${scoreType} Genel`] || null;
                             } else {
                                 rankClass = row.ranks['Sınıf'] || row.ranks['Sınıf Derece'] || null;
                                 rankSchool = row.ranks['Okul'] || row.ranks['Kurum'] || row.ranks['Okul Derece'] || null;
-                                rankCity = row.ranks['İlçe'] || row.ranks['İl'] || row.ranks['İl Derece'] || null;
+                                rankDistrict = row.ranks['İlçe'] || null;
+                                rankCity = row.ranks['İl'] || row.ranks['İl Derece'] || null;
                                 rankGen = row.ranks['Genel'] || row.ranks['Genel Derece'] || null;
                             }
 
@@ -224,6 +226,7 @@ export class ImportService {
                                     type: scoreType,
                                     score: Number(scoreVal),
                                     rankClass: rankClass ? Number(rankClass) : null,
+                                    rankDistrict: rankDistrict ? Number(rankDistrict) : null,
                                     rankSchool: rankSchool ? Number(rankSchool) : null,
                                     rankCity: rankCity ? Number(rankCity) : null,
                                     rankGen: rankGen ? Number(rankGen) : null,

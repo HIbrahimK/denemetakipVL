@@ -1,4 +1,5 @@
 import { IsEnum, IsInt, IsOptional, IsString, IsDateString, IsBoolean, IsNumber } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ExamType } from '@prisma/client';
 
 export class CreateExamDto {
@@ -13,6 +14,7 @@ export class CreateExamDto {
     publisher?: string;
 
     @IsOptional()
+    @Transform(({ value }) => (value === '' ? undefined : value))
     @IsDateString()
     date?: string;
 
@@ -21,10 +23,12 @@ export class CreateExamDto {
 
     // Takvim bilgileri
     @IsOptional()
+    @Transform(({ value }) => (value === '' ? undefined : value))
     @IsDateString()
     scheduledDateTime?: string;
 
     @IsOptional()
+    @Transform(({ value }) => (value === '' ? undefined : value))
     @IsDateString()
     applicationDateTime?: string;
 

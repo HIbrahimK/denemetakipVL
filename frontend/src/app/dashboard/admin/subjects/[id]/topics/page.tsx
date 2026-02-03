@@ -312,10 +312,11 @@ export default function AdminTopicsPage() {
   // Flatten topics for parent selection
   const getAllTopics = (topicsList: Topic[], level = 0): { topic: Topic; level: number }[] => {
     const result: { topic: Topic; level: number }[] = [];
+    const safeLevel = Math.max(0, level); // Ensure level is never negative
     topicsList.forEach(topic => {
-      result.push({ topic, level });
+      result.push({ topic, level: safeLevel });
       if (topic.childTopics) {
-        result.push(...getAllTopics(topic.childTopics, level + 1));
+        result.push(...getAllTopics(topic.childTopics, safeLevel + 1));
       }
     });
     return result;
@@ -463,7 +464,7 @@ export default function AdminTopicsPage() {
                     <SelectItem value="null">Ana Konu (Üst konu yok)</SelectItem>
                     {allTopics.map(({ topic, level }) => (
                       <SelectItem key={topic.id} value={topic.id}>
-                        {'  '.repeat(level)}{topic.name}
+                        {'  '.repeat(Math.max(0, level))}{topic.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

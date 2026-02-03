@@ -692,52 +692,68 @@ export default function ExamResultsPage() {
                                                 <div className="text-[10px] uppercase font-bold">SAY {getSortIcon('sayScore')}</div>
                                                 <div className="text-[8px] text-slate-500">Puan</div>
                                             </th>
-                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">İlçe</div>
-                                            </th>
-                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">İl</div>
-                                            </th>
-                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">Genel</div>
-                                            </th>
+                                            {viewMode === 'detailed' && (
+                                                <>
+                                                    <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">İlçe</div>
+                                                    </th>
+                                                    <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">İl</div>
+                                                    </th>
+                                                    <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">Genel</div>
+                                                    </th>
+                                                </>
+                                            )}
                                             
                                             <th className="p-3 text-center border-l dark:border-slate-700 min-w-[100px] cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('eaScore')}>
                                                 <div className="text-[10px] uppercase font-bold">EA {getSortIcon('eaScore')}</div>
                                                 <div className="text-[8px] text-slate-500">Puan</div>
                                             </th>
-                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">İlçe</div>
-                                            </th>
-                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">İl</div>
-                                            </th>
-                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">Genel</div>
-                                            </th>
+                                            {viewMode === 'detailed' && (
+                                                <>
+                                                    <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">İlçe</div>
+                                                    </th>
+                                                    <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">İl</div>
+                                                    </th>
+                                                    <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">Genel</div>
+                                                    </th>
+                                                </>
+                                            )}
                                             
                                             <th className="p-3 text-center border-l dark:border-slate-700 min-w-[100px] cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('sozScore')}>
                                                 <div className="text-[10px] uppercase font-bold">SÖZ {getSortIcon('sozScore')}</div>
                                                 <div className="text-[8px] text-slate-500">Puan</div>
                                             </th>
-                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">İlçe</div>
-                                            </th>
-                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">İl</div>
-                                            </th>
-                                            <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
-                                                <div className="text-[8px] uppercase">Genel</div>
-                                            </th>
+                                            {viewMode === 'detailed' && (
+                                                <>
+                                                    <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">İlçe</div>
+                                                    </th>
+                                                    <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">İl</div>
+                                                    </th>
+                                                    <th className="p-3 text-center border-l dark:border-slate-700 min-w-[80px]">
+                                                        <div className="text-[8px] uppercase">Genel</div>
+                                                    </th>
+                                                </>
+                                            )}
                                         </>
                                     ) : (
                                         <>
                                             <th className="p-3 text-right cursor-pointer border-l dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => handleSort('score')}>
                                                 <div>Puan {getSortIcon('score')}</div>
                                             </th>
-                                            <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700">İlçe</th>
-                                            <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700">İl</th>
-                                            <th className="p-3 text-center border-l dark:border-slate-700">Genel</th>
+                                            {viewMode === 'detailed' && (
+                                                <>
+                                                    <th className="p-3 text-center hidden md:table-cell border-l dark:border-slate-700">İlçe</th>
+                                                    <th className="p-3 text-center hidden lg:table-cell border-l dark:border-slate-700">İl</th>
+                                                    <th className="p-3 text-center border-l dark:border-slate-700">Genel</th>
+                                                </>
+                                            )}
                                         </>
                                     )}
                                 </tr>
@@ -786,58 +802,74 @@ export default function ExamResultsPage() {
                                                 <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
                                                     {student.scores?.find((s: any) => s.type === 'SAY')?.score.toFixed(3) || '-'}
                                                 </td>
-                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.rankCity || '-'}
-                                                </td>
-                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.rankSchool || '-'}
-                                                </td>
-                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'SAY')?.rankGen || '-'}
-                                                </td>
+                                                {viewMode === 'detailed' && (
+                                                    <>
+                                                        <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'SAY')?.rankDistrict || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'SAY')?.rankCity || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'SAY')?.rankGen || '-'}
+                                                        </td>
+                                                    </>
+                                                )}
 
                                                 {/* EA Puanı ve Sıralamaları */}
                                                 <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
                                                     {student.scores?.find((s: any) => s.type === 'EA')?.score.toFixed(3) || '-'}
                                                 </td>
-                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'EA')?.rankCity || '-'}
-                                                </td>
-                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'EA')?.rankSchool || '-'}
-                                                </td>
-                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'EA')?.rankGen || '-'}
-                                                </td>
+                                                {viewMode === 'detailed' && (
+                                                    <>
+                                                        <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'EA')?.rankDistrict || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'EA')?.rankCity || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'EA')?.rankGen || '-'}
+                                                        </td>
+                                                    </>
+                                                )}
 
                                                 {/* SÖZ Puanı ve Sıralamaları */}
                                                 <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
                                                     {student.scores?.find((s: any) => s.type === 'SÖZ')?.score.toFixed(3) || '-'}
                                                 </td>
-                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankCity || '-'}
-                                                </td>
-                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankSchool || '-'}
-                                                </td>
-                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankGen || '-'}
-                                                </td>
+                                                {viewMode === 'detailed' && (
+                                                    <>
+                                                        <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankDistrict || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankCity || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.find((s: any) => s.type === 'SÖZ')?.rankGen || '-'}
+                                                        </td>
+                                                    </>
+                                                )}
                                             </>
                                         ) : (
                                             <>
                                                 <td className="p-3 text-right font-bold text-indigo-600 dark:text-indigo-400 border-l dark:border-slate-800">
                                                     {student.scores?.[0]?.score.toFixed(3) || student.score?.toFixed(3) || '-'}
                                                 </td>
-                                                <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.[0]?.rankCity || '-'}
-                                                </td>
-                                                <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.[0]?.rankSchool || '-'}
-                                                </td>
-                                                <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
-                                                    {student.scores?.[0]?.rankGen || '-'}
-                                                </td>
+                                                {viewMode === 'detailed' && (
+                                                    <>
+                                                        <td className="p-3 text-center hidden md:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.[0]?.rankDistrict || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center hidden lg:table-cell text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.[0]?.rankCity || '-'}
+                                                        </td>
+                                                        <td className="p-3 text-center font-bold text-sm border-l dark:border-slate-800">
+                                                            {student.scores?.[0]?.rankGen || '-'}
+                                                        </td>
+                                                    </>
+                                                )}
                                             </>
                                         )}
                                     </tr>

@@ -24,6 +24,11 @@ export default function PWARegister() {
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      // Respect "never show again" preference
+      const neverShow = localStorage.getItem("pwa-install-hide") === "true";
+      if (neverShow) {
+        return;
+      }
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowInstallPrompt(true);
     };
@@ -79,8 +84,18 @@ export default function PWARegister() {
     localStorage.setItem("pwa-install-dismissed", Date.now().toString());
   };
 
+  const handleNeverShow = () => {
+    localStorage.setItem("pwa-install-hide", "true");
+    setShowInstallPrompt(false);
+  };
+
   // Check if dismissed recently
   useEffect(() => {
+    const neverShow = localStorage.getItem("pwa-install-hide") === "true";
+    if (neverShow) {
+      setShowInstallPrompt(false);
+      return;
+    }
     const dismissed = localStorage.getItem("pwa-install-dismissed");
     if (dismissed) {
       const dismissedTime = parseInt(dismissed);
@@ -118,6 +133,13 @@ export default function PWARegister() {
               onClick={handleDismiss}
             >
               Şimdi Değil
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleNeverShow}
+            >
+              Bir daha gösterme
             </Button>
           </div>
         </div>

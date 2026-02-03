@@ -35,6 +35,7 @@ interface ExamScore {
     score: number;
     rankSchool: number | null;
     rankClass: number | null;
+    rankDistrict: number | null;
     rankCity: number | null;
     rankGen: number | null;
 }
@@ -234,7 +235,7 @@ export default function ExamDetailPage() {
             </div>
 
             {/* Score Overview */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -264,6 +265,19 @@ export default function ExamDetailPage() {
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            Sınıf Sırası
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            {primaryScore?.rankClass ?? '-'}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400">
                             Okul Sırası
                         </CardTitle>
                     </CardHeader>
@@ -272,6 +286,38 @@ export default function ExamDetailPage() {
                             {primaryScore?.rankSchool || '-'}
                             {examDetail.schoolParticipantCount && primaryScore?.rankSchool && (
                                 <span className="text-sm font-normal text-slate-500">/{examDetail.schoolParticipantCount}</span>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            İlçe Sırası
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                            {primaryScore?.rankDistrict || '-'}
+                            {examDetail.districtParticipantCount && primaryScore?.rankDistrict && (
+                                <span className="text-sm font-normal text-slate-500">/{examDetail.districtParticipantCount}</span>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            İl Sırası
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                            {primaryScore?.rankCity || '-'}
+                            {examDetail.cityParticipantCount && primaryScore?.rankCity && (
+                                <span className="text-sm font-normal text-slate-500">/{examDetail.cityParticipantCount}</span>
                             )}
                         </div>
                     </CardContent>
@@ -462,6 +508,14 @@ export default function ExamDetailPage() {
                                             <span className="text-slate-600 dark:text-slate-400">Puan:</span>
                                             <span className="font-bold">{score.score.toFixed(2)}</span>
                                         </div>
+                                        {score.rankClass && (
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-600 dark:text-slate-400">Sınıf:</span>
+                                                <span className="font-semibold">
+                                                    {score.rankClass}
+                                                </span>
+                                            </div>
+                                        )}
                                         {score.rankSchool && (
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-600 dark:text-slate-400">Okul:</span>
@@ -469,6 +523,17 @@ export default function ExamDetailPage() {
                                                     {score.rankSchool}
                                                     {examDetail.schoolParticipantCount && (
                                                         <span className="text-xs font-normal text-slate-500">/{examDetail.schoolParticipantCount}</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {score.rankDistrict && (
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-600 dark:text-slate-400">İlçe:</span>
+                                                <span className="font-semibold">
+                                                    {score.rankDistrict}
+                                                    {examDetail.districtParticipantCount && (
+                                                        <span className="text-xs font-normal text-slate-500">/{examDetail.districtParticipantCount}</span>
                                                     )}
                                                 </span>
                                             </div>

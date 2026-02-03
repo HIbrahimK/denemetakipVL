@@ -50,14 +50,14 @@ export default function StudentDashboardPage() {
     }
     const userData = JSON.parse(userStr);
     setUser(userData);
-    fetchGoals(userData.id);
-    fetchStudyStats(userData.id);
+    fetchGoals();
+    fetchStudyStats();
   }, []);
 
-  const fetchGoals = async (userId: string) => {
+  const fetchGoals = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/goals/user/${userId}`, {
+      const response = await fetch('http://localhost:3001/goals', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -74,14 +74,14 @@ export default function StudentDashboardPage() {
     }
   };
 
-  const fetchStudyStats = async (userId: string) => {
+  const fetchStudyStats = async () => {
     try {
       const token = localStorage.getItem('token');
       
       // Bugünkü çalışma süresi
       const today = new Date().toISOString().split('T')[0];
       const sessionsResponse = await fetch(
-        `http://localhost:3001/study/sessions/student/${userId}?startDate=${today}`,
+        `http://localhost:3001/study/sessions?startDate=${today}`,
         {
           headers: { 'Authorization': `Bearer ${token}` },
         }

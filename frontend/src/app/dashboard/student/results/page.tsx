@@ -46,6 +46,7 @@ interface ExamScore {
     score: number;
     rankSchool: number | null;
     rankClass: number | null;
+    rankDistrict: number | null;
     rankCity: number | null;
     rankGen: number | null;
 }
@@ -523,6 +524,15 @@ export default function StudentResultsPage() {
                                     </div>
                                     {/* Sıralamalar */}
                                     <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-2">
+                                        {primaryScore?.rankClass && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-600 dark:text-slate-400">Sınıf Sırası:</span>
+                                                <span className="font-semibold">
+                                                    {primaryScore.rankClass}
+                                                    {/* Sınıf katılımcı sayısı bilinmiyor; yalnızca sırayı gösteriyoruz */}
+                                                </span>
+                                            </div>
+                                        )}
                                         {primaryScore?.rankSchool && (
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-slate-600 dark:text-slate-400">Okul Sırası:</span>
@@ -530,6 +540,17 @@ export default function StudentResultsPage() {
                                                     {primaryScore.rankSchool}
                                                     {exam.schoolParticipantCount && (
                                                         <span className="text-slate-500">/{exam.schoolParticipantCount}</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {primaryScore?.rankDistrict && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-600 dark:text-slate-400">İlçe Sırası:</span>
+                                                <span className="font-semibold">
+                                                    {primaryScore.rankDistrict}
+                                                    {exam.districtParticipantCount && (
+                                                        <span className="text-slate-500">/{exam.districtParticipantCount}</span>
                                                     )}
                                                 </span>
                                             </div>
