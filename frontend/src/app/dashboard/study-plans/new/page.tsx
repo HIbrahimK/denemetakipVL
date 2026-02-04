@@ -14,7 +14,6 @@ import { format, addDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -34,19 +33,6 @@ interface Topic {
   name: string;
   subjectId: string;
   parentTopicId?: string | null;
-}
-
-interface Grade {
-  id: string;
-  name: string;
-  level: number;
-}
-
-interface Class {
-  id: string;
-  name: string;
-  gradeId: string;
-  grade: Grade;
 }
 
 interface CellData {
@@ -97,7 +83,6 @@ export default function NewStudyPlanPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [examType, setExamType] = useState<string>('');
-  const [gradeLevels, setGradeLevels] = useState<number[]>([]);
   const [isTemplate, setIsTemplate] = useState(true);
   const [isPublic, setIsPublic] = useState(false);
 
@@ -109,10 +94,6 @@ export default function NewStudyPlanPage() {
   const [rows, setRows] = useState<PlanRow[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [grades, setGrades] = useState<Grade[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [selectedGradeId, setSelectedGradeId] = useState<string>('');
-  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number; dayIndex: number } | null>(null);
   const [cellModalOpen, setCellModalOpen] = useState(false);
   const [editingCellData, setEditingCellData] = useState<CellData>({});
@@ -139,8 +120,6 @@ export default function NewStudyPlanPage() {
     fetchTemplates();
     fetchSubjects();
     fetchTopics();
-    fetchGrades();
-    fetchClasses();
     
     // Load plan if in edit mode
     if (isEditMode && editPlanId) {
@@ -163,7 +142,6 @@ export default function NewStudyPlanPage() {
         setName(plan.name);
         setDescription(plan.description || '');
         setExamType(plan.examType);
-        setGradeLevels(plan.gradeLevels || []);
         setIsTemplate(plan.isTemplate);
         setIsPublic(plan.isPublic || false);
         
@@ -263,76 +241,16 @@ export default function NewStudyPlanPage() {
     }
   };
 
-  const fetchGrades = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      if (!userStr) return;
-      
-      const user = JSON.parse(userStr);
-      const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/grades`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setGrades(data);
-      }
-    } catch (error) {
-      console.error('Error fetching grades:', error);
-    }
-  };
 
-  const fetchClasses = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      if (!userStr) return;
-      
-      const user = JSON.parse(userStr);
-      const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/classes`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setClasses(data);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
-  };
-
-  const getAvailableGrades = () => {
-    const exam = EXAM_TYPES.find(e => e.value === examType);
-    return exam?.grades || [];
-  };
 
   const handleExamTypeChange = (value: string) => {
     setExamType(value);
-    setGradeLevels([]);
   };
 
-  const toggleGrade = (grade: number) => {
-    setGradeLevels(prev =>
-      prev.includes(grade)
-        ? prev.filter(g => g !== grade)
-        : [...prev, grade]
-    );
-  };
 
-  const getClassesByGrade = (gradeId: string) => {
-    return classes.filter(c => c.gradeId === gradeId);
-  };
-
-  const toggleClass = (classId: string) => {
-    setSelectedClassIds(prev =>
-      prev.includes(classId)
-        ? prev.filter(id => id !== classId)
-        : [...prev, classId]
-    );
-  };
 
   const canProceedToStep2 = () => {
-    return name && examType && gradeLevels.length > 0;
+    return name && examType;
   };
 
   const canProceedToStep3 = () => {
@@ -343,7 +261,7 @@ export default function NewStudyPlanPage() {
     if (!canProceedToStep2()) {
       toast({
         title: 'Eksik Bilgi',
-        description: 'Lütfen plan adı, sınav tipi ve sınıf seviyesi seçin',
+        description: 'Lütfen plan adı ve sınav tipi seçin',
         variant: 'destructive',
       });
       return;
@@ -506,7 +424,6 @@ export default function NewStudyPlanPage() {
         name,
         description,
         examType,
-        gradeLevels,
         planData: buildPlanData(),
         status: 'DRAFT',
         isTemplate, // Use checkbox value
@@ -596,84 +513,6 @@ export default function NewStudyPlanPage() {
           rows={2}
         />
       </div>
-
-      {/* Grade Levels */}
-      {examType && (
-        <div className="space-y-2">
-          <Label>Sınıf Seviyeleri *</Label>
-          <div className="flex flex-wrap gap-3">
-            {getAvailableGrades().map(grade => (
-              <div key={grade} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`grade-${grade}`}
-                  checked={gradeLevels.includes(grade)}
-                  onCheckedChange={() => toggleGrade(grade)}
-                />
-                <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
-                  {grade}. Sınıf
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Class and Section Selection */}
-      {gradeLevels.length > 0 && grades.length > 0 && (
-        <div className="space-y-4 p-4 border rounded-lg">
-          <Label>Sınıf ve Şube Seçimi (Opsiyonel)</Label>
-          <p className="text-sm text-muted-foreground">Plan oluştururken belirli sınıf ve şubeleri seçebilirsiniz</p>
-          
-          {/* Grade Selector */}
-          <div className="space-y-2">
-            <Label>Sınıf Seviyesi</Label>
-            <Select value={selectedGradeId} onValueChange={setSelectedGradeId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sınıf seviyesi seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                {grades
-                  .filter(g => gradeLevels.includes(g.level))
-                  .map(grade => (
-                    <SelectItem key={grade.id} value={grade.id}>
-                      {grade.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Class/Section Selector */}
-          {selectedGradeId && (
-            <div className="space-y-2">
-              <Label>Şubeler</Label>
-              <div className="flex flex-wrap gap-3 p-3 border rounded-lg">
-                {getClassesByGrade(selectedGradeId).length > 0 ? (
-                  getClassesByGrade(selectedGradeId).map(cls => (
-                    <div key={cls.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`class-${cls.id}`}
-                        checked={selectedClassIds.includes(cls.id)}
-                        onCheckedChange={() => toggleClass(cls.id)}
-                      />
-                      <Label htmlFor={`class-${cls.id}`} className="cursor-pointer">
-                        {cls.grade.level}. Sınıf - {cls.name} Şubesi
-                      </Label>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">Bu sınıf seviyesinde kayıtlı şube bulunmuyor</p>
-                )}
-              </div>
-              {selectedClassIds.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  {selectedClassIds.length} şube seçildi
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Template Checkbox */}
       <div className="space-y-2">
@@ -773,7 +612,7 @@ export default function NewStudyPlanPage() {
 
         {/* Templates */}
         {templates
-          .filter(t => t.examType === examType && gradeLevels.some(g => t.gradeLevels.includes(g)))
+          .filter(t => t.examType === examType)
           .map(template => (
             <Card
               key={template.id}
@@ -798,9 +637,9 @@ export default function NewStudyPlanPage() {
           ))}
       </div>
 
-      {templates.filter(t => t.examType === examType && gradeLevels.some(g => t.gradeLevels.includes(g))).length === 0 && (
+      {templates.filter(t => t.examType === examType).length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          Bu sınav tipi ve sınıf seviyesi için şablon bulunmuyor.
+          Bu sınav tipi için şablon bulunmuyor.
         </div>
       )}
 

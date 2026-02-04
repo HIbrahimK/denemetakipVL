@@ -179,7 +179,9 @@ export class AuthService {
         });
 
         // Send email
-        await this.emailService.sendPasswordResetEmail(user.email, token);
+        if (user.email) {
+            await this.emailService.sendPasswordResetEmail(user.email, token);
+        }
 
         return { message: 'If user exists, email sent' };
     }

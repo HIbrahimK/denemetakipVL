@@ -7,6 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Target, 
@@ -71,6 +76,7 @@ export default function GroupDetailPage() {
   const params = useParams();
   const router = useRouter();
   const groupId = params?.id as string;
+  const { toast } = useToast();
 
   const [group, setGroup] = useState<MentorGroup | null>(null);
   const [stats, setStats] = useState<GroupStats | null>(null);
@@ -262,10 +268,17 @@ export default function GroupDetailPage() {
       
       // Show result
       if (result.errors && result.errors.length > 0) {
-        const errorMessages = result.errors.map((e: any) => e.error).join('\n');
-        alert(`Bazı öğrenciler eklenemedi:\n${errorMessages}`);
+        const errorMessages = result.errors.map((e: any) => e.error).join(', ');
+        toast({
+          title: "Kısmi Başarı",
+          description: `${result.totalAdded} öğrenci eklendi. Bazı öğrenciler eklenemedi: ${errorMessages}`,
+          variant: "default",
+        });
       } else {
-        alert(`${result.totalAdded} öğrenci başarıyla eklendi`);
+        toast({
+          title: "Başarılı",
+          description: `${result.totalAdded} öğrenci başarıyla eklendi`,
+        });
       }
 
       setShowAddMemberModal(false);
@@ -291,7 +304,11 @@ export default function GroupDetailPage() {
       }
     } catch (error) {
       console.error('Error adding members:', error);
-      alert('Öğrenciler eklenirken bir hata oluştu');
+      toast({
+        title: "Hata",
+        description: "Öğrenciler eklenirken bir hata oluştu",
+        variant: "destructive",
+      });
     } finally {
       setAddingMembers(false);
     }
@@ -579,146 +596,129 @@ export default function GroupDetailPage() {
       </Tabs>
 
       {/* Add Member Modal */}
-      {showAddMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Gruba Üye Ekle</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAddMemberModal(false)}
-                >
-                  ✕
-                </Button>
-              </div>
-            </div>
+      <Dialog open={showAddMemberModal} onOpenChange={setShowAddMemberModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Gruba Üye Ekle</DialogTitle>
+          </DialogHeader>
 
-            <div className="p-6 space-y-4">
-              {/* Step 1: Select Grade */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Sınıf Seviyesi
-                </label>
-                <select
-                  value={selectedGradeId}
-                  onChange={(e) => fetchClasses(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Sınıf seçiniz...</option>
+          <div className="space-y-4">
+            {/* Step 1: Select Grade */}
+            <div className="space-y-2">
+              <Label>Sınıf Seviyesi</Label>
+              <Select value={selectedGradeId} onValueChange={fetchClasses}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sınıf seçiniz..." />
+                </SelectTrigger>
+                <SelectContent>
                   {grades.map((grade: any) => (
-                    <option key={grade.id} value={grade.id}>
+                    <SelectItem key={grade.id} value={grade.id}>
                       {grade.name}. Sınıf
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-              </div>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {/* Step 2: Select Class */}
-              {selectedGradeId && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Şube
-                  </label>
-                  <select
-                    value={selectedClassId}
-                    onChange={(e) => fetchStudents(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Şube seçiniz...</option>
+            {/* Step 2: Select Class */}
+            {selectedGradeId && (
+              <div className="space-y-2">
+                <Label>Şube</Label>
+                <Select value={selectedClassId} onValueChange={fetchStudents}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Şube seçiniz..." />
+                  </SelectTrigger>
+                  <SelectContent>
                     {classes.map((cls: any) => (
-                      <option key={cls.id} value={cls.id}>
+                      <SelectItem key={cls.id} value={cls.id}>
                         {cls.name} ({cls._count?.students || 0} öğrenci)
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Step 3: Search and Select Students */}
+            {selectedClassId && (
+              <>
+                <div className="space-y-2">
+                  <Label>Öğrenci Ara</Label>
+                  <Input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Öğrenci adı veya soyadı..."
+                  />
                 </div>
-              )}
 
-              {/* Step 3: Search and Select Students */}
-              {selectedClassId && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Öğrenci Ara
-                    </label>
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Öğrenci adı veya soyadı..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div className="border rounded-lg max-h-64 overflow-y-auto">
-                    {modalLoading ? (
-                      <div className="p-4 text-center text-gray-500">
-                        Yükleniyor...
-                      </div>
-                    ) : filteredStudents.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
-                        Öğrenci bulunamadı
-                      </div>
-                    ) : (
-                      <div className="divide-y">
-                        {filteredStudents.map((student: any) => (
-                          <label
-                            key={student.id}
-                            className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedStudents.includes(student.id)}
-                              onChange={() => toggleStudentSelection(student.id)}
-                              className="h-5 w-5 text-blue-600 rounded"
-                            />
-                            <Avatar>
-                              <AvatarFallback className="text-sm">
-                                {student.user.firstName[0]}
-                                {student.user.lastName[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="font-medium">
-                                {student.user.firstName} {student.user.lastName}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {student.class?.name} - {student.class?.grade?.name}
-                              </div>
+                <div className="border rounded-lg max-h-64 overflow-y-auto">
+                  {modalLoading ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      Yükleniyor...
+                    </div>
+                  ) : filteredStudents.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      Öğrenci bulunamadı
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {filteredStudents.map((student: any) => (
+                        <label
+                          key={student.id}
+                          className="flex items-center gap-3 p-3 hover:bg-accent cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStudents.includes(student.id)}
+                            onChange={() => toggleStudentSelection(student.id)}
+                            className="h-4 w-4 rounded border-input"
+                          />
+                          <Avatar>
+                            <AvatarFallback className="text-sm">
+                              {student.user.firstName[0]}
+                              {student.user.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="font-medium">
+                              {student.user.firstName} {student.user.lastName}
                             </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="p-6 border-t flex justify-between items-center bg-gray-50">
-              <div className="text-sm text-gray-600">
-                {selectedStudents.length} öğrenci seçildi
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddMemberModal(false)}
-                >
-                  İptal
-                </Button>
-                <Button
-                  onClick={addSelectedMembers}
-                  disabled={selectedStudents.length === 0 || addingMembers}
-                >
-                  {addingMembers ? 'Ekleniyor...' : `${selectedStudents.length} Öğrenci Ekle`}
-                </Button>
-              </div>
-            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {student.class?.name} - {student.class?.grade?.name}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      )}
+
+          <DialogFooter className="flex justify-between items-center sm:justify-between">
+            <div className="text-sm text-muted-foreground">
+              {selectedStudents.length} öğrenci seçildi
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddMemberModal(false)}
+                disabled={addingMembers}
+              >
+                İptal
+              </Button>
+              <Button
+                onClick={addSelectedMembers}
+                disabled={selectedStudents.length === 0 || addingMembers}
+              >
+                {addingMembers ? 'Ekleniyor...' : `${selectedStudents.length} Öğrenci Ekle`}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

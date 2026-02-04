@@ -57,7 +57,6 @@ export function middleware(request: NextRequest) {
                 '/dashboard/exams/', // Allow viewing exam results
                 '/dashboard/study-plans',
                 '/dashboard/my-tasks', // Allow access to study plans/tasks
-                '/dashboard/student-dashboard',
                 '/dashboard/achievements',
                 '/dashboard/groups',
                 '/dashboard/recommendations',
@@ -98,7 +97,6 @@ export function middleware(request: NextRequest) {
             if (pathname.startsWith('/dashboard/reports') || 
                 pathname.startsWith('/dashboard/messages') ||
                 pathname.startsWith('/dashboard/study-plans') ||
-                pathname.startsWith('/dashboard/student-dashboard') ||
                 pathname.startsWith('/dashboard/achievements') ||
                 pathname.startsWith('/dashboard/groups') ||
                 pathname.startsWith('/dashboard/recommendations')) {

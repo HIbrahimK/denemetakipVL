@@ -126,12 +126,17 @@ export default function PlanDetailPage() {
   };
 
   const handleCellClick = (task: StudyTask | undefined, rowIndex: number, dayIndex: number) => {
-    if (task && task.status === 'PENDING') {
-      setSelectedTask(task);
-      setIsModalOpen(true);
-    } else if (task) {
-      // For completed tasks, show details (could open a view-only modal)
-      setSelectedTask(task);
+    if (task) {
+      // Enrich task with targets from planData if needed
+      const targets = getTaskTargets(task);
+      const enrichedTask = {
+        ...task,
+        targetQuestionCount: targets.targetQuestionCount || task.targetQuestionCount,
+        targetDuration: targets.targetDuration || task.targetDuration,
+        targetResource: targets.targetResource || task.targetResource,
+      };
+      
+      setSelectedTask(enrichedTask);
       setIsModalOpen(true);
     }
   };
@@ -222,6 +227,31 @@ export default function PlanDetailPage() {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return mins > 0 ? `${hours} sa ${mins} dk` : `${hours} sa`;
+  };
+
+  // Get task targets from planData if not available in task itself
+  const getTaskTargets = (task: StudyTask) => {
+    // First try task's own data
+    if (task.targetQuestionCount || task.targetDuration || task.targetResource) {
+      return {
+        targetQuestionCount: task.targetQuestionCount,
+        targetDuration: task.targetDuration,
+        targetResource: task.targetResource,
+      };
+    }
+
+    // Fallback to planData
+    if (!plan?.planData) return { targetQuestionCount: null, targetDuration: null, targetResource: null };
+    
+    const rows = plan.planData.rows || [];
+    const row = rows[task.rowIndex];
+    const cell = row?.cells?.[task.dayIndex];
+    
+    return {
+      targetQuestionCount: cell?.targetQuestionCount || null,
+      targetDuration: cell?.targetDuration || null,
+      targetResource: cell?.targetResource || null,
+    };
   };
 
   // Determine the number of rows from tasks or default to 5
@@ -377,6 +407,7 @@ export default function PlanDetailPage() {
                     </td>
                     {Array.from({ length: 7 }, (_, dayIndex) => {
                       const task = getTaskAtPosition(rowIndex, dayIndex);
+                      const targets = task ? getTaskTargets(task) : null;
                       
                       return (
                         <td 
@@ -398,25 +429,25 @@ export default function PlanDetailPage() {
                               )}
                               
                               {/* Teacher Targets - More Prominent */}
-                              {(task.targetQuestionCount || task.targetDuration || task.targetResource) && (
+                              {targets && (targets.targetQuestionCount || targets.targetDuration || targets.targetResource) && (
                                 <div className="bg-blue-50 border border-blue-200 rounded p-2 space-y-1 mt-2">
                                   <p className="text-xs font-semibold text-blue-900 mb-1">Öğretmen Hedefi:</p>
-                                  {task.targetQuestionCount && (
+                                  {targets.targetQuestionCount && (
                                     <div className="flex items-center gap-1 text-xs text-blue-800">
                                       <Target className="h-3 w-3 flex-shrink-0" />
-                                      <span className="font-medium">{task.targetQuestionCount} soru</span>
+                                      <span className="font-medium">{targets.targetQuestionCount} soru</span>
                                     </div>
                                   )}
-                                  {task.targetDuration && (
+                                  {targets.targetDuration && (
                                     <div className="flex items-center gap-1 text-xs text-blue-800">
                                       <Clock className="h-3 w-3 flex-shrink-0" />
-                                      <span className="font-medium">{formatDuration(task.targetDuration)}</span>
+                                      <span className="font-medium">{formatDuration(targets.targetDuration)}</span>
                                     </div>
                                   )}
-                                  {task.targetResource && (
+                                  {targets.targetResource && (
                                     <div className="flex items-center gap-1 text-xs text-blue-800">
                                       <BookOpen className="h-3 w-3 flex-shrink-0" />
-                                      <span className="font-medium truncate">{task.targetResource}</span>
+                                      <span className="font-medium truncate">{targets.targetResource}</span>
                                     </div>
                                   )}
                                 </div>
@@ -426,9 +457,9 @@ export default function PlanDetailPage() {
                                   Yapılmadı
                                 </Badge>
                               )}
-                              {task.status === 'COMPLETED' && task.targetQuestionCount && (
+                              {task.status === 'COMPLETED' && targets && targets.targetQuestionCount && (
                                 (() => {
-                                  const completionPercentage = Math.round((task.completedQuestionCount / task.targetQuestionCount) * 100);
+                                  const completionPercentage = Math.round((task.completedQuestionCount / targets.targetQuestionCount) * 100);
                                   if (completionPercentage === 100) {
                                     return (
                                       <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
@@ -451,7 +482,7 @@ export default function PlanDetailPage() {
                                   }
                                 })()
                               )}
-                              {task.status === 'COMPLETED' && !task.targetQuestionCount && (
+                              {task.status === 'COMPLETED' && (!targets || !targets.targetQuestionCount) && (
                                 <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
                                   Tamamlandı

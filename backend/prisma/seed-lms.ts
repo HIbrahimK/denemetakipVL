@@ -1,4 +1,4 @@
-import { PrismaClient, ExamType, TopicDifficulty, ResourceType, AchievementCategory } from '@prisma/client';
+import { PrismaClient, ExamType, TopicDifficulty, ResourceType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -286,157 +286,11 @@ async function seedResources() {
   console.log('✅ Resources seeded');
 }
 
-async function seedAchievements() {
-  console.log('🏆 Seeding achievements...');
-
-  const achievements = [
-    // Streak achievements
-    {
-      code: 'STREAK_7',
-      name: '7 Günlük Ateş',
-      description: '7 gün üst üste çalışma yap',
-      category: 'STREAK',
-      criteria: { days: 7 },
-    },
-    {
-      code: 'STREAK_30',
-      name: 'Aylık Kararlılık',
-      description: '30 gün üst üste çalışma yap',
-      category: 'STREAK',
-      criteria: { days: 30 },
-    },
-    {
-      code: 'STREAK_100',
-      name: '100 Gün Maratonu',
-      description: '100 gün üst üste çalışma yap',
-      category: 'STREAK',
-      criteria: { days: 100 },
-    },
-
-    // Milestone achievements
-    {
-      code: 'QUESTIONS_100',
-      name: 'İlk 100',
-      description: '100 soru çöz',
-      category: 'MILESTONE',
-      criteria: { count: 100 },
-    },
-    {
-      code: 'QUESTIONS_500',
-      name: 'Beş Yüzlük',
-      description: '500 soru çöz',
-      category: 'MILESTONE',
-      criteria: { count: 500 },
-    },
-    {
-      code: 'QUESTIONS_1000',
-      name: 'Binlik',
-      description: '1000 soru çöz',
-      category: 'MILESTONE',
-      criteria: { count: 1000 },
-    },
-    {
-      code: 'QUESTIONS_5000',
-      name: '5000 Soru Savaşçısı',
-      description: '5000 soru çöz',
-      category: 'MILESTONE',
-      criteria: { count: 5000 },
-    },
-
-    // Improvement achievements
-    {
-      code: 'WEAK_TURNAROUND',
-      name: 'Zayıf Noktayı Yendim',
-      description: 'Zayıf bir derste %20+ gelişme sağla',
-      category: 'IMPROVEMENT',
-      criteria: { improvementPercent: 20 },
-    },
-    {
-      code: 'NET_BOOST',
-      name: 'Net Canavarı',
-      description: 'Bir denemede toplam netini 15+ artır',
-      category: 'IMPROVEMENT',
-      criteria: { netIncrease: 15 },
-    },
-    {
-      code: 'PERFECT_SUBJECT',
-      name: 'Mükemmellik',
-      description: 'Bir dersten %100 başarı',
-      category: 'IMPROVEMENT',
-      criteria: { successRate: 100 },
-    },
-
-    // Consistency achievements
-    {
-      code: 'WEEKLY_WARRIOR',
-      name: 'Haftalık Savaşçı',
-      description: '4 hafta boyunca haftada 5+ gün çalış',
-      category: 'CONSISTENCY',
-      criteria: { daysPerWeek: 5, weeks: 4 },
-    },
-    {
-      code: 'MORNING_PERSON',
-      name: 'Sabah Kuşu',
-      description: '10 gün sabah 8\'den önce çalış',
-      category: 'CONSISTENCY',
-      criteria: { beforeHour: 8, days: 10 },
-    },
-    {
-      code: 'NIGHT_OWL',
-      name: 'Gece Baykuşu',
-      description: '10 gün akşam 10\'dan sonra çalış',
-      category: 'CONSISTENCY',
-      criteria: { afterHour: 22, days: 10 },
-    },
-
-    // Group achievements
-    {
-      code: 'GROUP_UNITY',
-      name: 'Birlik Beraberlik',
-      description: 'Tüm grup üyeleri haftalık planı tamamlasın',
-      category: 'GROUP',
-      criteria: { completionRate: 100 },
-    },
-    {
-      code: 'GROUP_MILESTONE',
-      name: 'Takım Başarısı',
-      description: 'Grup toplu olarak 10,000 soru çözsün',
-      category: 'GROUP',
-      criteria: { totalQuestions: 10000 },
-    },
-  ];
-
-  for (const achievement of achievements) {
-    // Get first school for seeding
-    const school = await prisma.school.findFirst();
-    if (!school) {
-      console.warn('No school found, skipping achievement seed');
-      continue;
-    }
-
-    await prisma.achievement.upsert({
-      where: { code: achievement.code },
-      update: {},
-      create: {
-        code: achievement.code,
-        name: achievement.name,
-        description: achievement.description,
-        category: achievement.category as AchievementCategory,
-        criteria: achievement.criteria,
-        schoolId: school.id,
-      },
-    });
-  }
-
-  console.log('✅ Achievements seeded');
-}
-
 async function main() {
   console.log('🌱 Seeding Learning Management System data...\n');
 
   await seedSubjectsAndTopics();
   await seedResources();
-  await seedAchievements();
 
   console.log('\n✅ Learning Management System seeding completed!');
 }
@@ -449,3 +303,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

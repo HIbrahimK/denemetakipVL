@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Users, Target, TrendingUp, Loader2, BookOpen, Eye, Filter, Copy, FileText, GraduationCap, Send, Search, X, Settings, ArrowLeft, ChevronDown, Check, Edit, AlertCircle, Archive, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Users, Target, TrendingUp, Loader2, BookOpen, Eye, Filter, FileText, GraduationCap, Send, Search, X, Settings, ArrowLeft, ChevronDown, Check, Edit, AlertCircle, Archive, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StudyPlan {
   id: string;
@@ -127,6 +128,7 @@ export default function StudyPlansPage() {
   const [selectedPlanForAssignment, setSelectedPlanForAssignment] = useState<StudyPlan | null>(null);
   const [assignmentTargetType, setAssignmentTargetType] = useState<'STUDENT' | 'GROUP' | 'CLASS' | 'GRADE'>('STUDENT');
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
+  const [selectedGradeId, setSelectedGradeId] = useState<string>('');
   const [assignmentYear, setAssignmentYear] = useState(new Date().getFullYear());
   const [assignmentMonth, setAssignmentMonth] = useState(new Date().getMonth() + 1);
   const [assignmentWeek, setAssignmentWeek] = useState(1);
@@ -356,20 +358,21 @@ export default function StudyPlansPage() {
         setGroups(data);
       }
 
-      // Fetch grades
-      const gradesRes = await fetch('http://localhost:3001/schools/grades', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (gradesRes.ok) {
-        const data = await gradesRes.json();
-        setGrades(data);
-      }
-
-      // Fetch classes - Need to get user's schoolId first
+      // Fetch grades and classes - Need to get user's schoolId first
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const userData = JSON.parse(userStr);
         const schoolId = userData.schoolId;
+
+        const gradesRes = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (gradesRes.ok) {
+          const data = await gradesRes.json();
+          // Sort grades by name (numerically)
+          const sortedGrades = data.sort((a: any, b: any) => parseInt(a.name) - parseInt(b.name));
+          setGrades(sortedGrades);
+        }
 
         const classesRes = await fetch(`http://localhost:3001/schools/${schoolId}/classes`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -420,7 +423,8 @@ export default function StudyPlansPage() {
   const openAssignModal = (plan: StudyPlan) => {
     setSelectedPlanForAssignment(plan);
     setSelectedTargets([]);
-    setAssignmentTargetType('STUDENT');
+    setSelectedGradeId('');
+    setAssignmentTargetType('CLASS');
     setAssignModalOpen(true);
   };
 
@@ -530,6 +534,12 @@ export default function StudyPlansPage() {
     setDeleteModalOpen(true);
   };
 
+  const openDeletePlanModal = (plan: StudyPlan) => {
+    setSelectedPlanForDelete(plan);
+    setDeleteMode('delete');
+    setDeleteModalOpen(true);
+  };
+
   const openDeleteTemplateModal = (template: StudyPlan) => {
     setSelectedPlanForDelete(template);
     setDeleteMode('delete');
@@ -586,37 +596,7 @@ export default function StudyPlansPage() {
     }
   };
 
-  // Duplicate function
-  const handleDuplicate = async (plan: StudyPlan) => {
-    const token = localStorage.getItem('token');
 
-    try {
-      const response = await fetch(`http://localhost:3001/study/plans/${plan.id}/duplicate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Plan kopyalanırken hata oluştu');
-      }
-
-      toast({
-        title: 'Başarılı',
-        description: 'Plan kopyalandı',
-      });
-
-      fetchPlans();
-    } catch (error: any) {
-      toast({
-        title: 'Hata',
-        description: error.message || 'Bir hata oluştu',
-        variant: 'destructive',
-      });
-    }
-  };
 
   // Stats calculation
   const stats = {
@@ -830,33 +810,94 @@ export default function StudyPlansPage() {
                               </div>
                             )}
                             <div className="flex justify-between pt-2">
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => router.push(`/dashboard/study-plans/${plan.id}`)}
-                                >
-                                  <Eye className="mr-1 h-4 w-4" />
-                                  Görüntüle
-                                </Button>
+                              <div className="flex gap-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => router.push(`/dashboard/study-plans/${plan.id}`)}
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Görüntüle</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Düzenle</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openDeletePlanModal(plan);
+                                        }}
+                                        className="text-destructive hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Sil</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openAssignModal(plan)}
-                                >
-                                  <Send className="mr-1 h-4 w-4" />
-                                  Tekrar Ata
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => openArchiveModal(plan)}
-                                  className="text-amber-600 hover:text-amber-700"
-                                >
-                                  <Archive className="h-4 w-4" />
-                                </Button>
+                              <div className="flex gap-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => openAssignModal(plan)}
+                                      >
+                                        <Send className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Tekrar Ata</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => openArchiveModal(plan)}
+                                        className="text-amber-600 hover:text-amber-700"
+                                      >
+                                        <Archive className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Arşivle</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
                             </div>
                           </div>
@@ -1029,43 +1070,75 @@ export default function StudyPlansPage() {
 
                             {/* Actions */}
                             <div className="flex justify-between pt-2">
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => router.push(`/dashboard/study-plans/${plan.id}`)}
-                                >
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  Detay
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDuplicate(plan)}
-                                >
-                                  <Copy className="h-4 w-4 mr-1" />
-                                  Kopyala ve Düzenle
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteTemplateModal(plan);
-                                  }}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Sil
-                                </Button>
+                              <div className="flex gap-1">
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => router.push(`/dashboard/study-plans/${plan.id}`)}
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Detay</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Düzenle</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          openDeleteTemplateModal(plan);
+                                        }}
+                                        className="text-destructive hover:text-destructive"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Sil</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
-                              <Button
-                                size="sm"
-                                onClick={() => openAssignModal(plan)}
-                              >
-                                <Send className="h-4 w-4 mr-1" />
-                                Ata
-                              </Button>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => openAssignModal(plan)}
+                                    >
+                                      <Send className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Ata</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </div>
                         </CardContent>
@@ -1166,26 +1239,18 @@ export default function StudyPlansPage() {
             {/* Step 1: Target Type Selection */}
             <div className="space-y-4">
               <Label className="text-base">Atama Yapılacak Grup/Kişi Tipi</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div
-                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'GRADE' ? 'border-primary bg-primary/5' : ''}`}
-                  onClick={() => { setAssignmentTargetType('GRADE'); setSelectedTargets([]); }}
-                >
-                  <GraduationCap className="h-6 w-6 mb-2 text-primary" />
-                  <div className="font-medium">Sınıf Seviyesi</div>
-                  <div className="text-xs text-muted-foreground">Tüm 12. sınıflar vb.</div>
-                </div>
+              <div className="grid grid-cols-3 gap-4">
                 <div
                   className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'CLASS' ? 'border-primary bg-primary/5' : ''}`}
-                  onClick={() => { setAssignmentTargetType('CLASS'); setSelectedTargets([]); }}
+                  onClick={() => { setAssignmentTargetType('CLASS'); setSelectedTargets([]); setSelectedGradeId(''); }}
                 >
-                  <Users className="h-6 w-6 mb-2 text-blue-600" />
-                  <div className="font-medium">Şube (Sınıf)</div>
+                  <GraduationCap className="h-6 w-6 mb-2 text-primary" />
+                  <div className="font-medium">Sınıf Seviyesi ve Şube</div>
                   <div className="text-xs text-muted-foreground">12-A, 11-B vb.</div>
                 </div>
                 <div
                   className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'GROUP' ? 'border-primary bg-primary/5' : ''}`}
-                  onClick={() => { setAssignmentTargetType('GROUP'); setSelectedTargets([]); }}
+                  onClick={() => { setAssignmentTargetType('GROUP'); setSelectedTargets([]); setSelectedGradeId(''); }}
                 >
                   <Users className="h-6 w-6 mb-2 text-green-600" />
                   <div className="font-medium">Mentör Grubu</div>
@@ -1193,7 +1258,7 @@ export default function StudyPlansPage() {
                 </div>
                 <div
                   className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'STUDENT' ? 'border-primary bg-primary/5' : ''}`}
-                  onClick={() => { setAssignmentTargetType('STUDENT'); setSelectedTargets([]); }}
+                  onClick={() => { setAssignmentTargetType('STUDENT'); setSelectedTargets([]); setSelectedGradeId(''); }}
                 >
                   <Users className="h-6 w-6 mb-2 text-orange-600" />
                   <div className="font-medium">Bireysel Öğrenci</div>
@@ -1206,8 +1271,7 @@ export default function StudyPlansPage() {
             <div className="space-y-4 border-t pt-4">
               <Label className="text-base flex justify-between">
                 <span>
-                  {assignmentTargetType === 'GRADE' && 'Sınıf Seviyelerini Seçin'}
-                  {assignmentTargetType === 'CLASS' && 'Şubeleri Seçin'}
+                  {assignmentTargetType === 'CLASS' && 'Sınıf Seviyesi ve Şube Seçin'}
                   {assignmentTargetType === 'GROUP' && 'Mentör Gruplarını Seçin'}
                   {assignmentTargetType === 'STUDENT' && 'Öğrencileri Seçin'}
                 </span>
@@ -1216,20 +1280,27 @@ export default function StudyPlansPage() {
                 )}
               </Label>
 
-              {/* Filtering for Classes/Students */}
-              {(assignmentTargetType === 'CLASS' || assignmentTargetType === 'STUDENT') && (
-                <div className="flex gap-2 mb-2">
-                  {/* Grade Filter could go here if we fetch grades properly and filter classes */}
-                  {assignmentTargetType === 'CLASS' && (
-                    <div className="text-xs text-muted-foreground">
-                      * Listeden şubeleri seçiniz. Her şube için öğrenci sayısı bellidir.
-                    </div>
-                  )}
+              {/* Grade selector for CLASS type */}
+              {assignmentTargetType === 'CLASS' && (
+                <div className="space-y-2">
+                  <Label>Sınıf Seviyesi</Label>
+                  <Select value={selectedGradeId} onValueChange={setSelectedGradeId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sınıf seviyesi seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {grades.map(grade => (
+                        <SelectItem key={grade.id} value={grade.id.toString()}>
+                          {grade.name}. Sınıf
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
               {/* Selection Lists */}
-              <div className="border rounded-md max-h-60 overflow-y-auto bg-slate-50">
+              <div className="border rounded-md max-h-60 overflow-y-auto bg-slate-50 dark:bg-slate-900">
                 {assignmentTargetType === 'STUDENT' && (
                   <div className="p-2">
                     <Input
@@ -1239,14 +1310,14 @@ export default function StudyPlansPage() {
                       className="mb-2"
                     />
                     {getFilteredStudents().map(student => (
-                      <div key={student.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
+                      <div key={student.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white dark:hover:bg-slate-800 border-b last:border-b-0">
                         <Checkbox
                           id={`student-${student.id}`}
                           checked={selectedTargets.includes(student.id)}
                           onCheckedChange={() => toggleTarget(student.id)}
                         />
                         <Label htmlFor={`student-${student.id}`} className="flex-1 cursor-pointer">
-                          <div className="font-medium">{student.user.firstName} {student.user.lastName}</div>
+                          <div className="font-medium text-foreground">{student.user.firstName} {student.user.lastName}</div>
                           <div className="text-xs text-muted-foreground">
                             {student.studentNumber} - {student.class?.name || 'Sınıf yok'}
                           </div>
@@ -1257,46 +1328,84 @@ export default function StudyPlansPage() {
                 )}
 
                 {assignmentTargetType === 'GROUP' && groups.map(group => (
-                  <div key={group.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
+                  <div key={group.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white dark:hover:bg-slate-800 border-b last:border-b-0">
                     <Checkbox
                       id={`group-${group.id}`}
                       checked={selectedTargets.includes(group.id)}
                       onCheckedChange={() => toggleTarget(group.id)}
                     />
                     <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer">
-                      <div className="font-medium">{group.name}</div>
+                      <div className="font-medium text-foreground">{group.name}</div>
                       <div className="text-xs text-muted-foreground">{group._count?.students || 0} öğrenci</div>
                     </Label>
                   </div>
                 ))}
 
-                {assignmentTargetType === 'CLASS' && classes.map(cls => (
-                  <div key={cls.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
-                    <Checkbox
-                      id={`class-${cls.id}`}
-                      checked={selectedTargets.includes(cls.id)}
-                      onCheckedChange={() => toggleTarget(cls.id)}
-                    />
-                    <Label htmlFor={`class-${cls.id}`} className="flex-1 cursor-pointer">
-                      <div className="font-medium">{cls.name}</div>
-                      <div className="text-xs text-muted-foreground">{cls.grade?.level}. Sınıf - {cls._count?.students || 0} öğrenci</div>
-                    </Label>
-                  </div>
-                ))}
-
-                {assignmentTargetType === 'GRADE' && grades.map(grade => (
-                  <div key={grade.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white border-b last:border-b-0">
-                    <Checkbox
-                      id={`grade-${grade.id}`}
-                      checked={selectedTargets.includes(grade.id)}
-                      onCheckedChange={() => toggleTarget(grade.id)}
-                    />
-                    <Label htmlFor={`grade-${grade.id}`} className="flex-1 cursor-pointer">
-                      <div className="font-medium">{grade.level}. Sınıf</div>
-                      <div className="text-xs text-muted-foreground">Tüm {grade.level}. şubeleri</div>
-                    </Label>
-                  </div>
-                ))}
+                {assignmentTargetType === 'CLASS' && (
+                  selectedGradeId ? (
+                    classes.filter(cls => cls.gradeId?.toString() === selectedGradeId).length > 0 ? (
+                      <>
+                        {/* Select All Button */}
+                        <div className="sticky top-0 bg-slate-100 dark:bg-slate-800 p-2 border-b">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const gradeClasses = classes.filter(cls => cls.gradeId?.toString() === selectedGradeId);
+                              const allSelected = gradeClasses.every(cls => selectedTargets.includes(cls.id));
+                              if (allSelected) {
+                                // Deselect all
+                                setSelectedTargets(prev => prev.filter(id => !gradeClasses.some(cls => cls.id === id)));
+                              } else {
+                                // Select all
+                                const newTargets = [...selectedTargets];
+                                gradeClasses.forEach(cls => {
+                                  if (!newTargets.includes(cls.id)) {
+                                    newTargets.push(cls.id);
+                                  }
+                                });
+                                setSelectedTargets(newTargets);
+                              }
+                            }}
+                            className="w-full"
+                          >
+                            {(() => {
+                              const selectedGrade = grades.find(g => g.id.toString() === selectedGradeId);
+                              const gradeLevel = selectedGrade?.name || '';
+                              const gradeClasses = classes.filter(cls => cls.gradeId?.toString() === selectedGradeId);
+                              const allSelected = gradeClasses.every(cls => selectedTargets.includes(cls.id));
+                              return allSelected
+                                ? `Tüm ${gradeLevel}. Sınıf Şubelerini Kaldır`
+                                : `Tüm ${gradeLevel}. Sınıf Şubelerini Seç`;
+                            })()}
+                          </Button>
+                        </div>
+                        {classes.filter(cls => cls.gradeId?.toString() === selectedGradeId).map(cls => (
+                          <div key={cls.id} className="flex items-center gap-2 px-3 py-2 hover:bg-white dark:hover:bg-slate-800 border-b last:border-b-0">
+                            <Checkbox
+                              id={`class-${cls.id}`}
+                              checked={selectedTargets.includes(cls.id)}
+                              onCheckedChange={() => toggleTarget(cls.id)}
+                            />
+                            <Label htmlFor={`class-${cls.id}`} className="flex-1 cursor-pointer">
+                              <div className="font-medium text-foreground">{cls.name}</div>
+                              <div className="text-xs text-muted-foreground">{cls.grade?.name}. Sınıf - {cls._count?.students || 0} öğrenci</div>
+                            </Label>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground">
+                        Bu sınıf seviyesinde şube bulunmuyor
+                      </div>
+                    )
+                  ) : (
+                    <div className="p-4 text-center text-muted-foreground">
+                      Lütfen önce sınıf seviyesi seçin
+                    </div>
+                  )
+                )}
               </div>
             </div>
 

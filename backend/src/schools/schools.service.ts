@@ -406,7 +406,6 @@ export class SchoolsService {
                 Promise.all([
                     this.prisma.studyPlan.findMany({ where: { schoolId: id } }),
                     this.prisma.studyTask.findMany({ where: { schoolId: id } }),
-                    this.prisma.studyGoal.findMany({ where: { schoolId: id } }),
                 ]),
             ]);
 
@@ -426,7 +425,6 @@ export class SchoolsService {
                     messages,
                     studyPlans: studyData[0],
                     studyTasks: studyData[1],
-                    studyGoals: studyData[2],
                 },
             };
 

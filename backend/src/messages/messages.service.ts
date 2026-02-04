@@ -243,6 +243,8 @@ export class MessagesService {
       });
 
       for (const recipient of recipients) {
+        if (!recipient.email) continue;
+        
         try {
           await this.emailService.sendEmail(
             recipient.email,

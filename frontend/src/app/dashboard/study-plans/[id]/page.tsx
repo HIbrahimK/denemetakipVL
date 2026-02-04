@@ -6,9 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import {
   ChevronLeft,
   Calendar,
@@ -17,11 +20,11 @@ import {
   Clock,
   HelpCircle,
   FileText,
-  CheckCircle,
-  XCircle,
   Loader2,
+  Target,
   AlertCircle,
-  CheckCircle2
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -129,12 +132,8 @@ export default function StudyPlanDetailPage() {
   const [plan, setPlan] = useState<StudyPlan | null>(null);
   const [assignmentSummary, setAssignmentSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
-  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
-  const [approvalComment, setApprovalComment] = useState('');
-  const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
   const [processing, setProcessing] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -191,19 +190,28 @@ export default function StudyPlanDetailPage() {
   };
 
   const getTaskStatusBadge = (task: StudyTask) => {
-    if (task.teacherApproved) {
-      return { label: 'Onaylandı', className: 'bg-green-100 text-green-800' };
-    }
-    if (task.parentApproved) {
-      return { label: 'Veli Onayında', className: 'bg-blue-100 text-blue-800' };
-    }
     if (task.status === 'COMPLETED') {
-      return { label: 'Tamamlandı', className: 'bg-yellow-100 text-yellow-800' };
+      return { label: 'Tamamlandı', className: 'bg-green-100 text-green-800' };
     }
     if (task.status === 'IN_PROGRESS') {
-      return { label: 'Devam Ediyor', className: 'bg-purple-100 text-purple-800' };
+      return { label: 'Devam Ediyor', className: 'bg-yellow-100 text-yellow-800' };
     }
     return { label: 'Bekliyor', className: 'bg-gray-100 text-gray-800' };
+  };
+
+  // Get task targets from planData if not available in task itself
+  const getTaskTargets = (task: StudyTask) => {
+    if (!plan?.planData) return { targetQuestionCount: task.targetQuestionCount, targetDuration: task.targetDuration, targetResource: task.targetResource };
+    
+    const rows = plan.planData.rows || [];
+    const row = rows[task.rowIndex];
+    const cell = row?.cells?.[task.dayIndex];
+    
+    return {
+      targetQuestionCount: task.targetQuestionCount || cell?.targetQuestionCount,
+      targetDuration: task.targetDuration || cell?.targetDuration,
+      targetResource: task.targetResource || cell?.targetResource,
+    };
   };
 
   const getCellProgress = (rowIndex: number, dayIndex: number) => {
@@ -236,70 +244,6 @@ export default function StudyPlanDetailPage() {
       percentage,
     };
   };
-
-  const toggleTaskSelection = (taskId: string) => {
-    setSelectedTasks(prev =>
-      prev.includes(taskId)
-        ? prev.filter(id => id !== taskId)
-        : [...prev, taskId]
-    );
-  };
-
-  const selectAllPending = () => {
-    if (!plan) return;
-    const pending = plan.tasks
-      .filter(t => t.status === 'COMPLETED' && !t.teacherApproved)
-      .map(t => t.id);
-    setSelectedTasks(pending);
-  };
-
-  const handleBulkApproval = async () => {
-    if (selectedTasks.length === 0) return;
-
-    setProcessing(true);
-    const token = localStorage.getItem('token');
-
-    try {
-      const promises = selectedTasks.map(taskId =>
-        fetch(`http://localhost:3001/study/tasks/${taskId}/teacher-approve`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            approved: approvalAction === 'approve',
-            comment: approvalComment,
-          }),
-        })
-      );
-
-      await Promise.all(promises);
-
-      toast({
-        title: 'Başarılı',
-        description: `${selectedTasks.length} görev ${approvalAction === 'approve' ? 'onaylandı' : 'reddedildi'}`,
-      });
-
-      setSelectedTasks([]);
-      setApprovalModalOpen(false);
-      setApprovalComment('');
-      fetchPlan();
-    } catch (error) {
-      toast({
-        title: 'Hata',
-        description: 'İşlem sırasında bir hata oluştu',
-        variant: 'destructive',
-      });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // Pending approval tasks
-  const pendingTasks = plan?.tasks.filter(
-    t => t.status === 'COMPLETED' && !t.teacherApproved
-  ) || [];
 
   const handleCancelAssignment = async (assignmentId: string) => {
     if (!confirm('Bu atamayı iptal etmek istediğinize emin misiniz?')) return;
@@ -439,17 +383,6 @@ export default function StudyPlanDetailPage() {
             <p className="text-xs text-muted-foreground">Toplam görev</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Onay Bekleyen</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-semibold">{pendingTasks.length}</div>
-            <p className="text-xs text-muted-foreground">Görev</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Tabs */}
@@ -457,9 +390,6 @@ export default function StudyPlanDetailPage() {
         <TabsList>
           <TabsTrigger value="table">Tablo Görünümü</TabsTrigger>
           {plan.isTemplate && <TabsTrigger value="assignments">Aktif Atamalar ({plan.assignments?.filter(a => a.status !== 'CANCELLED').length || 0})</TabsTrigger>}
-          <TabsTrigger value="pending">
-            Onay Bekleyen ({pendingTasks.length})
-          </TabsTrigger>
           <TabsTrigger value="all">Tüm Görevler</TabsTrigger>
         </TabsList>
 
@@ -569,6 +499,28 @@ export default function StudyPlanDetailPage() {
                                       {cell.topicName && (
                                         <div className="text-xs text-muted-foreground">{cell.topicName}</div>
                                       )}
+                                      {/* Teacher's Targets */}
+                                      {(cell.targetQuestionCount || cell.targetDuration || cell.targetResource) && (
+                                        <div className="mt-2 pt-2 border-t space-y-1">
+                                          {cell.targetQuestionCount && (
+                                            <div className="text-xs text-blue-700 font-medium flex items-center gap-1">
+                                              <HelpCircle className="h-3 w-3" />
+                                              Hedef: {cell.targetQuestionCount} soru
+                                            </div>
+                                          )}
+                                          {cell.targetDuration && (
+                                            <div className="text-xs text-blue-700 font-medium flex items-center gap-1">
+                                              <Clock className="h-3 w-3" />
+                                              Süre: {cell.targetDuration} dk
+                                            </div>
+                                          )}
+                                          {cell.targetResource && (
+                                            <div className="text-xs text-blue-700 font-medium truncate">
+                                              📚 {cell.targetResource}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                   {progress.total > 0 && (
@@ -602,230 +554,129 @@ export default function StudyPlanDetailPage() {
         </TabsContent>
 
         {/* Pending Approval */}
-        <TabsContent value="pending">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Onay Bekleyen Görevler</CardTitle>
-                <CardDescription>
-                  Öğrenciler tarafından tamamlanan görevleri inceleyin
-                </CardDescription>
-              </div>
-              {user?.role === 'TEACHER' && pendingTasks.length > 0 && (
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={selectAllPending}>
-                    Tümünü Seç
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={selectedTasks.length === 0}
-                    onClick={() => { setApprovalAction('approve'); setApprovalModalOpen(true); }}
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Onayla ({selectedTasks.length})
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              {pendingTasks.length === 0 ? (
-                <div className="text-center py-12">
-                  <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-                  <h3 className="mt-4 text-lg font-semibold">Onay bekleyen görev yok</h3>
-                  <p className="text-muted-foreground mt-2">
-                    Tüm görevler onaylanmış veya henüz tamamlanmamış
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {pendingTasks.map(task => (
-                    <div
-                      key={task.id}
-                      className="flex items-start gap-4 p-4 border rounded-lg hover:bg-accent/50"
-                    >
-                      {user?.role === 'TEACHER' && (
-                        <Checkbox
-                          checked={selectedTasks.includes(task.id)}
-                          onCheckedChange={() => toggleTaskSelection(task.id)}
-                        />
-                      )}
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              {task.student?.user.firstName} {task.student?.user.lastName}
-                            </span>
-                            <Badge variant="outline">
-                              {DAYS[task.dayIndex]} - Satır {task.rowIndex + 1}
-                            </Badge>
-                          </div>
-                          <Badge className={getTaskStatusBadge(task).className}>
-                            {getTaskStatusBadge(task).label}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Ders:</span>
-                            <span className="ml-1 font-medium">{task.subjectName || '-'}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Konu:</span>
-                            <span className="ml-1 font-medium">{task.topicName || '-'}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Soru:</span>
-                            <span className="ml-1 font-medium">
-                              {task.completedQuestionCount}/{task.targetQuestionCount || '-'}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Süre:</span>
-                            <span className="ml-1 font-medium">
-                              {task.actualDuration} dk
-                            </span>
-                          </div>
-                        </div>
-
-                        {(task.correctCount > 0 || task.wrongCount > 0 || task.blankCount > 0) && (
-                          <div className="flex gap-4 text-sm">
-                            <span className="text-green-600">Doğru: {task.correctCount}</span>
-                            <span className="text-red-600">Yanlış: {task.wrongCount}</span>
-                            <span className="text-gray-600">Boş: {task.blankCount}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* All Tasks */}
         <TabsContent value="all">
           <Card>
             <CardHeader>
               <CardTitle>Tüm Görevler</CardTitle>
-              <CardDescription>Plan kapsamındaki tüm görevler</CardDescription>
+              <CardDescription>Görevler ve atanan öğrenciler</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {plan.tasks.map(task => (
-                  <div
-                    key={task.id}
-                    className="flex items-start gap-4 p-4 border rounded-lg"
-                  >
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {task.student?.user.firstName} {task.student?.user.lastName}
-                          </span>
-                          <Badge variant="outline">
-                            {DAYS[task.dayIndex]} - Satır {task.rowIndex + 1}
-                          </Badge>
-                        </div>
-                        <Badge className={getTaskStatusBadge(task).className}>
-                          {getTaskStatusBadge(task).label}
-                        </Badge>
-                      </div>
+              <Accordion type="multiple" className="w-full">
+                {(() => {
+                  // Group tasks by day, row, subject, and topic
+                  const groupedTasks = plan.tasks.reduce((acc, task) => {
+                    const key = `${task.dayIndex}-${task.rowIndex}`;
+                    if (!acc[key]) {
+                      acc[key] = {
+                        dayIndex: task.dayIndex,
+                        rowIndex: task.rowIndex,
+                        subjectName: task.subjectName || null,
+                        topicName: task.topicName || null,
+                        tasks: []
+                      };
+                    }
+                    acc[key].tasks.push(task);
+                    return acc;
+                  }, {} as Record<string, {
+                    dayIndex: number;
+                    rowIndex: number;
+                    subjectName: string | null;
+                    topicName: string | null;
+                    tasks: typeof plan.tasks;
+                  }>);
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Ders:</span>
-                          <span className="ml-1">{task.subjectName || '-'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Konu:</span>
-                          <span className="ml-1">{task.topicName || '-'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Hedef Soru:</span>
-                          <span className="ml-1">{task.targetQuestionCount || '-'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Hedef Süre:</span>
-                          <span className="ml-1">{task.targetDuration ? `${task.targetDuration} dk` : '-'}</span>
-                        </div>
-                      </div>
+                  return Object.entries(groupedTasks).map(([key, group]) => {
+                    // Get targets from the first task or plan data
+                    const firstTask = group.tasks[0];
+                    const targets = getTaskTargets(firstTask);
 
-                      {task.status !== 'PENDING' && (
-                        <div className="pt-2 border-t">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Çözülen:</span>
-                              <span className="ml-1 font-medium">{task.completedQuestionCount}</span>
+                    return (
+                      <AccordionItem key={key} value={key}>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center justify-between w-full pr-4">
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline">
+                                {DAYS[group.dayIndex]} - Satır {group.rowIndex + 1}
+                              </Badge>
+                              <div className="text-left">
+                                <div className="font-medium">
+                                  {group.subjectName || 'Ders Belirtilmemiş'} 
+                                  {group.topicName && ` - ${group.topicName}`}
+                                </div>
+                                <div className="text-sm text-muted-foreground flex gap-4">
+                                  <span>Hedef: {targets.targetQuestionCount || '-'} soru</span>
+                                  <span>{targets.targetDuration || '-'} dakika</span>
+                                  {targets.targetResource && <span>Kaynak: {targets.targetResource}</span>}
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Gerçek Süre:</span>
-                              <span className="ml-1 font-medium">{task.actualDuration} dk</span>
-                            </div>
-                            <div className="flex gap-3">
-                              <span className="text-green-600">D: {task.correctCount}</span>
-                              <span className="text-red-600">Y: {task.wrongCount}</span>
-                              <span className="text-gray-600">B: {task.blankCount}</span>
-                            </div>
+                            <Badge variant="secondary" className="ml-2">
+                              {group.tasks.length} öğrenci
+                            </Badge>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2 pt-2">
+                            {group.tasks.map(task => (
+                              <div
+                                key={task.id}
+                                className="flex items-center justify-between p-3 border rounded-lg"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="font-medium">
+                                    {task.student?.user.firstName} {task.student?.user.lastName}
+                                  </span>
+                                  <Badge className={getTaskStatusBadge(task).className}>
+                                    {getTaskStatusBadge(task).label}
+                                  </Badge>
+                                </div>
+                                
+                                {/* Progress Info */}
+                                {(task.completedQuestionCount > 0 || task.actualDuration > 0) ? (
+                                  <div className="flex gap-6 text-sm">
+                                    <div>
+                                      <span className="text-muted-foreground">Çözülen:</span>
+                                      <span className="ml-1 font-medium text-blue-600">
+                                        {task.completedQuestionCount || 0}/{targets.targetQuestionCount || '-'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Süre:</span>
+                                      <span className="ml-1 font-medium text-blue-600">
+                                        {task.actualDuration || 0} dk
+                                      </span>
+                                    </div>
+                                    {(task.correctCount > 0 || task.wrongCount > 0 || task.blankCount > 0) && (
+                                      <>
+                                        <span className="text-green-600 font-medium">
+                                          D: {task.correctCount || 0}
+                                        </span>
+                                        <span className="text-red-600 font-medium">
+                                          Y: {task.wrongCount || 0}
+                                        </span>
+                                        <span className="text-gray-600 font-medium">
+                                          B: {task.blankCount || 0}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">Henüz başlanmadı</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    );
+                  });
+                })()}
+              </Accordion>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Bulk Approval Modal */}
-      <Dialog open={approvalModalOpen} onOpenChange={setApprovalModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {approvalAction === 'approve' ? 'Görevleri Onayla' : 'Görevleri Reddet'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              {selectedTasks.length} görev için işlem yapılacak
-            </p>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Yorum (Opsiyonel)</label>
-              <Textarea
-                placeholder="Onay veya ret için yorum ekleyin..."
-                value={approvalComment}
-                onChange={(e) => setApprovalComment(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setApprovalModalOpen(false)}>
-              İptal
-            </Button>
-            <Button
-              variant={approvalAction === 'approve' ? 'default' : 'destructive'}
-              onClick={handleBulkApproval}
-              disabled={processing}
-            >
-              {processing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : approvalAction === 'approve' ? (
-                <>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Onayla
-                </>
-              ) : (
-                <>
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Reddet
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

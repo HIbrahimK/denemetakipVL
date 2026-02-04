@@ -15,7 +15,6 @@ import { ReportsModule } from './reports/reports.module';
 import { SearchModule } from './search/search.module';
 import { MessagesModule } from './messages/messages.module';
 import { StudyModule } from './study/study.module';
-import { GoalsModule } from './goals/goals.module';
 import { GroupsModule } from './groups/groups.module';
 import { SubjectsModule } from './subjects/subjects.module';
 
@@ -40,7 +39,6 @@ import { SubjectsModule } from './subjects/subjects.module';
     SearchModule,
     MessagesModule,
     StudyModule,
-    GoalsModule,
     GroupsModule,
     SubjectsModule,
   ],

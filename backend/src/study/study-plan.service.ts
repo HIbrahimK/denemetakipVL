@@ -593,9 +593,9 @@ export class StudyPlanService {
               dayIndex,
               subjectName: cell.subjectName,
               topicName: cell.topicName,
-              targetQuestionCount: cell.questionCount,
-              targetDuration: cell.duration,
-              targetResource: cell.resource,
+              targetQuestionCount: cell.targetQuestionCount || cell.questionCount,
+              targetDuration: cell.targetDuration || cell.duration,
+              targetResource: cell.targetResource || cell.resource,
               status: 'PENDING',
               dueDate: taskDate,
             };
