@@ -20,29 +20,42 @@ async function bootstrap() {
   });
 
   // Security headers
-  app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-  }));
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
-  // Enable CORS for frontend
+  // Enable CORS for frontend (prod + local)
+  const allowedOrigins = [
+    process.env.FRONTEND_URL, // https://denemetakip.net
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://192.168.1.14:3000',
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://192.168.1.14:3000', 'http://127.0.0.1:3000'],
+    origin: allowedOrigins,
     credentials: true,
   });
 
   // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Strip properties that don't have decorators
-      transform: true, // Transform payloads to DTO instances
+      whitelist: true,
+      transform: true,
       transformOptions: {
-        enableImplicitConversion: true, // Automatically convert types
+        enableImplicitConversion: true,
       },
     }),
   );
 
-  const port = process.env.PORT ?? 8080;
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  const port = Number(process.env.PORT) || 8080;
+
+  // ✅ IMPORTANT: bind to 0.0.0.0 for DigitalOcean health checks
+  await app.listen(port, '0.0.0.0');
+
+  console.log(`Application is running on: http://0.0.0.0:${port}`);
 }
+
 bootstrap();
