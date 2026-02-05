@@ -631,7 +631,7 @@ export default function ExamResultsPage() {
                                 <tr className="bg-slate-50 dark:bg-slate-900/40 font-semibold">
                                     <td className="p-3 text-center"></td>
                                     <td className="p-3">Ortalama</td>
-                                    {lessonNames.map((lesson) => (
+                                    {lessonNames.map((lesson: string) => (
                                         <td key={lesson} className="p-3 text-center font-mono text-xs md:text-sm">
                                             {overallSelectedAverages.lessonAverages?.[lesson] !== undefined
                                                 ? overallSelectedAverages.lessonAverages[lesson].toFixed(2)
