@@ -24,10 +24,47 @@ export class AchievementsService {
   async findStudentAchievements(studentId: string) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
-      select: { schoolId: true },
+      select: { 
+        schoolId: true,
+        class: {
+          select: {
+            grade: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!student) throw new NotFoundException('Student not found');
+
+    // Determine allowed exam types based on student's grade level
+    let allowedExamTypes: (ExamType | null)[] = [null]; // null represents GENEL (general achievements)
+    
+    // Extract grade level from grade name (e.g., "5. Sınıf" -> 5, "12. Sınıf" -> 12)
+    const gradeName = student.class?.grade?.name;
+    let gradeLevel: number | null = null;
+    if (gradeName) {
+      const match = gradeName.match(/(\d+)/);
+      if (match) {
+        gradeLevel = parseInt(match[1], 10);
+      }
+    }
+    
+    if (gradeLevel) {
+      if (gradeLevel >= 5 && gradeLevel <= 8) {
+        // LGS students: only GENEL and LGS
+        allowedExamTypes.push(ExamType.LGS);
+      } else if (gradeLevel >= 9 && gradeLevel <= 11) {
+        // TYT preparation students: GENEL and TYT
+        allowedExamTypes.push(ExamType.TYT);
+      } else if (gradeLevel === 12) {
+        // Final year students: GENEL, TYT and AYT
+        allowedExamTypes.push(ExamType.TYT, ExamType.AYT);
+      }
+    }
 
     const [unlocked, available] = await Promise.all([
       // Unlocked achievements
@@ -35,6 +72,9 @@ export class AchievementsService {
         where: {
           studentId,
           unlockedAt: { not: null },
+          achievement: {
+            OR: allowedExamTypes.map(type => ({ examType: type })),
+          },
         },
         include: {
           achievement: true,
@@ -46,6 +86,7 @@ export class AchievementsService {
         where: {
           schoolId: student.schoolId,
           isActive: true,
+          OR: allowedExamTypes.map(type => ({ examType: type })),
           NOT: {
             studentAchievements: {
               some: {

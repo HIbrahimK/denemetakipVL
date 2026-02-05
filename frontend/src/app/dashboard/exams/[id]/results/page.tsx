@@ -615,7 +615,7 @@ export default function ExamResultsPage() {
                                             />
                                         </td>
                                         <td className="p-3 font-medium text-slate-800 dark:text-slate-100">{branch.name}</td>
-                                        {lessonNames.map((lesson) => (
+                                        {lessonNames.map((lesson: string) => (
                                             <td key={lesson} className="p-3 text-center font-mono text-xs md:text-sm">
                                                 {branch.lessonAverages?.[lesson] !== undefined ? branch.lessonAverages[lesson].toFixed(2) : '-'}
                                             </td>
