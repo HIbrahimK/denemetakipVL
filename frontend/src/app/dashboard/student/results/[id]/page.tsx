@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,7 +66,7 @@ interface ExamStats {
     }[];
 }
 
-export default function ExamDetailPage() {
+function ExamDetailContent() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -568,5 +568,17 @@ export default function ExamDetailPage() {
                 </Card>
             )}
         </div>
+    );
+}
+
+export default function ExamDetailPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        }>
+            <ExamDetailContent />
+        </Suspense>
     );
 }

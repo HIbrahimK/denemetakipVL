@@ -32,7 +32,13 @@ interface StudyPlan {
     lastName: string;
   };
   planData?: {
-    rows?: number;
+    rows?: Array<{
+      cells?: Array<{
+        targetQuestionCount?: number | null;
+        targetDuration?: number | null;
+        targetResource?: string | null;
+      }>;
+    }>;
     columns?: number;
   };
 }

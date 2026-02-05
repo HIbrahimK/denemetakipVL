@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Trash2, ChevronLeft, ChevronRight, BookOpen, Clock, HelpCircle, FileText, Save, Globe, Lock, Target, Copy as CopyIcon, MoreVertical, X } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, BookOpen, Clock, HelpCircle, FileText, Save, Globe, Lock, Target, Copy as CopyIcon, MoreVertical, X, Loader2 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -67,7 +67,7 @@ const EXAM_TYPES = [
   { value: 'LGS', label: 'LGS', grades: [5, 6, 7, 8] },
 ];
 
-export default function NewStudyPlanPage() {
+function NewStudyPlanContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -1105,5 +1105,17 @@ export default function NewStudyPlanPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function NewStudyPlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <NewStudyPlanContent />
+    </Suspense>
   );
 }

@@ -35,6 +35,7 @@ interface RankingMatrixData {
     studentId: string;
     studentNumber: string;
     fullName: string;
+    className?: string;
     rankings: {
       examId: string;
       rank: number | null;

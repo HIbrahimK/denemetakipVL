@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { AlertCircle, CheckCircle2, FileSpreadsheet, Info, Loader2, Trash2, Uplo
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-export function ImportWizard() {
+function ImportWizardContent() {
     const searchParams = useSearchParams();
     const examId = searchParams.get("examId");
     const [exam, setExam] = useState<any>(null);
@@ -476,5 +476,17 @@ export function ImportWizard() {
                 )}
             </CardFooter>
         </Card>
+    );
+}
+
+export function ImportWizard() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        }>
+            <ImportWizardContent />
+        </Suspense>
     );
 }

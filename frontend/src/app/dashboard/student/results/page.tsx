@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +65,7 @@ interface ExamAttempt {
     districtParticipantCount: number | null;
     cityParticipantCount: number | null;
     generalParticipantCount: number | null;
+    answerKeyUrl?: string | null;
 }
 
 interface MissedExam {
@@ -93,7 +94,7 @@ interface StudentData {
     missedExams: MissedExam[];
 }
 
-export default function StudentResultsPage() {
+function StudentResultsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const studentId = searchParams.get('studentId');
@@ -672,5 +673,17 @@ export default function StudentResultsPage() {
                 </Card>
             )}
         </div>
+    );
+}
+
+export default function StudentResultsPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        }>
+            <StudentResultsContent />
+        </Suspense>
     );
 }
