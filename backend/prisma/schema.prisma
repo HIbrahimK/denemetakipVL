@@ -7,6 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Achievement {
+  id            String                @id @default(uuid())
+  name          String
+  description   String
+  category      AchievementCategory
+  type          String // STREAK_1W, STREAK_2W, RANK_SCHOOL_1, SCORE_400, FULL_MATH, etc.
+  requirement   Json // { weeks: 1 } or { rank: 1, scope: 'SCHOOL' } or { score: 400 } etc.
+  iconName      String // trophy, star, target, flame, award, medal, crown
+  colorScheme   String // blue, orange, green, purple, yellow, red, gold
+  points        Int                   @default(0)
+  isActive      Boolean               @default(true)
+  examType      ExamType? // TYT, AYT, LGS - for exam-specific achievements
+  schoolId      String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  school        School?               @relation(fields: [schoolId], references: [id])
+  studentAchievements StudentAchievement[]
+
+  @@unique([schoolId, type])
+  @@index([schoolId, isActive])
+  @@index([category, isActive])
+}
+
+model StudentAchievement {
+  id            String      @id @default(uuid())
+  studentId     String
+  achievementId String
+  progress      Float       @default(0) // 0-100 percentage
+  unlockedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  schoolId      String?
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  school        School?     @relation(fields: [schoolId], references: [id])
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, achievementId])
+  @@index([studentId, unlockedAt])
+  @@index([achievementId])
+  @@index([schoolId])
+}
+
 model Backup {
   id        String   @id @default(uuid())
   filename  String
@@ -444,6 +486,8 @@ model School {
   studySessions             StudySession[]
   studyTasks                StudyTask[]
   users                     User[]
+  achievements              Achievement[]
+  studentAchievements       StudentAchievement[]
 }
 
 model Student {
@@ -464,6 +508,7 @@ model Student {
   recommendations      StudyRecommendation[]
   sessions             StudySession[]
   tasks                StudyTask[]
+  achievements         StudentAchievement[]
 }
 
 model StudentPerformanceSummary {

@@ -593,7 +593,7 @@ export default function ExamResultsPage() {
                             <tr>
                                 <th className="w-10 p-3 text-center"></th>
                                 <th className="p-3 text-left">Şube</th>
-                                {lessonNames.map((lesson) => (
+                                {lessonNames.map((lesson: string) => (
                                     <th key={lesson} className="p-3 text-center whitespace-nowrap">{lesson}</th>
                                 ))}
                                 <th className="p-3 text-center whitespace-nowrap">Toplam Net</th>

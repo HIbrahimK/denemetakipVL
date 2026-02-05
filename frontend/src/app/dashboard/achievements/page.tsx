@@ -24,7 +24,8 @@ interface StudentAchievement {
 }
 
 export default function AchievementsPage() {
-  const [achievements, setAchievements] = useState<StudentAchievement[]>([]);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<StudentAchievement[]>([]);
+  const [availableAchievements, setAvailableAchievements] = useState<any[]>([]);
   const [allAchievements, setAllAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -40,36 +41,47 @@ export default function AchievementsPage() {
     setUser(userData);
     
     if (userData.role === 'STUDENT') {
-      fetchStudentAchievements(userData.id);
+      // Fetch from auth/me to get complete user data with student relation
+      fetchCompleteUserData();
     } else {
-      fetchAllAchievements();
+      // For non-students, redirect to admin panel
+      router.push('/dashboard/admin/achievements');
     }
   }, []);
 
-  const fetchStudentAchievements = async (userId: string) => {
+  const fetchCompleteUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/achievements/student/${userId}`, {
+      const response = await fetch(`http://localhost:3001/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setAchievements(data);
+        const userData = await response.json();
+        if (userData.student?.id) {
+          fetchStudentAchievements(userData.student.id);
+        } else {
+          console.error('No student data found in user');
+          setLoading(false);
+        }
+      } else {
+        console.error('Failed to fetch user data');
+        setLoading(false);
       }
     } catch (error) {
-      console.error('Error fetching achievements:', error);
-    } finally {
+      console.error('Error fetching user data:', error);
       setLoading(false);
     }
   };
 
-  const fetchAllAchievements = async () => {
+  const fetchStudentAchievements = async (studentId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/achievements', {
+      
+      // Get student's unlocked and available achievements
+      const response = await fetch(`http://localhost:3001/achievements/student/${studentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -77,10 +89,21 @@ export default function AchievementsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setAllAchievements(data);
+        setUnlockedAchievements(data.unlocked || []);
+        setAvailableAchievements(data.available || []);
+        
+        // Combine both for total count
+        const unlockedAchIds = data.unlocked.map((sa: StudentAchievement) => sa.achievementId);
+        const combined = [
+          ...data.unlocked.map((sa: StudentAchievement) => ({ ...sa.achievement, unlocked: true, unlockedAt: sa.unlockedAt })),
+          ...data.available.map((ach: any) => ({ ...ach, unlocked: false }))
+        ];
+        setAllAchievements(combined);
+      } else {
+        console.error('Failed to fetch achievements');
       }
     } catch (error) {
-      console.error('Error fetching all achievements:', error);
+      console.error('Error fetching achievements:', error);
     } finally {
       setLoading(false);
     }
@@ -139,8 +162,7 @@ export default function AchievementsPage() {
     );
   }
 
-  const unlockedAchievements = achievements.filter(a => a.unlockedAt);
-  const totalAchievements = user?.role === 'STUDENT' ? 20 : allAchievements.length; // Varsayılan 20
+  const totalAchievements = unlockedAchievements.length + availableAchievements.length;
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -194,7 +216,7 @@ export default function AchievementsPage() {
           <CardContent>
             <div className="text-lg font-bold">
               {unlockedAchievements.length > 0 
-                ? unlockedAchievements[0].achievement.name.substring(0, 15) + '...'
+                ? unlockedAchievements[0].achievement.name.substring(0, 15) + (unlockedAchievements[0].achievement.name.length > 15 ? '...' : '')
                 : 'Henüz yok'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -212,12 +234,12 @@ export default function AchievementsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold">
-              {totalAchievements - unlockedAchievements.length > 0 
-                ? `${totalAchievements - unlockedAchievements.length} rozet`
+              {availableAchievements.length > 0 
+                ? `${availableAchievements.length} rozet`
                 : 'Tümü kazanıldı!'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {totalAchievements - unlockedAchievements.length > 0 
+              {availableAchievements.length > 0 
                 ? 'Kilidi aç'
                 : 'Harika iş!'}
             </p>
@@ -270,35 +292,105 @@ export default function AchievementsPage() {
         </CardContent>
       </Card>
 
-      {/* Kilitli Rozetler */}
-      {totalAchievements - unlockedAchievements.length > 0 && (
+      {/* Kazanılabilir Rozetler */}
+      {availableAchievements.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Kilitli Rozetler</CardTitle>
+            <CardTitle>Kazanılabilir Rozetler</CardTitle>
             <CardDescription>Bu rozetleri kazanmak için çalışmaya devam edin</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {/* Örnek kilitli rozetler - gerçek veride olmayan rozetleri göstermek için */}
-              <Card className="border-gray-200 border-2 opacity-60">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-3 rounded-full bg-gray-100 text-gray-400">
-                      <Lock className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-400">Gizli Rozet</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Bu rozeti kazanmak için çalışmaya devam edin
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {availableAchievements.map((achievement) => {
+                const colors = getColorClasses(achievement.colorScheme, false);
+                return (
+                  <Card key={achievement.id} className={`${colors.border} border-2 opacity-70`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`p-3 rounded-full ${colors.bg} ${colors.text}`}>
+                          {getIconComponent(achievement.iconName)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                            <h3 className="font-semibold">{achievement.name}</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {achievement.description}
+                          </p>
+                          {achievement.examType && (
+                            <Badge variant="outline" className="mt-2">
+                              {achievement.examType}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* TÜM ROZETLER */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tüm Rozetler</CardTitle>
+          <CardDescription>
+            Sistemdeki tüm rozetler ({allAchievements.filter(a => a.unlocked).length} / {allAchievements.length} kazanıldı)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {allAchievements.map((achievement) => {
+              const colors = getColorClasses(achievement.colorScheme, achievement.unlocked);
+              return (
+                <Card 
+                  key={achievement.id} 
+                  className={`${colors.border} border-2 ${!achievement.unlocked ? 'opacity-70' : ''}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-3 rounded-full ${colors.bg} ${colors.text}`}>
+                        {achievement.unlocked ? (
+                          getIconComponent(achievement.iconName)
+                        ) : (
+                          <Lock className="h-6 w-6" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          {!achievement.unlocked && (
+                            <Lock className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <h3 className="font-semibold">{achievement.name}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {achievement.description}
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          {achievement.examType && (
+                            <Badge variant="outline">
+                              {achievement.examType}
+                            </Badge>
+                          )}
+                          {achievement.unlocked && achievement.unlockedAt && (
+                            <Badge variant="outline">
+                              {getTimeSince(achievement.unlockedAt)}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

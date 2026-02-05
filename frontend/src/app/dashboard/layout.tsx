@@ -169,6 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { name: "Sınıflar", href: "/dashboard/classes", icon: School },
             { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
             { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
+            { name: "Başarılar", href: "/dashboard/admin/achievements", icon: Award },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },

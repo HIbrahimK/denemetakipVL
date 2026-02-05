@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { seedAchievements } from './seed-achievements';
 
 const prisma = new PrismaClient();
 
@@ -325,6 +326,10 @@ async function main() {
             }
         }
     }
+
+    // Seed achievements
+    console.log('\n🏆 Seeding achievements for school...');
+    await seedAchievements(school.id);
 }
 
 main()

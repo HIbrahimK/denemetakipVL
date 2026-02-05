@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ExcelParsingService, ParsedExamRow } from './excel-parsing.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AchievementsService } from '../achievements/achievements.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class ImportService {
         @InjectQueue('import-queue') private importQueue: Queue,
         private excelParser: ExcelParsingService,
         private prisma: PrismaService,
+        private achievementsService: AchievementsService,
     ) { }
 
     async confirmImport(data: any[], examId: string, schoolId: string, examType: string) {
@@ -168,6 +170,8 @@ export class ImportService {
                         });
                     }
 
+                    const attemptId = attempt.id; // Save for achievement check
+
                     // 4. Save Lesson Results
                     await tx.examLessonResult.deleteMany({ where: { attemptId: attempt.id } });
 
@@ -235,7 +239,65 @@ export class ImportService {
                         }
                     }
                 }
+
+                // Store attempt IDs for achievement checking (outside transaction)
+                const attemptIds: string[] = [];
+                for (const row of rowsToProcess) {
+                    const student = await tx.student.findFirst({
+                        where: {
+                            schoolId,
+                            OR: [
+                                { studentNumber: row.studentNumber },
+                                { tcNo: row.tcNo },
+                            ]
+                        }
+                    });
+                    if (student) {
+                        const attempt = await tx.examAttempt.findUnique({
+                            where: { examId_studentId: { examId, studentId: student.id } }
+                        });
+                        if (attempt) {
+                            attemptIds.push(attempt.id);
+                        }
+                    }
+                }
+
+                return attemptIds;
             });
+
+            // Check achievements for all attempts (after transaction completes)
+            const attemptIds = await this.prisma.$transaction(async (tx) => {
+                const ids: string[] = [];
+                for (const row of rowsToProcess) {
+                    const student = await tx.student.findFirst({
+                        where: {
+                            schoolId,
+                            OR: [
+                                { studentNumber: row.studentNumber },
+                                { tcNo: row.tcNo },
+                            ]
+                        }
+                    });
+                    if (student) {
+                        const attempt = await tx.examAttempt.findUnique({
+                            where: { examId_studentId: { examId, studentId: student.id } }
+                        });
+                        if (attempt) {
+                            ids.push(attempt.id);
+                        }
+                    }
+                }
+                return ids;
+            });
+
+            // Check achievements for each attempt
+            for (const attemptId of attemptIds) {
+                try {
+                    await this.achievementsService.checkAchievementsForExam(attemptId);
+                } catch (error) {
+                    this.logger.warn(`Failed to check achievements for attempt ${attemptId}: ${error.message}`);
+                }
+            }
 
             return { success: true, count: rowsToProcess.length };
         } catch (error) {
