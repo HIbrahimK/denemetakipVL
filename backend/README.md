@@ -34,14 +34,19 @@ $ npm install
 ## Compile and run the project
 
 ```bash
-# development (builds then runs)
+# development (requires build output)
+$ npm run build
 $ npm run start
 
 # watch mode
 $ npm run start:dev
 
-# production mode (builds then runs)
+# production mode (requires build output)
+$ npm run build
 $ npm run start:prod
+
+# production mode (builds then runs)
+$ npm run start:prod:build
 ```
 
 ## Run tests
