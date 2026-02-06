@@ -10,11 +10,11 @@ async function bootstrap() {
     bodyParser: true,
   });
 
-  // Increase payload size limit for logo uploads (10MB)
+  // Increase payload size limit for uploads (10MB)
   app.use(require('express').json({ limit: '10mb' }));
   app.use(require('express').urlencoded({ limit: '10mb', extended: true }));
 
-  // Serve static files from uploads directory
+  // Serve static files
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads/',
   });
@@ -26,13 +26,19 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS for frontend (prod + local)
-  const allowedOrigins = [
-    process.env.FRONTEND_URL, // https://denemetakip.net
+  /**
+   * ✅ TypeScript-safe CORS origins
+   * (explicit string[] — no undefined)
+   */
+  const allowedOrigins: string[] = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://192.168.1.14:3000',
-  ].filter(Boolean);
+  ];
+
+  if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+  }
 
   app.enableCors({
     origin: allowedOrigins,
@@ -52,10 +58,10 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT) || 8080;
 
-  // ✅ IMPORTANT: bind to 0.0.0.0 for DigitalOcean health checks
+  // ✅ DigitalOcean health check fix
   await app.listen(port, '0.0.0.0');
 
-  console.log(`Application is running on: http://0.0.0.0:${port}`);
+  console.log(`🚀 Application running on http://0.0.0.0:${port}`);
 }
 
 bootstrap();
