@@ -17,6 +17,7 @@ import { MessagesModule } from './messages/messages.module';
 import { StudyModule } from './study/study.module';
 import { GroupsModule } from './groups/groups.module';
 import { SubjectsModule } from './subjects/subjects.module';
+import { HealthController } from './health.controller';
 import { AchievementsModule } from './achievements/achievements.module';
 
 @Module({
@@ -44,6 +45,7 @@ import { AchievementsModule } from './achievements/achievements.module';
     SubjectsModule,
     AchievementsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule { }
 
