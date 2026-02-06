@@ -17,8 +17,13 @@ export class HealthController {
   @Get('health')
   async getHealth() {
     try {
-      // Test database connection
-      await this.prisma.$queryRaw`SELECT 1`;
+      // Test database connection with timeout
+      const dbPromise = this.prisma.$queryRaw`SELECT 1`;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database timeout')), 3000)
+      );
+      
+      await Promise.race([dbPromise, timeoutPromise]);
       
       return {
         status: 'healthy',
@@ -27,11 +32,13 @@ export class HealthController {
         uptime: process.uptime()
       };
     } catch (error) {
+      console.error('Health check failed:', error.message);
       return {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         database: 'disconnected',
-        error: error.message
+        error: error.message,
+        uptime: process.uptime()
       };
     }
   }
@@ -39,8 +46,13 @@ export class HealthController {
   @Get('ready')
   async getReady() {
     try {
-      // More comprehensive readiness check
-      await this.prisma.$queryRaw`SELECT 1`;
+      // More comprehensive readiness check with timeout
+      const dbPromise = this.prisma.$queryRaw`SELECT 1`;
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database timeout')), 5000)
+      );
+      
+      await Promise.race([dbPromise, timeoutPromise]);
       
       return {
         status: 'ready',
@@ -50,7 +62,19 @@ export class HealthController {
         }
       };
     } catch (error) {
+      console.error('Readiness check failed:', error.message);
       throw new Error(`Service not ready: ${error.message}`);
     }
+  }
+
+  @Get('alive')
+  getLiveness() {
+    // Simple liveness check without external dependencies
+    return {
+      status: 'alive',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage()
+    };
   }
 }

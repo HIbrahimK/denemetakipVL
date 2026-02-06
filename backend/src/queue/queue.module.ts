@@ -10,6 +10,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                 const redisConfig: any = {
                     host: configService.get('REDIS_HOST', 'localhost'),
                     port: parseInt(configService.get('REDIS_PORT', '6379'), 10),
+                    maxRetriesPerRequest: 3,
+                    retryDelayOnFailover: 100,
+                    enableReadyCheck: false,
+                    lazyConnect: true,
                 };
                 
                 // Add authentication for production Redis
@@ -25,6 +29,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                 if (configService.get('NODE_ENV') === 'production') {
                     redisConfig.tls = {};
                 }
+                
+                console.log('Redis config:', { 
+                    host: redisConfig.host, 
+                    port: redisConfig.port, 
+                    hasAuth: !!(redisUsername && redisPassword),
+                    hasTLS: !!redisConfig.tls 
+                });
                 
                 return { connection: redisConfig };
             },
