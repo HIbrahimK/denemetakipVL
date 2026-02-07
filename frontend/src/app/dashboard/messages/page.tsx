@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -91,7 +91,6 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:3001/messages/sent", {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,6 @@ export function BulkTransferModal({ isOpen, onClose, onSuccess, selectedCount, s
         const token = localStorage.getItem("token");
         try {
             const res = await fetch("http://localhost:3001/students/filters", {
-                headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
             setFilters(data);
@@ -73,7 +72,6 @@ export function BulkTransferModal({ isOpen, onClose, onSuccess, selectedCount, s
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     studentIds,

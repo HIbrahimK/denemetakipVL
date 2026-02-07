@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { format, isBefore, isAfter, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
@@ -80,7 +80,6 @@ export default function StudentExamCalendarPage() {
                 `http://localhost:3001/exams/calendar/settings?schoolId=${schoolId}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 }
             );
@@ -122,7 +121,6 @@ export default function StudentExamCalendarPage() {
 
             const response = await fetch(`http://localhost:3001/exams/calendar/view?${params}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 
@@ -286,7 +284,7 @@ export default function StudentExamCalendarPage() {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                                window.open(`http://localhost:3001${exam.answerKeyUrl}`, '_blank')
+                                window.open(`http://localhost:3001/exams/${exam.id}/answer-key`, '_blank')
                             }
                         >
                             <FileText className="w-4 h-4 mr-2" />
@@ -448,7 +446,7 @@ export default function StudentExamCalendarPage() {
                                                                     size="sm"
                                                                     onClick={() =>
                                                                         window.open(
-                                                                            `http://localhost:3001${exam.answerKeyUrl}`,
+                                                                            `http://localhost:3001/exams/${exam.id}/answer-key`,
                                                                             '_blank'
                                                                         )
                                                                     }

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -31,7 +31,6 @@ export default function EditMessagePage() {
         `http://localhost:3001/messages/${messageId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -79,7 +78,6 @@ export default function EditMessagePage() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ subject, body }),
         }

@@ -10,52 +10,56 @@ async function bootstrap() {
     bodyParser: true,
   });
 
+  app.set('trust proxy', 1);
+
   // Increase payload size limit for logo uploads (10MB)
   app.use(require('express').json({ limit: '10mb' }));
   app.use(require('express').urlencoded({ limit: '10mb', extended: true }));
 
-  // Serve static files from uploads directory
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  // Serve public files from uploads/public directory
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'public'), {
     prefix: '/uploads/',
   });
 
-  // Security headers
-  app.use(
-    helmet({
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-    }),
-  );
+  // Legacy public attachments (backward compatibility)
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'message-attachments'), {
+    prefix: '/uploads/message-attachments/',
+  });
 
-  // Enable CORS for frontend (prod + local)
-  const allowedOrigins = [
-    process.env.FRONTEND_URL, // https://denemetakip.net
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://192.168.1.14:3000',
-  ].filter(Boolean);
+  // Security headers
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  }));
+
+  // Enable CORS for frontend
+  const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'), false);
+    },
     credentials: true,
   });
 
   // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      transform: true,
+      whitelist: true, // Strip properties that don't have decorators
+      transform: true, // Transform payloads to DTO instances
       transformOptions: {
-        enableImplicitConversion: true,
+        enableImplicitConversion: true, // Automatically convert types
       },
     }),
   );
 
-  const port = Number(process.env.PORT) || 8080;
-
-  // ✅ IMPORTANT: bind to 0.0.0.0 for DigitalOcean health checks
-  await app.listen(port, '0.0.0.0');
-
-  console.log(`Application is running on: http://0.0.0.0:${port}`);
+  const port = process.env.PORT ?? 8080;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
 }
-
 bootstrap();

@@ -69,6 +69,7 @@ export class MessagesService {
         scheduledFor: createMessageDto.scheduledFor ? new Date(createMessageDto.scheduledFor) : null,
         sentAt: status === MessageStatus.SENT ? new Date() : null,
         requiresApproval: createMessageDto.requiresApproval || false,
+        allowReplies: createMessageDto.allowReplies ?? false,
       },
       include: {
         sender: true,
@@ -661,7 +662,7 @@ export class MessagesService {
         targetGradeId: saveDraftDto.targetGradeId,
         targetClassId: saveDraftDto.targetClassId,
         recipientIds: saveDraftDto.recipientIds || undefined,
-        allowReplies: saveDraftDto.allowReplies !== undefined ? saveDraftDto.allowReplies : true,
+        allowReplies: saveDraftDto.allowReplies ?? false,
       },
     });
   }

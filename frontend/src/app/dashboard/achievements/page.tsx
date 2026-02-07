@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -58,7 +58,6 @@ export default function AchievementsPage() {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -87,7 +86,6 @@ export default function AchievementsPage() {
       // Get student's unlocked and available achievements
       const response = await fetch(`http://localhost:3001/achievements/student/${studentId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 

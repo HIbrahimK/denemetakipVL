@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  Query,
   Sse,
   UnauthorizedException,
   UseInterceptors,
@@ -29,18 +28,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
 import { Observable, interval, map, switchMap, from } from 'rxjs';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MessagesController {
   constructor(
     private readonly messagesService: MessagesService,
-    private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService,
   ) {}
 
   @Post('upload')
@@ -49,7 +43,7 @@ export class MessagesController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          const uploadPath = './uploads/message-attachments';
+          const uploadPath = './uploads/public/message-attachments';
           if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true });
           }
@@ -111,38 +105,15 @@ export class MessagesController {
   }
 
   @Sse('stream')
-  @Public()
-  async streamMessages(@Query('token') token: string): Promise<Observable<MessageEvent>> {
-    if (!token) {
-      throw new UnauthorizedException('Token is required');
+  async streamMessages(@CurrentUser() user: any): Promise<Observable<MessageEvent>> {
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
 
-    try {
-      // JWT token'ı doğrula
-      const payload = this.jwtService.verify(token);
-      
-      // Kullanıcıyı veritabanından getir
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-        include: {
-          school: true,
-          student: true,
-          parent: true,
-        },
-      });
-
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      // SSE stream'i döndür
-      return interval(3000).pipe(
-        switchMap(() => from(this.messagesService.getUnreadCount(user.id, user.schoolId))),
-        map((data) => ({ data } as MessageEvent)),
-      );
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token');
-    }
+    return interval(3000).pipe(
+      switchMap(() => from(this.messagesService.getUnreadCount(user.id, user.schoolId))),
+      map((data) => ({ data } as MessageEvent)),
+    );
   }
 
   @Get('drafts')

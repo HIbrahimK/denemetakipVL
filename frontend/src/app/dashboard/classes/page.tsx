@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -94,7 +94,6 @@ export default function ClassesPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/schools/${schoolId}/classes`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const data = await response.json();
@@ -127,7 +126,6 @@ export default function ClassesPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           gradeLevel: parseInt(formData.gradeLevel),
@@ -165,7 +163,6 @@ export default function ClassesPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           gradeLevel: parseInt(formData.gradeLevel),
@@ -202,7 +199,6 @@ export default function ClassesPage() {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/schools/${schoolId}/classes/${selectedClass.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -268,7 +264,6 @@ export default function ClassesPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/students?classId=${classId}`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
         const data = await response.json();
@@ -288,7 +283,6 @@ export default function ClassesPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(mergeData),
       });
@@ -334,7 +328,6 @@ export default function ClassesPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(body),
       });

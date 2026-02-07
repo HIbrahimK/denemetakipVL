@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,6 @@ export default function ParentResultsPage() {
                 // Get parent's student data
                 const res = await fetch("http://localhost:3001/parents/me/students", {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                     },
                 });
 

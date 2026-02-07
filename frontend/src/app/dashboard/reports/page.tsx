@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,7 +129,6 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -156,7 +155,6 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -196,7 +194,6 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -265,7 +262,6 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 

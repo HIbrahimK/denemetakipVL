@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
@@ -45,7 +45,6 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (user.schoolId) {
           const token = localStorage.getItem('token');
           const response = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           
           if (response.ok) {

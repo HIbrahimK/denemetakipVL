@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -88,7 +88,6 @@ function ExamDetailContent() {
                 
                 // Fetch all exams to find this specific exam
                 const response = await fetch(endpoint, {
-                    headers: { "Authorization": `Bearer ${token}` },
                 });
                 const data = await response.json();
                 
@@ -106,7 +105,6 @@ function ExamDetailContent() {
 
                 // Fetch exam statistics for comparison
                 const statsResponse = await fetch(`http://localhost:3001/exams/${params.id}/statistics`, {
-                    headers: { "Authorization": `Bearer ${token}` },
                 });
                 const statsData = await statsResponse.json();
                 

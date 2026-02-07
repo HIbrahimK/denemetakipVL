@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,6 @@ export default function SettingsPage() {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         try {
             const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/backups`, {
-                headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
             setBackups(Array.isArray(data) ? data : []);
@@ -83,7 +82,6 @@ export default function SettingsPage() {
             const token = localStorage.getItem('token');
             const res = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
                 }
             });
             if (!res.ok) {
@@ -190,7 +188,6 @@ export default function SettingsPage() {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({ logoUrl: base64 }),
                 });
@@ -244,7 +241,6 @@ export default function SettingsPage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(formData),
             });
@@ -295,7 +291,6 @@ export default function SettingsPage() {
                 try {
                     const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/promote`, {
                         method: "POST",
-                        headers: { "Authorization": `Bearer ${token}` }
                     });
                     const data = await res.json();
                     toast({
@@ -322,7 +317,6 @@ export default function SettingsPage() {
         try {
             const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/backup`, {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
             toast({
@@ -347,7 +341,6 @@ export default function SettingsPage() {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         try {
             const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/backups/${backupId}/download`, {
-                headers: { "Authorization": `Bearer ${token}` }
             });
             const backup = await res.json();
 
@@ -385,7 +378,6 @@ export default function SettingsPage() {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`
                         },
                         body: JSON.stringify({ backupId }),
                     });
@@ -418,7 +410,6 @@ export default function SettingsPage() {
                 try {
                     const res = await fetch(`http://localhost:3001/schools/${user.schoolId}/backups/${backupId}`, {
                         method: "DELETE",
-                        headers: { "Authorization": `Bearer ${token}` }
                     });
                     const data = await res.json();
                     toast({
@@ -471,7 +462,6 @@ export default function SettingsPage() {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`
                         },
                         body: JSON.stringify({ backupData }),
                     });

@@ -30,6 +30,8 @@ export class ImportService {
             const defaultPassword = process.env.DEFAULT_STUDENT_PASSWORD || '123456';
             const defaultHashedPassword = await bcrypt.hash(defaultPassword, 10);
 
+            const attemptIds = new Set<string>();
+
             await this.prisma.$transaction(async (tx) => {
                 for (const row of rowsToProcess) {
                     // row is ParsedExamRow
@@ -89,38 +91,29 @@ export class ImportService {
                     });
 
                     if (!student) {
-                        const studentEmail = `${studentNumber}.${schoolId}.s@denemetakip.com`;
-                        const parentEmail = `${studentNumber}.${schoolId}.p@denemetakip.com`;
+                        // Create Student User without email (student login uses studentNumber)
+                        const studentUser = await tx.user.create({
+                            data: {
+                                email: null,
+                                password: defaultHashedPassword,
+                                firstName,
+                                lastName,
+                                role: 'STUDENT',
+                                schoolId,
+                            }
+                        });
 
-                        // Find or create Student User
-                        let studentUser = await tx.user.findUnique({ where: { email: studentEmail } });
-                        if (!studentUser) {
-                            studentUser = await tx.user.create({
-                                data: {
-                                    email: studentEmail,
-                                    password: defaultHashedPassword,
-                                    firstName,
-                                    lastName,
-                                    role: 'STUDENT',
-                                    schoolId,
-                                }
-                            });
-                        }
-
-                        // Find or create Parent User
-                        let parentUser = await tx.user.findUnique({ where: { email: parentEmail } });
-                        if (!parentUser) {
-                            parentUser = await tx.user.create({
-                                data: {
-                                    email: parentEmail,
-                                    password: defaultHashedPassword,
-                                    firstName: `Veli - ${firstName}`,
-                                    lastName,
-                                    role: 'PARENT',
-                                    schoolId,
-                                }
-                            });
-                        }
+                        // Create Parent User without email (parent login uses studentNumber)
+                        const parentUser = await tx.user.create({
+                            data: {
+                                email: null,
+                                password: defaultHashedPassword,
+                                firstName: `Veli - ${firstName}`,
+                                lastName,
+                                role: 'PARENT',
+                                schoolId,
+                            }
+                        });
 
                         // Ensure Parent entity exists for parent user
                         let parent = await tx.parent.findUnique({ where: { userId: parentUser.id } });
@@ -170,7 +163,7 @@ export class ImportService {
                         });
                     }
 
-                    const attemptId = attempt.id; // Save for achievement check
+                    attemptIds.add(attempt.id);
 
                     // 4. Save Lesson Results
                     await tx.examLessonResult.deleteMany({ where: { attemptId: attempt.id } });
@@ -240,54 +233,9 @@ export class ImportService {
                     }
                 }
 
-                // Store attempt IDs for achievement checking (outside transaction)
-                const attemptIds: string[] = [];
-                for (const row of rowsToProcess) {
-                    const student = await tx.student.findFirst({
-                        where: {
-                            schoolId,
-                            OR: [
-                                { studentNumber: row.studentNumber },
-                                { tcNo: row.tcNo },
-                            ]
-                        }
-                    });
-                    if (student) {
-                        const attempt = await tx.examAttempt.findUnique({
-                            where: { examId_studentId: { examId, studentId: student.id } }
-                        });
-                        if (attempt) {
-                            attemptIds.push(attempt.id);
-                        }
-                    }
-                }
-
-                return attemptIds;
-            });
-
-            // Check achievements for all attempts (after transaction completes)
-            const attemptIds = await this.prisma.$transaction(async (tx) => {
-                const ids: string[] = [];
-                for (const row of rowsToProcess) {
-                    const student = await tx.student.findFirst({
-                        where: {
-                            schoolId,
-                            OR: [
-                                { studentNumber: row.studentNumber },
-                                { tcNo: row.tcNo },
-                            ]
-                        }
-                    });
-                    if (student) {
-                        const attempt = await tx.examAttempt.findUnique({
-                            where: { examId_studentId: { examId, studentId: student.id } }
-                        });
-                        if (attempt) {
-                            ids.push(attempt.id);
-                        }
-                    }
-                }
-                return ids;
+            }, {
+                maxWait: 60000,
+                timeout: 600000,
             });
 
             // Check achievements for each attempt

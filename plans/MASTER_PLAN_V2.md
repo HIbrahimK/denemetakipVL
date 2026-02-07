@@ -1,245 +1,124 @@
-# 🎯 DENEME TAKİP SİSTEMİ - MASTER PLAN
+﻿# 🎯 DENEME TAKİP SİSTEMİ - MASTER PLAN V2
 
-**Tarih:** Ocak 2026 | **Durum:** Aktif Geliştirme
-
----
-
-## ✅ TAMAMLANAN ÖZELLIKLER
-
-### 🔐 Temel Altyapı
-- [x] Çoklu rol sistemi (Super Admin, Okul Admin, Öğretmen, Öğrenci, Veli)
-- [x] JWT authentication
-- [x] Multi-tenant yapı (schoolId bazlı izolasyon)
-- [x] Rate limiting ve güvenlik
-- [x] Session yönetimi
-- [x] Şifre değiştirme/sıfırlama
-
-### 📊 Veri Modeli
-- [x] Exam, ExamAttempt, ExamLessonResult modelleri
-- [x] Student, Class, Grade, School yapıları
-- [x] User ve Parent ilişkileri
-- [x] Messaging sistemi (Message, MessageRecipient, MessageTemplate)
-- [x] Backup modeli
-
-### 📥 Excel Import/Export
-- [x] Öğrenci toplu yükleme (TC No, Ad Soyad, Sınıf)
-- [x] Deneme sonuçları yükleme (AYT/TYT/LGS formatları)
-- [x] Excel validation ve hata raporlama
-- [x] PDF/Excel export (tüm raporlar için)
-
-### 📈 Raporlar
-- [x] Deneme özet raporu (sınıf bazlı)
-- [x] Deneme detay raporu (öğrenci bazlı)
-- [x] Ders bazlı analiz raporu
-- [x] Sınıf sıralama matrisi
-- [x] Kademe sıralama matrisi
-- [x] Sınav detay raporu (tek deneme analizi)
-- [x] PDF/Excel export desteği
-
-### 🗓️ Deneme Takvimi
-- [x] Takvim ve tablo görünümü
-- [x] Deneme oluşturma/düzenleme/silme
-- [x] Sınav zamanlama (tarih, saat, uygulama tarihi)
-- [x] Cevap anahtarı yükleme
-- [x] Yayın görünürlük ayarları
-- [x] Arşivleme sistemi
-- [x] Renk kodlama
-- [x] Katılım sayaçları
-- [x] Ücret/ödeme takibi
-- [x] Öğrenci takvim görünümü (takvim + tablo)
-- [x] Sıralama ve filtreleme
-
-### 💬 Mesajlaşma Sistemi
-- [x] Toplu mesaj gönderimi
-- [x] Alıcı seçimi (sınıf, kademe, bireysel)
-- [x] Dosya ekleme
-- [x] Taslak kaydetme
-- [x] Mesaj şablonları
-- [x] Yanıtlama sistemi
-- [x] Onaylama sistemi (approval)
-- [x] Zamanlanmış gönderim
-- [x] Otomatik silme
-- [x] Hatırlatma sistemi
-- [x] Favori işaretleme
-- [x] Gönderim raporu
-
-### 🏫 Okul Yönetimi
-- [x] Okul bilgileri düzenleme
-- [x] Sınıf oluşturma/düzenleme/silme
-- [x] Sınıf birleştirme
-- [x] Öğrenci transfer (sınıf değiştirme)
-- [x] Toplu öğrenci silme
-- [x] Yedekleme (backup) ve geri yükleme
-- [x] Kademe/sınıf listeleme
-
-### 👨‍🎓 Öğrenci & Veli Paneli
-- [x] Öğrenci kendi sonuçlarını görme
-- [x] Veli çocuklarının sonuçlarını görme
-- [x] Deneme takvimi görüntüleme
-- [x] Cevap anahtarı erişimi (yayınlanmışsa)
-- [x] Deneme durumu (girildi/girilmedi/beklemede)
-
-### 🎨 UI/UX
-- [x] Avatar seçimi (önceden tanımlı avatarlar)
-- [x] Dark mode desteği
-- [x] Responsive tasarım
-- [x] Arama ve otokomplit
-- [x] Toast bildirimleri
+**Tarih:** 7 Şubat 2026 | **Durum:** Aktif Geliştirme
 
 ---
 
-## 🚧 DEVAM EDEN / YAKINDA
+## Durum Özeti (Kod İnceleme Bazlı)
 
-### 📚 İçerik Yönetimi
-- [ ] TYT konu listesi ve konu bazlı soru sayıları
-- [ ] AYT konu listesi (SAY/EA/SOZ/DİL)
-- [ ] LGS konu listesi
-- [ ] Konu bazlı soru ekleme ve analiz
-
-### 📋 Ders Çalışma Sistemi
-- [ ] Öğrenci çalışma planı oluşturma
-- [ ] Günlük çalışma takibi (✔ Çalıştım / ✔ Bitirdim)
-- [ ] Haftalık  ve günlük çalışma hedefleri 
-- [ ] Zayıf ders tespiti
-- [ ] "Ne çalışmalıyım?" önerisi
-- [ ] Çalışma istatistikleri (öğretmen için)
-öğretmen tarafından öğrenciye özel, guruba özel (mentörlük gurubu), sınıfa özel  zaman çizelgesi hazırlama. Günlük çözülecek soru sayısı (matematik 30 tükçe 30 gibi). zaman çizlgesinde konu belirleyebilme. Pazartesi günü Matematik Çarpanlara ayırma konusundan 30 soru çözülecek. gibi. Öğrenci 30 soru çözdüm 20 doğru 8 yanlış 2 boş. olarak işaretleyebilecek. öğretmen bunu görecek. incelendi diye işaretleyecek. veli doğrulaması da olsun. veli evet bunları çözdü diye işaretlesin. 
-hazır çalışma planları hazırlayalım hafta hafta LGS özelinde TYT ve AYT özelinde şablonlar olsun. Öğretmen bunları direk gönderebilsin. haftalık çalışma planı şablonları. Bunlar 1 kere hazırlayalım. İndirilebilir olsun. Diğer okullarda bu haftalık çalışma planlarını kullanabilsin. Öğremtn öğrenciye özel bu planlarda değişiklik yapabilsin. Öğrenci öğretmen çalışma planına konu yanında kitap kaynağı da yazabilsin. Paraf Türkçe parafraf kitabı Sayfa 45-55 15 soru gibi.
-
-### 🎯 Hedef ve Motivasyon
-- [ ] Öğrenci hedef belirleme (net/puan/okul/bölüm)
-- [ ] Hedef-gerçekleşen karşılaştırması
-- [ ] Öğretmen hedef belirleme (sınıf ortalaması)
-- [ ] İlerleme grafikleri
-- [ ] Motivasyon mesajları
-
-### 👥 Mentörlük Sistemi
-- [ ] Öğrenci grupları oluşturma
-- [ ] Grup mesajlaşma
-- [ ] Grup dosya paylaşma
-- [ ] Grup çalışma planı
-- [ ] Grup istatistikleri
-
-### 🎫 Ticket Sistemi
-- [ ] Destek talebi oluşturma
-- [ ] Ticket yönetimi (admin panel)
-- [ ] Ticket durumu takibi
-- [ ] Yanıt sistemi
-- [ ] Kategori ve öncelik
-
-### 📖 Yardım ve Belgeler
-- [ ] Kullanım kılavuzu (rol bazlı)
-- [ ] Video eğitimler
-- [ ] SSS bölümü
-- [ ] Özellik tanıtımları
-- [ ] Hızlı başlangıç rehberi
-
-### 📄 Şablon İndirme
-- [ ] Excel deneme şablonları (AYT/TYT/LGS)
-- [ ] Öğrenci yükleme şablonu
-- [ ] Boş rapor şablonları
-
-### 🔄 Sınıf Geçiş Sistemi
-- [ ] Toplu sınıf atlatma (9→10, 10→11, vb.)
-- [ ] Mezun işaretleme (12. sınıf)
-- [ ] Önceki yıl verileri arşivleme
-- [ ] Yıl sonu işlemleri sihirbazı
-
-### 📊 Gelişmiş Analizler
-- [ ] Son 5 deneme trend analizi
-- [ ] Ders bazlı net düşüş/artış grafiği
-- [ ] Önceki sene karşılaştırma raporları
-- [ ] Yıllık performans raporu
-- [ ] Konu bazlı başarı oranları
-
-### 👨‍🏫 Öğretmen Özellikleri
-- [ ] Branş seçimi (Matematik Öğretmeni, vb.)
-- [ ] Branş bazlı raporlar
-- [ ] Ders sorumluluğu atama
-- [ ] Kendi derslerindeki analiz
-
-### ⚙️ Okul Ayarları
-- [ ] Okul türü seçimi (Ortaokul/Lise/İkisi)
-- [ ] Sınıf/Şube yeniden yapılandırma
-- [ ] Kademe bazlı aktif/pasif (AYT/TYT/LGS)
-- [ ] Logo yükleme
-- [ ] Okul renk teması
-
-### 🔐 Güvenlik İyileştirmeleri
-- [ ] Security audit raporu incelemesi
-- [ ] 2FA (Two-Factor Authentication)
-- [ ] IP kısıtlama
-- [ ] Audit log (tüm işlemler)
-- [ ] GDPR uyumluluğu
+Sistem; deneme takvimi, raporlama, Excel import, mesajlaşma ve çalışma planı modülleriyle birlikte geniş bir çekirdeği tamamlamış durumda. Ancak güvenlik sertleştirmesi, TypeScript tip güvenliği ve bazı mimari temizlikler yapılmadan üretim olgunluğuna ulaşmıyor.
 
 ---
 
-## 🚀 GELECEKTEKİ BÜYÜK ÖZELLIKLER
+## ✅ Tamamlanan Özellikler (Kodda Doğrulanan)
 
-### 🤖 AI Destekli Analiz
-- [ ] "Matematik netlerin düşüyor çünkü..." yorumları
-- [ ] Akıllı konu önerisi
-- [ ] Performans tahminleme
-- [ ] Anonim veri kullanımı
-- [ ] Kişiselleştirilmiş çalışma planı
-
-### 📱 Mobil ve Bildirimler
-- [ ] PWA (Progressive Web App)
-- [ ] Push bildirimleri
-- [ ] Offline çalışma
-- [ ] Mobil uygulama
-- [ ] Veli bildirimleri (SMS/Email)
-
-### 💰 Lisanslama ve Satış
-- [ ] Domain bazlı lisanslama
-- [ ] Öğrenci sayısı limiti
-- [ ] Süreli lisans kontrolü
-- [ ] Paket sistemi (Basic/Pro/Premium)
-- [ ] Ödeme entegrasyonu
-
-### 📊 İleri Seviye Raporlar
-- [ ] Okul karşılaştırması (anonim)
-- [ ] Şehir/ilçe ortalamaları
-- [ ] Türkiye geneli karşılaştırma
-- [ ] Trend tahminleri
-- [ ] Başarı projeksiyonları
+- Çoklu rol sistemi ve JWT kimlik doğrulama
+- SchoolId bazlı tenant izolasyonu
+- Şifre sıfırlama ve avatar güncelleme
+- Deneme yönetimi ve takvim (oluşturma, yayınlama, arşiv, hatırlatma)
+- Cevap anahtarı yükleme
+- Excel import (ön doğrulama, onay, kayıt)
+- Raporlama ve PDF/Excel export
+- Mesajlaşma sistemi (taslak, onay, zamanlama, şablon)
+- Öğrenci/veli panelleri ve sonuç görüntüleme
+- Çalışma planı, görev, onay ve öneri servisleri
+- Başarımlar (achievements)
+- Gruplar ve arama
+- PWA altyapısı (manifest + ikonlar)
 
 ---
 
-## 📌 ÖNCELİK SIRASI (Önümüzdeki 3 Ay)
+## ⚠️ Kodda Görülen Eksikler / Hatalı Yapı Noktaları
 
-### Ay 1 - Şubat 2026
-1. TYT/AYT/LGS konu listelerini ekle
-2. Ders çalışma planı sistemi
-3. Öğrenci hedef belirleme
-4. Zayıf ders tespiti ve öneri motoru
-
-### Ay 2 - Mart 2026
-1. Mentörlük grupları
-2. Ticket sistemi
-3. Yardım belgeleri
-4. Şablon indirme
-
-### Ay 3 - Nisan 2026
-1. Sınıf geçiş sistemi
-2. Önceki yıl karşılaştırması
-3. Öğretmen branş seçimi
-4. Okul türü ayarları
+- Varsayılan şifre kullanımı Excel import içinde sabitlenmiş durumda (ör. `backend/src/import/import.service.ts`). Bunda problem yok ama şifreleme güvenliği için `bcrypt` kullanılması gerekir. Öğrenci şifreleri basit ve standart olabilir.
+- CORS izinleri sadece lokal adreslerle hardcoded (`backend/src/main.ts`). Ne demek anlamadım ancak düzeltelim
+- Dosya yükleme boyut limiti ve içerik doğrulaması eksik (`backend/src/import/import.controller.ts`, `backend/src/exams/exams.service.ts`). bunu mutlaka yapalım. 
+- Statik `uploads/` klasörü herkes tarafından erişilebilir; cevap anahtarı gizliliği deliniyor (`backend/src/main.ts`). bunuda yapalım 
+- Token saklama frontend’de `localStorage` + erişilebilir cookie ile yapılıyor (`frontend/src/lib/auth.ts`). Güvenlik açığı oluşturacaksa düzeltelim. 
+- Rate limiting modülü konfigüre edilmiş ama global guard olarak aktif edilmemiş (`backend/src/app.module.ts`). aktif hale getirelim. güvenlik açığı olmasın. 
+- İki farklı PrismaService dosyası var; biri boş ve kafa karıştırıcı (`backend/src/prisma.service.ts`). gereksiz dosyayı kaldıralım. kullanılamayn başka servis ve dosya kod varsa temizleyelim.
 
 ---
 
-## 💡 PROJENİN FARKI
+## ✅ TypeScript Uyumluluğu (Özet)
 
-**Sadece deneme takibi değil, tam bir eğitim yardımcısı:**
-
-✅ Excel kadar detaylı ama otomatik analiz üretiyor
-✅ Öğrenci ne çalışacağını biliyor
-✅ Öğretmen kimin nerede zayıf olduğunu anında görüyor
-✅ Veli çocuğunun gelişimini takip ediyor
-✅ AI destekli öneriler (yakında)
-
-**Rakiplerden farkı:** Sadece veri girişi değil, aksiyon önerisi!
+- Backend TS derlenebilir durumda ama strict değildir. `noImplicitAny` kapalı ve çok sayıda `any` kullanımı var.
+- Frontend strict açık olmasına rağmen `any` kullanımı yaygın ve `allowJs` açık.
+- Sonuç: TS uyumlu fakat tip güvenliği düşük. Özellikle API DTO’ları ve frontend state modelleri tiplenmeli.
 
 ---
 
-**Son Güncelleme:** 31 Ocak 2026
+## 🔐 Güvenlik Öncelikleri (Sıralı Eylem)
+
+### Acil (1-3 gün)
+- Varsayılan şifreyi kaldır, güçlü ve rastgele parola üretimi uygula
+- CORS origin listesini `.env` üzerinden yönet
+- Dosya upload için boyut ve MIME doğrulama ekle
+- Rate limiting guard’ını global olarak aktive et
+
+### Yüksek Öncelik (1-2 hafta)
+- JWT token’ı HttpOnly cookie ile taşı
+- Cevap anahtarı erişimini yetki kontrolüyle koru
+- Şifre politikası güçlendir (min 8, karmaşık)
+- Hesap kilitleme ve login deneme limiti
+
+### Orta Öncelik (1 ay)
+- Audit log altyapısı
+- IP kısıtlama (opsiyonel)
+- Reset token entropy ve süre ayarları
+
+---
+
+## 🧱 Teknik Borç / Yapısal Temizlik
+
+- `any` kullanımını azaltacak DTO ve response tipleri
+- Tekilleştirilmiş PrismaService (boş servis kaldırılmalı)
+- Upload ve statik dosya erişimleri için ortak servis
+- Import ve rapor üretiminde uzun transaction parçalama
+
+---
+
+## 🚧 Devam Eden / Yakın Dönem Fonksiyonlar
+
+- TYT/AYT/LGS konu listeleri ve konu bazlı analiz
+- Çalışma planı detayları (günlük hedef, kontrol, veli onayı)
+- Hedef ve motivasyon modülü
+- Mentörlük grupları
+- Ticket sistemi
+- Yardım dokümantasyonu
+- Şablon indirme sayfaları
+
+---
+
+## 🗓️ 3 Aylık Yol Haritası (Şubat–Nisan 2026)
+
+### Şubat 2026
+1. Güvenlik düzeltmeleri (parola, upload, CORS, rate limit)
+2. Konu listeleri ve konu bazlı raporlar
+3. Çalışma planı MVP (günlük görev, öğrenci işaretleme)
+
+### Mart 2026
+1. Çalışma planı gelişmiş akış (veli onayı, öğretmen inceleme)
+2. Hedef ve motivasyon sistemi
+3. Mentörlük grupları
+4. Yardım dokümantasyonu
+
+### Nisan 2026
+1. Ticket sistemi
+2. Sınıf geçiş sihirbazı
+3. Okul ayarları genişletme
+4. Yeni rapor tipleri
+
+---
+
+## 🚀 Yeni Özellikler Planı (Orta/Uzun Vadeli)
+
+- AI destekli çalışma önerileri
+- Gelişmiş trend analizleri (son 5 deneme)
+- Mobil uygulama ve push bildirimleri
+- Lisanslama ve paketleme
+- Ulusal karşılaştırmalı raporlar (anonim)
+
+---
+
+**Son Güncelleme:** 7 Şubat 2026

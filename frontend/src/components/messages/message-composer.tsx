@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -27,14 +27,14 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("GENERAL");
-  const [messageType, setMessageType] = useState<"DIRECT" | "BROADCAST">("DIRECT");
+  const [messageType, setMessageType] = useState<"DIRECT" | "BROADCAST">("BROADCAST");
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [targetGrade, setTargetGrade] = useState("");
   const [targetClass, setTargetClass] = useState("");
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [targetRoles, setTargetRoles] = useState<string[]>([]);
   const [scheduledFor, setScheduledFor] = useState("");
-  const [allowReplies, setAllowReplies] = useState(true);
+  const [allowReplies, setAllowReplies] = useState(false);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [grades, setGrades] = useState<any[]>([]);
@@ -73,7 +73,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:3001/messages/settings", {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -93,7 +92,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
         `http://localhost:3001/users?schoolId=${schoolId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -114,7 +112,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
         `http://localhost:3001/schools/${schoolId}/grades`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -135,7 +132,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
         `http://localhost:3001/schools/${schoolId}/grades/${gradeId}/classes`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -154,7 +150,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:3001/messages/templates", {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -211,7 +206,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
       const response = await fetch("http://localhost:3001/messages/upload", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
         },
         body: formData,
       });
@@ -329,7 +323,6 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });

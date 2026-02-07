@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ export default function StudentLoginPage() {
             }
 
             const data = await res.json();
-            setUserData(data.user, data.access_token);
+            setUserData(data.user);
 
             // Redirect student to their results page
             router.push('/dashboard/student/results');

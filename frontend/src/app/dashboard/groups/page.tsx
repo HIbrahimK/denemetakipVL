@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -49,7 +49,6 @@ export default function GroupsPage() {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/groups', {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 

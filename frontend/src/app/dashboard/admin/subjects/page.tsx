@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -71,7 +71,6 @@ export default function AdminSubjectsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:3001/subjects', {
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
@@ -144,7 +143,6 @@ export default function AdminSubjectsPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -180,7 +178,6 @@ export default function AdminSubjectsPage() {
     try {
       const res = await fetch(`http://localhost:3001/subjects/${subjectToDelete.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {

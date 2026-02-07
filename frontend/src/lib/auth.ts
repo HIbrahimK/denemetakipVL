@@ -1,26 +1,24 @@
-/**
- * Set user data in both localStorage and cookie for middleware access
+﻿/**
+ * Set user data in localStorage for client-side access
  */
-export function setUserData(user: any, token: string) {
-    // Store in localStorage for client-side access
-    localStorage.setItem('token', token);
+export function setUserData(user: any) {
     localStorage.setItem('user', JSON.stringify(user));
-    
-    // Store user in cookie for middleware access
-    document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
-    document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 days
+    localStorage.setItem('auth', '1');
 }
 
 /**
  * Clear all user data from localStorage and cookies
  */
 export function clearUserData() {
-    localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+        fetch('http://localhost:3001/auth/logout', { method: 'POST' });
+    }
+
     localStorage.removeItem('user');
+    localStorage.removeItem('auth');
     
     // Clear cookies
     document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
 
 /**
@@ -32,8 +30,8 @@ export function getUserData() {
 }
 
 /**
- * Get token from localStorage
+ * Check authentication flag
  */
-export function getToken() {
-    return localStorage.getItem('token');
+export function isAuthenticated() {
+    return localStorage.getItem('auth') === '1';
 }

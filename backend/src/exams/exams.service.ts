@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -28,7 +28,7 @@ export class ExamsService {
 
         const exam = await this.prisma.exam.create({ data });
 
-        // Otomatik bildirim oluştur
+        // Otomatik bildirim olu�Ytur
         if (exam.scheduledDateTime && exam.isPublished) {
             await this.createExamNotifications(exam.id, exam.scheduledDateTime);
         }
@@ -140,7 +140,7 @@ export class ExamsService {
             totalNet += attemptNet;
 
             // Branch Stats
-            const branchName = attempt.student.class?.name || 'Diğer';
+            const branchName = attempt.student.class?.name || 'Di�Yer';
             if (!branchStats[branchName]) {
                 branchStats[branchName] = { count: 0, totalNet: 0, totalScore: 0 };
             }
@@ -175,7 +175,7 @@ export class ExamsService {
             name: `${a.student.user?.firstName || ''} ${a.student.user?.lastName || ''}`.trim(), // Need to include user in query above if not present
             className: a.student.class?.name,
             score: a.scores.length > 0 ? a.scores[0].score : 0,
-            scores: a.scores, // Include all scores (SAY, EA, SÖZ for AYT)
+            scores: a.scores, // Include all scores (SAY, EA, S�-Z for AYT)
             net: a.lessonResults.reduce((acc, curr) => acc + curr.net, 0),
             // Add lesson specific nets if needed for dynamic columns
             lessons: a.lessonResults.reduce((acc, curr) => ({
@@ -228,6 +228,11 @@ export class ExamsService {
             throw new Error('No file provided');
         }
 
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            throw new Error('Dosya boyutu 10MB\'dan k�f¼�f§�f¼k olmal�"±d�"±r');
+        }
+
         // Validate file type
         const allowedMimeTypes = [
             'application/pdf',
@@ -242,23 +247,38 @@ export class ExamsService {
             throw new Error('Invalid file type. Only PDF, JPG, JPEG, PNG, and Excel files are allowed.');
         }
 
-        // Create uploads directory if it doesn't exist
-        const uploadsDir = path.join(process.cwd(), 'uploads', 'answer-keys');
+        // Magic number check
+        const signature = file.buffer.slice(0, 4).toString('hex').toLowerCase();
+        const allowedSignatures = ['25504446', 'ffd8ff', '89504e47', '504b0304', 'd0cf11e0'];
+        if (!allowedSignatures.some((sig) => signature.startsWith(sig))) {
+            throw new Error('Dosya i�f§eri�"Ÿi t�f¼r�f¼yle uyu�.Ÿmuyor');
+        }
+
+        // Create private uploads directory if it doesn't exist
+        const uploadsDir = path.join(process.cwd(), 'uploads', 'private', 'answer-keys');
         if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
         }
 
-        // Generate unique filename
-        const timestamp = Date.now();
-        const ext = path.extname(file.originalname);
-        const filename = `${examId}_${timestamp}${ext}`;
+        // Remove any existing answer key for this exam
+        const possibleExts = ['.pdf', '.jpg', '.jpeg', '.png', '.xlsx', '.xls'];
+        for (const ext of possibleExts) {
+            const existingPath = path.join(uploadsDir, `${examId}${ext}`);
+            if (fs.existsSync(existingPath)) {
+                fs.unlinkSync(existingPath);
+            }
+        }
+
+        // Use deterministic filename per exam
+        const ext = path.extname(file.originalname).toLowerCase();
+        const filename = `${examId}${ext}`;
         const filepath = path.join(uploadsDir, filename);
 
         // Save file
         fs.writeFileSync(filepath, file.buffer);
 
-        // Update exam with answer key URL
-        const answerKeyUrl = `/uploads/answer-keys/${filename}`;
+        // Store public endpoint in DB
+        const answerKeyUrl = `/exams/${examId}/answer-key`;
         await this.prisma.exam.update({
             where: { id: examId },
             data: { answerKeyUrl },
@@ -271,13 +291,83 @@ export class ExamsService {
         };
     }
 
+    async getAnswerKeyFile(examId: string, user: any) {
+        const exam = await this.prisma.exam.findUnique({
+            where: { id: examId },
+            select: {
+                id: true,
+                schoolId: true,
+                isAnswerKeyPublic: true,
+                answerKeyUrl: true,
+            },
+        });
+
+        if (!exam || !exam.answerKeyUrl) {
+            throw new Error('Dosya bulunamad�"±');
+        }
+
+        if (user.schoolId !== exam.schoolId) {
+            throw new Error('Eri�.Ÿim reddedildi');
+        }
+
+        const isStudentOrParent = ['STUDENT', 'PARENT'].includes(user.role);
+        if (isStudentOrParent && !exam.isAnswerKeyPublic) {
+            throw new Error('Cevap anahtar�"± hen�f¼z yay�"±nlanmad�"±');
+        }
+
+        const uploadsDir = path.join(process.cwd(), 'uploads', 'private', 'answer-keys');
+        const possibleExts = ['.pdf', '.jpg', '.jpeg', '.png', '.xlsx', '.xls'];
+        let filePath: string | null = null;
+
+        for (const ext of possibleExts) {
+            const candidate = path.join(uploadsDir, `${examId}${ext}`);
+            if (fs.existsSync(candidate)) {
+                filePath = candidate;
+                break;
+            }
+        }
+
+        // Legacy support for old answer keys stored in uploads/answer-keys
+        if (!filePath) {
+            const legacyDir = path.join(process.cwd(), 'uploads', 'answer-keys');
+            if (fs.existsSync(legacyDir)) {
+                const candidates = fs.readdirSync(legacyDir)
+                    .filter((name) => name.startsWith(`${examId}_`))
+                    .map((name) => path.join(legacyDir, name));
+                if (candidates.length > 0) {
+                    candidates.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+                    filePath = candidates[0];
+                }
+            }
+        }
+
+        if (!filePath) {
+            throw new Error('Dosya bulunamad�"±');
+        }
+
+        const ext = path.extname(filePath).toLowerCase();
+        const contentTypeMap: Record<string, string> = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            '.xls': 'application/vnd.ms-excel',
+        };
+
+        return {
+            filePath,
+            contentType: contentTypeMap[ext] || 'application/octet-stream',
+        };
+    }
+
     // ============ TAKVIM METODLARI ============
 
     // Takvim görünümü için sınavları getir
     async getCalendarExams(schoolId: string, query: CalendarQueryDto, userId?: string, userRole?: string) {
         const where: any = { schoolId };
 
-        // Arşivlenmemiş sınavları getir (includeArchived true değilse)
+        // Ar�Yivlenmemi�Y sınavları getir (includeArchived true de�Yilse)
         if (!query.includeArchived) {
             where.isArchived = false;
         }
@@ -293,7 +383,7 @@ export class ExamsService {
             where.date = { gte: startDate, lte: endDate };
         }
 
-        // Sınıf seviyesi filtreleme (öğrenci için kendi sınıfı)
+        // Sınıf seviyesi filtreleme (ö�Yrenci için kendi sınıfı)
         if (query.gradeLevel) {
             where.gradeLevel = query.gradeLevel;
         }
@@ -303,7 +393,7 @@ export class ExamsService {
             where.type = query.type;
         }
 
-        // Öğrenciler sadece yayınlananları görsün
+        // �-�Yrenciler sadece yayınlananları görsün
         if (userRole === 'STUDENT') {
             where.isPublished = true;
         }
@@ -319,7 +409,7 @@ export class ExamsService {
             },
         });
 
-        // Öğrenci için: Girdiği/girmediği sınavları işaretle
+        // �-�Yrenci için: Girdi�Yi/girmedi�Yi sınavları i�Yaretle
         if (userRole === 'STUDENT') {
             return exams.map(exam => ({
                 ...exam,
@@ -331,7 +421,7 @@ export class ExamsService {
         return exams;
     }
 
-    // Yaklaşan sınavlar
+    // Yakla�Yan sınavlar
     async getUpcomingExams(schoolId: string, gradeLevel?: number, limit: number = 5) {
         const where: any = {
             schoolId,
@@ -351,7 +441,7 @@ export class ExamsService {
         });
     }
 
-    // Denemeyi başka sınıflara kopyala
+    // Denemeyi ba�Yka sınıflara kopyala
     async duplicateExam(examId: string, dto: DuplicateExamDto) {
         const originalExam = await this.prisma.exam.findUnique({
             where: { id: examId },
@@ -379,7 +469,7 @@ export class ExamsService {
                 },
             });
 
-            // Bildirimler oluştur
+            // Bildirimler olu�Ytur
             if (newExam.scheduledDateTime && newExam.isPublished) {
                 await this.createExamNotifications(newExam.id, newExam.scheduledDateTime);
             }
@@ -390,7 +480,7 @@ export class ExamsService {
         return duplicatedExams;
     }
 
-    // Sınavı arşivle/arşivden çıkar
+    // Sınavı ar�Yivle/ar�Yivden çıkar
     async toggleArchive(examId: string) {
         const exam = await this.prisma.exam.findUnique({
             where: { id: examId },
@@ -407,7 +497,7 @@ export class ExamsService {
         });
     }
 
-    // Yayın görünürlüğünü değiştir
+    // Yayın görünürlü�Yünü de�Yi�Ytir
     async togglePublisherVisibility(examId: string) {
         const exam = await this.prisma.exam.findUnique({
             where: { id: examId },
@@ -424,7 +514,7 @@ export class ExamsService {
         });
     }
 
-    // Cevap anahtarını paylaş/gizle
+    // Cevap anahtarını payla�Y/gizle
     async toggleAnswerKeyPublic(examId: string) {
         const exam = await this.prisma.exam.findUnique({
             where: { id: examId },
@@ -441,7 +531,7 @@ export class ExamsService {
         });
     }
 
-    // Otomatik bildirim oluştur
+    // Otomatik bildirim olu�Ytur
     private async createExamNotifications(examId: string, scheduledDateTime: Date) {
         const exam = await this.prisma.exam.findUnique({ where: { id: examId } });
         if (!exam) {
@@ -456,7 +546,7 @@ export class ExamsService {
         const reminderDate = new Date(scheduledDateTime);
         reminderDate.setDate(reminderDate.getDate() - notifyDaysBefore);
 
-        // Sadece gelecek tarih için oluştur
+        // Sadece gelecek tarih için olu�Ytur
         if (reminderDate > new Date()) {
             await this.prisma.examNotification.create({
                 data: {
@@ -474,7 +564,7 @@ export class ExamsService {
             where: { schoolId },
         });
 
-        // Yoksa varsayılan oluştur
+        // Yoksa varsayılan olu�Ytur
         if (!settings) {
             settings = await this.prisma.examCalendarSettings.create({
                 data: { schoolId },
@@ -493,7 +583,7 @@ export class ExamsService {
         });
     }
 
-    // Pending bildirimleri işle (Cron job için)
+    // Pending bildirimleri i�Yle (Cron job için)
     async processPendingNotifications() {
         const now = new Date();
 
@@ -522,13 +612,13 @@ export class ExamsService {
     private async sendExamNotification(notification: any) {
         const exam = notification.exam;
 
-        // İlgili sınıf seviyesindeki öğrencileri bul
+        // İlgili sınıf seviyesindeki ö�Yrencileri bul
         const students = await this.prisma.student.findMany({
             where: {
                 schoolId: exam.schoolId,
                 class: {
                     grade: {
-                        name: `${exam.gradeLevel}`, // Grade name'e göre eşleştir
+                        name: `${exam.gradeLevel}`, // Grade name'e göre e�Yle�Ytir
                     },
                 },
             },
@@ -541,11 +631,11 @@ export class ExamsService {
         let messageSubject = '';
 
         if (notification.notificationType === 'REMINDER') {
-            messageSubject = `📚 Yaklaşan Deneme: ${exam.title}`;
+            messageSubject = `gY"s Yakla�Yan Deneme: ${exam.title}`;
             messageBody = `Merhaba,\n\n${exam.title} sınavınız ${exam.scheduledDateTime?.toLocaleDateString('tr-TR')} tarihinde yapılacaktır.\n\nHazırlıklarınızı tamamlamayı unutmayın!`;
         } else if (notification.notificationType === 'RESULTS_READY') {
-            messageSubject = `✅ Sonuçlar Açıklandı: ${exam.title}`;
-            messageBody = `Merhaba,\n\n${exam.title} sınavınızın sonuçları açıklanmıştır.\n\nDeneme Takvimi sayfasından sonuçlarınızı görüntüleyebilirsiniz.`;
+            messageSubject = `�o. Sonuçlar Açıklandı: ${exam.title}`;
+            messageBody = `Merhaba,\n\n${exam.title} sınavınızın sonuçları açıklanmı�Ytır.\n\nDeneme Takvimi sayfasından sonuçlarınızı görüntüleyebilirsiniz.`;
         }
 
         // Admin kullanıcıyı bul (mesaj gönderen)
@@ -558,7 +648,7 @@ export class ExamsService {
 
         if (!adminUser) return;
 
-        // Mesaj oluştur
+        // Mesaj olu�Ytur
         const message = await this.prisma.message.create({
             data: {
                 senderId: adminUser.id,

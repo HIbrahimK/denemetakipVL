@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,6 @@ export default function UsersPage() {
             if (selectedRole && selectedRole !== "all") params.append("role", selectedRole);
 
             const res = await fetch(`http://localhost:3001/users?${params.toString()}`, {
-                headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await res.json();
             setUsers(Array.isArray(data) ? data : []);
@@ -86,7 +85,6 @@ export default function UsersPage() {
         try {
             await fetch(`http://localhost:3001/users/${deleteId}`, {
                 method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
             });
             fetchData();
         } catch (error) {

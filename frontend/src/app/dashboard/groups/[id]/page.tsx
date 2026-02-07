@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -109,7 +109,6 @@ export default function GroupDetailPage() {
         // Fetch group details
         const groupResponse = await fetch(`http://localhost:3001/groups/${groupId}`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -123,7 +122,6 @@ export default function GroupDetailPage() {
         // Fetch group stats
         const statsResponse = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -168,7 +166,6 @@ export default function GroupDetailPage() {
       
       // Fetch grades from schools API
       const gradesResponse = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
       
       if (gradesResponse.ok) {
@@ -196,7 +193,6 @@ export default function GroupDetailPage() {
     try {
       const token = localStorage.getItem('token');
       const classesResponse = await fetch(`http://localhost:3001/groups/grades/${gradeId}/classes`, {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (classesResponse.ok) {
@@ -222,7 +218,6 @@ export default function GroupDetailPage() {
       const studentsResponse = await fetch(
         `http://localhost:3001/groups/${groupId}/available-students?classId=${classId}`,
         {
-          headers: { 'Authorization': `Bearer ${token}` },
         }
       );
 
@@ -254,7 +249,6 @@ export default function GroupDetailPage() {
       const response = await fetch(`http://localhost:3001/groups/${groupId}/members/bulk`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ studentIds: selectedStudents }),
@@ -285,7 +279,6 @@ export default function GroupDetailPage() {
       
       // Refresh group data
       const groupResponse = await fetch(`http://localhost:3001/groups/${groupId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
       
       if (groupResponse.ok) {
@@ -295,7 +288,6 @@ export default function GroupDetailPage() {
 
       // Refresh stats
       const statsResponse = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (statsResponse.ok) {

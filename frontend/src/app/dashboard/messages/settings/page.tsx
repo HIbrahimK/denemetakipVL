@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
@@ -24,7 +24,6 @@ export default function MessageSettingsPage() {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:3001/messages/settings", {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -53,7 +52,6 @@ export default function MessageSettingsPage() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(settings),
       });

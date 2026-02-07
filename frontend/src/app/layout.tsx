@@ -1,9 +1,10 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import DynamicFavicon from "@/components/dynamic-favicon";
 import PWARegister from "@/components/pwa-register";
+import { FetchCredentialsProvider } from "@/components/fetch-credentials-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,6 +69,7 @@ export default function RootLayout({
       >
         <SchoolProvider>
           <DynamicFavicon />
+          <FetchCredentialsProvider />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

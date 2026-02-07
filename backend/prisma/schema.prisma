@@ -791,7 +791,7 @@ model TopicResource {
 
 model User {
   id                   String                @id @default(uuid())
-  email                String                @unique
+  email                String?               @unique
   password             String
   role                 Role                  @default(STUDENT)
   firstName            String

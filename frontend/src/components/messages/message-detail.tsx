@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -67,7 +67,6 @@ export default function MessageDetail({
         `http://localhost:3001/messages/${messageId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -116,7 +115,6 @@ export default function MessageDetail({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ body: replyText }),
         }
@@ -155,7 +153,6 @@ export default function MessageDetail({
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -192,7 +189,6 @@ export default function MessageDetail({
         `http://localhost:3001/messages/${messageId}/delivery-report`,
         {
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -102,7 +102,6 @@ export default function PlanDetailPage() {
       // Fetch plan details
       const planResponse = await fetch(`http://localhost:3001/study/plans/${planId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -116,7 +115,6 @@ export default function PlanDetailPage() {
       // Fetch tasks for this plan
       const tasksResponse = await fetch(`http://localhost:3001/study/tasks?planId=${planId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -162,7 +160,6 @@ export default function PlanDetailPage() {
       const response = await fetch(`http://localhost:3001/study/tasks/${taskId}/complete`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
@@ -76,7 +76,6 @@ export function CalendarView({
 
             const response = await fetch(`http://localhost:3001/exams/calendar/view?${params}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 

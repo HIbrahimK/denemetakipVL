@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +67,6 @@ export default function MyTasksPage() {
       
       const response = await fetch('http://localhost:3001/study/plans', {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -84,7 +83,6 @@ export default function MyTasksPage() {
           assignedPlans.map(async (plan: StudyPlan) => {
             const tasksResponse = await fetch(`http://localhost:3001/study/tasks?planId=${plan.id}`, {
               headers: {
-                'Authorization': `Bearer ${token}`,
               },
             });
             

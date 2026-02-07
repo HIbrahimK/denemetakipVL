@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -119,7 +119,6 @@ export default function EditStudyPlanPage() {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`http://localhost:3001/study/plans/${planId}`, {
-                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 const data = await res.json();
@@ -146,7 +145,6 @@ export default function EditStudyPlanPage() {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch('http://localhost:3001/subjects', {
-                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) setSubjects(await res.json());
         } catch (error) { console.error(error); }
@@ -156,7 +154,6 @@ export default function EditStudyPlanPage() {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch('http://localhost:3001/subjects/topics/all', {
-                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) setTopics(await res.json());
         } catch (error) { console.error(error); }
@@ -263,7 +260,6 @@ export default function EditStudyPlanPage() {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(planPayload),
             });

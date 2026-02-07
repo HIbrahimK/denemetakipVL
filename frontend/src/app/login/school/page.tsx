@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -40,7 +40,7 @@ export default function SchoolLoginPage() {
                 throw new Error(data.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
             }
 
-            setUserData(data.user, data.access_token);
+            setUserData(data.user);
             console.log('User data set, redirecting...');
 
             // Force redirect using window.location

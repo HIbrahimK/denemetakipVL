@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,7 +66,6 @@ export default function ExamsPage() {
         setLoading(true);
         fetch(`http://localhost:3001/exams?schoolId=${schoolId}`, {
             headers: {
-                'Authorization': `Bearer ${token}`
             }
         })
             .then(res => {
@@ -114,7 +113,6 @@ export default function ExamsPage() {
             const res = await fetch(endpoint, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
                 },
             });
             if (res.ok) {
@@ -326,7 +324,7 @@ export default function ExamsPage() {
                                 <Button
                                     variant="outline"
                                     className="w-full mt-3 gap-2"
-                                    onClick={() => window.open(`http://localhost:3001${exam.answerKeyUrl}`, '_blank')}
+                                    onClick={() => window.open(`http://localhost:3001/exams/${exam.id}/answer-key`, '_blank')}
                                 >
                                     <Download className="h-4 w-4" />
                                     Cevap Anahtarı
