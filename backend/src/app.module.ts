@@ -17,6 +17,7 @@ import { MessagesModule } from './messages/messages.module';
 import { StudyModule } from './study/study.module';
 import { GroupsModule } from './groups/groups.module';
 import { SubjectsModule } from './subjects/subjects.module';
+import { HealthController } from './health.controller';
 import { AchievementsModule } from './achievements/achievements.module';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -45,6 +46,7 @@ import { APP_GUARD } from '@nestjs/core';
     SubjectsModule,
     AchievementsModule,
   ],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,

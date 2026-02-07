@@ -6,8 +6,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 
 async function bootstrap() {
+  console.log('🚀 Starting NestJS application...');
+  
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: true,
+    logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
 
   app.set('trust proxy', 1);
@@ -46,6 +49,8 @@ async function bootstrap() {
     },
     credentials: true,
   });
+
+  console.log('⚙️ Configuring validation...');
 
   // Global validation pipe
   app.useGlobalPipes(
