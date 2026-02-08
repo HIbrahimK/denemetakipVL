@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsObject } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsObject, IsBoolean } from 'class-validator';
 
 export class CreateGroupGoalDto {
   @IsNotEmpty()
@@ -12,4 +12,12 @@ export class CreateGroupGoalDto {
   @IsOptional()
   @IsString()
   deadline?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isCompleted?: boolean;
 }

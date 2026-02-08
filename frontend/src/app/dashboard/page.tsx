@@ -163,7 +163,7 @@ export default function DashboardPage() {
                                 <option>Son 10 Sınav</option>
                             </select>
                         </div>
-                        <ResponsiveContainer width="100%" height="85%">
+                        <ResponsiveContainer width="100%" height={300} minHeight={220}>
                             <BarChart data={examPerformanceData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12 }} dy={10} />
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800">
                         <h3 className="font-bold text-slate-800 dark:text-white mb-2">Sınav Türleri</h3>
                         <div className="h-[200px] w-full relative">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height={180} minHeight={160}>
                                 <RePieChart>
                                     <Pie
                                         data={examTypeData}

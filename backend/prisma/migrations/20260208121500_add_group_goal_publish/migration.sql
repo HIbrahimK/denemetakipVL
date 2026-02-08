@@ -1,0 +1,1 @@
+ALTER TABLE "GroupGoal" ADD COLUMN "isPublished" BOOLEAN NOT NULL DEFAULT true;

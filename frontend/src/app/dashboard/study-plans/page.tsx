@@ -74,7 +74,7 @@ interface MentorGroup {
   id: string;
   name: string;
   _count?: {
-    students: number;
+    memberships: number;
   };
 }
 
@@ -1326,7 +1326,7 @@ export default function StudyPlansPage() {
                     />
                     <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer">
                       <div className="font-medium text-foreground">{group.name}</div>
-                      <div className="text-xs text-muted-foreground">{group._count?.students || 0} öğrenci</div>
+                      <div className="text-xs text-muted-foreground">{group._count?.memberships || 0} öğrenci</div>
                     </Label>
                   </div>
                 ))}

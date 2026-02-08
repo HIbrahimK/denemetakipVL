@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsArray, IsInt, Min, IsBoolean } from 'class-validator';
 
 export class CreateMentorGroupDto {
   @IsNotEmpty()
@@ -11,7 +11,21 @@ export class CreateMentorGroupDto {
 
   @IsOptional()
   @IsArray()
+  @IsInt({ each: true })
   gradeIds?: number[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  maxStudents?: number;
+
+  @IsOptional()
+  @IsString()
+  teacherId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 
   @IsOptional()
   @IsArray()

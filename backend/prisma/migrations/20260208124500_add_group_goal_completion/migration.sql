@@ -1,0 +1,1 @@
+ALTER TABLE "GroupGoal" ADD COLUMN "isCompleted" BOOLEAN NOT NULL DEFAULT false;

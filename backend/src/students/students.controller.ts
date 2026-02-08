@@ -36,7 +36,7 @@ export class StudentsController {
     @Get(':id')
     @ApiOperation({ summary: 'Tek öğrenci getir' })
     findOne(@Request() req, @Param('id') id: string) {
-        return this.studentsService.findOne(id, req.user.schoolId);
+        return this.studentsService.findOne(id, req.user.schoolId, req.user);
     }
 
     @Get()

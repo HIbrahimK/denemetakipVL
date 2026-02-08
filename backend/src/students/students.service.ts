@@ -72,7 +72,38 @@ export class StudentsService {
         });
     }
 
-    async findOne(id: string, schoolId: string) {
+    async findOne(id: string, schoolId: string, requestingUser?: any) {
+        if (requestingUser) {
+            const isStudent = requestingUser.role === 'STUDENT';
+            const isOwnData = requestingUser.student?.id === id;
+            const isTeacherOrAdmin = ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(requestingUser.role);
+            const isParent = requestingUser.role === 'PARENT';
+
+            if (isStudent && !isOwnData) {
+                throw new ForbiddenException('Öğrenciler sadece kendi bilgilerini görüntüleyebilir');
+            }
+
+            if (isParent) {
+                const parent = await this.prisma.parent.findUnique({
+                    where: { userId: requestingUser.id },
+                    include: {
+                        students: {
+                            select: { id: true }
+                        }
+                    }
+                });
+
+                const hasAccess = parent?.students.some(s => s.id === id);
+                if (!hasAccess) {
+                    throw new ForbiddenException('Bu öğrenciye erişim yetkiniz yok');
+                }
+            }
+
+            if (!isStudent && !isTeacherOrAdmin && !isParent) {
+                throw new ForbiddenException('Bu kaynağa erişim yetkiniz yok');
+            }
+        }
+
         const student = await this.prisma.student.findFirst({
             where: { id, schoolId },
             include: {
