@@ -69,7 +69,7 @@ export default function ClassesPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || '\';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   useEffect(() => {
     // Get user info and schoolId

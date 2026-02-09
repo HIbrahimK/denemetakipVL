@@ -16,6 +16,7 @@ import {
     CheckCircle,
     XCircle,
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

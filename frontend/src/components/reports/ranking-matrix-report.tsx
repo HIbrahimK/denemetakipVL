@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Label } from '@/components/ui/label';
 import { FileSpreadsheet, Loader2, Trophy, TrendingUp, Users, Calendar, ArrowUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface Class {
   id: string;

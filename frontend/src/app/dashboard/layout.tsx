@@ -27,6 +27,7 @@ import {
     UsersRound,
     Award
 } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

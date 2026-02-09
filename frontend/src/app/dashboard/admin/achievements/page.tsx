@@ -15,6 +15,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Checkbox } from '@/components/ui/checkbox';
 import { Trophy, Star, Target, Clock, BookOpen, Flame, Award, Crown, Medal, Plus, Edit, Trash2, Power, PowerOff, Users, Loader2, Check, Search, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface Achievement {
   id: string;

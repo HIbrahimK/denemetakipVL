@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import { API_BASE_URL } from '@/lib/auth';
 
 interface MessageInboxProps {
   userId: string;

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Trophy, Lock, Star, Target, Clock, BookOpen, Flame, Award, Loader2, Sparkles, ChevronDown } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface StudentAchievement {
   id: string;

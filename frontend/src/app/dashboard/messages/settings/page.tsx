@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Settings as SettingsIcon } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 
 export default function MessageSettingsPage() {
   const [settings, setSettings] = useState<any>(null);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Download, Upload } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 
 interface EditExamModalProps {
     exam: any;

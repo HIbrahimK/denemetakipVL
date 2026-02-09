@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_BASE_URL } from '@/lib/auth';
 
 export function ChangePasswordModal({ student, open, onOpenChange }: any) {
     const [loading, setLoading] = useState(false);

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Send, Inbox, Settings } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 
 export default function MessagesPage() {
   const [user, setUser] = useState<any>(null);

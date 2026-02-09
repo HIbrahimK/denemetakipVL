@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileSpreadsheet, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 
 export function ImportStudentsModal({ open, onOpenChange, onSuccess }: any) {
     const [loading, setLoading] = useState(false);

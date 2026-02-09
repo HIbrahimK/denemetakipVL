@@ -15,6 +15,7 @@ import {
     Users,
     Download
 } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 import { CreateExamModal } from "@/components/create-exam-modal";
 import { EditExamModal } from "@/components/edit-exam-modal";
 import Link from "next/link";

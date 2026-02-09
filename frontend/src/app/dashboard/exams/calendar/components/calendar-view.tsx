@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface CalendarViewProps {
     year: number;

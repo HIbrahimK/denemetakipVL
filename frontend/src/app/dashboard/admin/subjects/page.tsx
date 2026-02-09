@@ -19,6 +19,7 @@ import {
   Layers,
   Search
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 

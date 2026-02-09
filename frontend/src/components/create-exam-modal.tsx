@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from '@/lib/auth';
 
 interface CreateExamModalProps {
     onSuccess?: () => void;
