@@ -23,7 +23,7 @@ export default function MessageSettingsPage() {
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("`${API_BASE_URL}/messages/settings", {
+      const response = await fetch(`${API_BASE_URL}/messages/settings`, {
         headers: {
         },
       });
@@ -49,7 +49,7 @@ export default function MessageSettingsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("`${API_BASE_URL}/messages/settings", {
+      const response = await fetch(`${API_BASE_URL}/messages/settings`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

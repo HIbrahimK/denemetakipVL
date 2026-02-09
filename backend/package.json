@@ -25,7 +25,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed": "ts-node prisma/seed.ts",
-    "seed:all": "powershell -ExecutionPolicy Bypass -File seed-all.ps1"
+    "seed:all": "powershell -ExecutionPolicy Bypass -File seed-all.ps1",
+    "seed:all:linux": "bash seed-all.sh",
+    "seed:subjects": "npx ts-node prisma/seed-tyt-matematik.ts && npx ts-node prisma/seed-tyt-fizik.ts && npx ts-node prisma/seed-tyt-kimya.ts && npx ts-node prisma/seed-tyt-biyoloji.ts && npx ts-node prisma/seed-tyt-tarih.ts && npx ts-node prisma/seed-tyt-cografya.ts && npx ts-node prisma/seed-tyt-felsefe.ts && npx ts-node prisma/seed-tyt-din.ts && npx ts-node prisma/seed-tyt-turkce.ts && npx ts-node prisma/seed-tyt-geometri.ts && npx ts-node prisma/seed-ayt-matematik.ts && npx ts-node prisma/seed-ayt-fizik.ts && npx ts-node prisma/seed-ayt-kimya.ts && npx ts-node prisma/seed-ayt-biyoloji.ts && npx ts-node prisma/seed-ayt-edebiyat.ts && npx ts-node prisma/seed-ayt-tarih1.ts && npx ts-node prisma/seed-ayt-cografya1.ts && npx ts-node prisma/seed-ayt-felsefe.ts && npx ts-node prisma/seed-ayt-din.ts && npx ts-node prisma/seed-ayt-geometri.ts && npx ts-node prisma/seed-lgs-matematik.ts && npx ts-node prisma/seed-lgs-fen.ts && npx ts-node prisma/seed-lgs-turkce.ts && npx ts-node prisma/seed-lgs-inkilap.ts && npx ts-node prisma/seed-lgs-din.ts && npx ts-node prisma/seed-lgs-ingilizce.ts && npx ts-node prisma/seed-ydt-ingilizce.ts && npx ts-node prisma/seed-common-activities.ts && npx ts-node prisma/seed-special-subjects.ts && npx ts-node prisma/seed-lms.ts"
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",

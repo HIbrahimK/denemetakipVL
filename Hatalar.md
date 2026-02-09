@@ -8,3 +8,12 @@ HATALAR ve iyileştirmeler:
 7. istenilen pano öğresi en üste sabitlenebilsin. max 3 öğe. Sabitlenen öğreler sürekli en üstte gözüksün. Sabitlenenleri yönetici tarafından kaldırabilsin. 
 8. pano öğesi silinince silinen öğeye ait tüm yanıtlar ve eklenmiş dosyalar silinsin. hedef ve görev eklendiyse onlarda silinsin.
 9- http://localhost:3000/dashboard/groups sayfasındaki gurupların olduğu kutuucuklarıdıda küçültelim. Üzerinde bilgi olarak kayıtlı öğrenci saysı yazsa yeter. Pano Detay düğmeleri kalsın. mesaklara gerek yok. Detayla düğmesi panoya yönlendiriyor. Bunu ayarlar diye değiştrelim ve detay sayfasına gitsin. 
+
+seed çalıştırma
+cd /workspace/backend
+chmod +x seed-all.sh
+./seed-all.sh 
+2. Package.json scriptleri:
+
+npm run seed:all:linux - Linux için bash script
+npm run seed:subjects - Platform bağımsız (her yerde çalışır)

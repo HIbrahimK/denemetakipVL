@@ -1,9 +1,9 @@
 ﻿/**
  * API Base URL Configuration
  * Uses NEXT_PUBLIC_API_URL environment variable in production
- * Falls back to localhost:3001 for local development
+ * Falls back to production API for local development
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://2eh.net/api';
 
 /**
  * Set user data in localStorage for client-side access

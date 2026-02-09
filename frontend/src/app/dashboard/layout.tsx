@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             if (!auth) return;
 
             try {
-                const res = await fetch("`${API_BASE_URL}/auth/me");
+                const res = await fetch(`${API_BASE_URL}/auth/me`);
 
                 if (res.ok) {
                     const userData = await res.json();
@@ -95,7 +95,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const fetchUnreadCount = async () => {
         try {
             const response = await fetch(
-                "`${API_BASE_URL}/messages/unread-count"
+                `${API_BASE_URL}/messages/unread-count`
             );
 
             if (response.ok) {

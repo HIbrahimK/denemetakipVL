@@ -113,7 +113,7 @@ function StudentResultsContent() {
                 // Otherwise use /me/exams (for student's own view)
                 const endpoint = studentId 
                     ? `${API_BASE_URL}/students/${studentId}/exams`
-                    : "${API_BASE_URL}/students/me/exams";
+                    : `${API_BASE_URL}/students/me/exams`;
                     
                 const response = await fetch(endpoint, {
                     headers: {

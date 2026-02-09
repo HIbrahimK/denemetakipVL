@@ -44,7 +44,7 @@ export default function ProfilePage() {
             if (!token) return;
 
             try {
-                const res = await fetch("${API_BASE_URL}/auth/me", {
+                const res = await fetch(`${API_BASE_URL}/auth/me`, {
                     headers: {
                     },
                 });
@@ -96,7 +96,7 @@ export default function ProfilePage() {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch("${API_BASE_URL}/auth/change-password", {
+            const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -130,7 +130,7 @@ export default function ProfilePage() {
         const avatarSeed = `${selectedStyle}:${selectedSeed}`;
 
         try {
-            const res = await fetch("${API_BASE_URL}/auth/update-avatar", {
+            const res = await fetch(`${API_BASE_URL}/auth/update-avatar`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

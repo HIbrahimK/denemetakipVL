@@ -90,7 +90,7 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
   const fetchSentMessages = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("`${API_BASE_URL}/messages/sent", {
+      const response = await fetch(`${API_BASE_URL}/messages/sent`, {
         headers: {
         },
       });
