@@ -7,6 +7,7 @@ async function main() {
         create: {
             id: 'clxxxx',
             name: 'Varsayılan Okul',
+            code: 'DEFAULT',
         },
     });
     console.log('SCHOOL_CREATED:', school.id);

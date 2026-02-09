@@ -17,6 +17,7 @@ async function main() {
         school = await prisma.school.create({
             data: {
                 name: 'DenemeTakip.net',
+                code: 'DENEMETAKIP',
                 logoUrl: null,
             },
         });
