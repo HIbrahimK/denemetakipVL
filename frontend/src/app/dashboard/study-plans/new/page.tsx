@@ -429,7 +429,7 @@ function NewStudyPlanContent() {
 
       const url = isEditMode 
         ? `${API_BASE_URL}/study/plans/${editPlanId}`
-        : '\/study/plans';
+        : `${API_BASE_URL}/study/plans`;
       
       const method = isEditMode ? 'PATCH' : 'POST';
 

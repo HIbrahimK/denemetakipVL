@@ -186,7 +186,7 @@ export default function SettingsPage() {
                 const base64 = canvas.toDataURL('image/jpeg', 0.85);
 
                 const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
-                    method: "PUT",
+                    method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -239,7 +239,7 @@ export default function SettingsPage() {
 
         try {
             const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
-                method: "PUT",
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },

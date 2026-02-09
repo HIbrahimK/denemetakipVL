@@ -6,18 +6,25 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('TYT Din Kültürü ve Ahlak Bilgisi dersi ve konuları ekleniyor...');
 
-  // TYT Din Kültürü ve Ahlak Bilgisi Dersini oluştur
-  const dinSubject = await prisma.subject.create({
-    data: {
-      name: 'Din Kültürü ve Ahlak Bilgisi',
-      examType: ExamType.TYT,
-      gradeLevels: [9, 10, 11, 12],
-      order: 10,
-      isActive: true,
-    },
+  // TYT Din Kültürü ve Ahlak Bilgisi Dersini oluştur veya güncelle
+  let dinSubject = await prisma.subject.findFirst({
+    where: { name: 'Din Kültürü ve Ahlak Bilgisi', examType: ExamType.TYT },
   });
 
-  console.log(`Din Kültürü ve Ahlak Bilgisi dersi oluşturuldu: ${dinSubject.id}`);
+  if (!dinSubject) {
+    dinSubject = await prisma.subject.create({
+      data: {
+        name: 'Din Kültürü ve Ahlak Bilgisi',
+        examType: ExamType.TYT,
+        gradeLevels: [9, 10, 11, 12],
+        order: 10,
+        isActive: true,
+      },
+    });
+    console.log(`Din Kültürü ve Ahlak Bilgisi dersi oluşturuldu: ${dinSubject.id}`);
+  } else {
+    console.log(`Din Kültürü ve Ahlak Bilgisi dersi zaten mevcut: ${dinSubject.id}`);
+  }
 
   // Ana konular ve alt konular
   const konular = [
@@ -112,27 +119,40 @@ async function main() {
 
   // Konuları ekle
   for (const konu of konular) {
-    const parentTopic = await prisma.topic.create({
-      data: {
-        name: konu.name,
-        subjectId: dinSubject.id,
-        order: konu.order,
-      },
+    let parentTopic = await prisma.topic.findFirst({
+      where: { name: konu.name, subjectId: dinSubject.id, parentTopicId: null },
     });
 
-    console.log(`  Ana konu eklendi: ${konu.name}`);
+    if (!parentTopic) {
+      parentTopic = await prisma.topic.create({
+        data: {
+          name: konu.name,
+          subjectId: dinSubject.id,
+          order: konu.order,
+        },
+      });
+      console.log(`  Ana konu eklendi: ${konu.name}`);
+    } else {
+      console.log(`  Ana konu zaten mevcut: ${konu.name}`);
+    }
 
     // Alt konuları ekle
     for (const child of konu.children) {
-      await prisma.topic.create({
-        data: {
-          name: child.name,
-          subjectId: dinSubject.id,
-          parentTopicId: parentTopic.id,
-          order: child.order,
-        },
+      const existingChild = await prisma.topic.findFirst({
+        where: { name: child.name, subjectId: dinSubject.id, parentTopicId: parentTopic.id },
       });
-      console.log(`    Alt konu eklendi: ${child.name}`);
+
+      if (!existingChild) {
+        await prisma.topic.create({
+          data: {
+            name: child.name,
+            subjectId: dinSubject.id,
+            parentTopicId: parentTopic.id,
+            order: child.order,
+          },
+        });
+        console.log(`    Alt konu eklendi: ${child.name}`);
+      }
     }
   }
 

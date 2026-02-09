@@ -6,18 +6,25 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('LGS Türkçe dersi ve konuları ekleniyor...');
 
-  // LGS Türkçe Dersini oluştur
-  const turkceSubject = await prisma.subject.create({
-    data: {
-      name: 'Türkçe',
-      examType: ExamType.LGS,
-      gradeLevels: [8],
-      order: 1,
-      isActive: true,
-    },
+  // LGS Türkçe Dersini kontrol et veya oluştur
+  let turkceSubject = await prisma.subject.findFirst({
+    where: { name: 'Türkçe', examType: ExamType.LGS },
   });
 
-  console.log(`LGS Türkçe dersi oluşturuldu: ${turkceSubject.id}`);
+  if (!turkceSubject) {
+    turkceSubject = await prisma.subject.create({
+      data: {
+        name: 'Türkçe',
+        examType: ExamType.LGS,
+        gradeLevels: [8],
+        order: 1,
+        isActive: true,
+      },
+    });
+    console.log(`LGS Türkçe dersi oluşturuldu: ${turkceSubject.id}`);
+  } else {
+    console.log(`LGS Türkçe dersi zaten mevcut: ${turkceSubject.id}`);
+  }
 
   // Ana konular ve alt konular
   const konular = [
@@ -170,28 +177,41 @@ async function main() {
 
   // Konuları oluştur
   for (const konu of konular) {
-    const mainTopic = await prisma.topic.create({
-      data: {
-        name: konu.name,
-        subjectId: turkceSubject.id,
-        order: konu.order,
-      },
+    let mainTopic = await prisma.topic.findFirst({
+      where: { name: konu.name, subjectId: turkceSubject.id, parentTopicId: null },
     });
 
-    console.log(`  Ana konu oluşturuldu: ${konu.name}`);
+    if (!mainTopic) {
+      mainTopic = await prisma.topic.create({
+        data: {
+          name: konu.name,
+          subjectId: turkceSubject.id,
+          order: konu.order,
+        },
+      });
+      console.log(`  Ana konu oluşturuldu: ${konu.name}`);
+    } else {
+      console.log(`  Ana konu zaten mevcut: ${konu.name}`);
+    }
 
     // Alt konuları oluştur
     if (konu.children && konu.children.length > 0) {
       for (const child of konu.children) {
-        await prisma.topic.create({
-          data: {
-            name: child.name,
-            subjectId: turkceSubject.id,
-            parentTopicId: mainTopic.id,
-            order: child.order,
-          },
+        const existingChild = await prisma.topic.findFirst({
+          where: { name: child.name, subjectId: turkceSubject.id, parentTopicId: mainTopic.id },
         });
-        console.log(`    Alt konu: ${child.name}`);
+
+        if (!existingChild) {
+          await prisma.topic.create({
+            data: {
+              name: child.name,
+              subjectId: turkceSubject.id,
+              parentTopicId: mainTopic.id,
+              order: child.order,
+            },
+          });
+          console.log(`    Alt konu: ${child.name}`);
+        }
       }
     }
   }
