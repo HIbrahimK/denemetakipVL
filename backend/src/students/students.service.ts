@@ -72,7 +72,38 @@ export class StudentsService {
         });
     }
 
-    async findOne(id: string, schoolId: string) {
+    async findOne(id: string, schoolId: string, requestingUser?: any) {
+        if (requestingUser) {
+            const isStudent = requestingUser.role === 'STUDENT';
+            const isOwnData = requestingUser.student?.id === id;
+            const isTeacherOrAdmin = ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(requestingUser.role);
+            const isParent = requestingUser.role === 'PARENT';
+
+            if (isStudent && !isOwnData) {
+                throw new ForbiddenException('Öğrenciler sadece kendi bilgilerini görüntüleyebilir');
+            }
+
+            if (isParent) {
+                const parent = await this.prisma.parent.findUnique({
+                    where: { userId: requestingUser.id },
+                    include: {
+                        students: {
+                            select: { id: true }
+                        }
+                    }
+                });
+
+                const hasAccess = parent?.students.some(s => s.id === id);
+                if (!hasAccess) {
+                    throw new ForbiddenException('Bu öğrenciye erişim yetkiniz yok');
+                }
+            }
+
+            if (!isStudent && !isTeacherOrAdmin && !isParent) {
+                throw new ForbiddenException('Bu kaynağa erişim yetkiniz yok');
+            }
+        }
+
         const student = await this.prisma.student.findFirst({
             where: { id, schoolId },
             include: {
@@ -134,12 +165,10 @@ export class StudentsService {
         }
 
         const hashedPassword = await bcrypt.hash(dto.password || '123456', 10);
-        // Generate placeholder email if not provided
-        const email = `${dto.studentNumber || Math.random().toString(36).substring(7)}@${schoolId}.denemetakip.com`;
 
         return this.prisma.user.create({
             data: {
-                email,
+                email: null,
                 password: hashedPassword,
                 firstName: dto.firstName,
                 lastName: dto.lastName,
@@ -550,7 +579,7 @@ export class StudentsService {
                 examDate: attempt.exam.date,
                 examType: attempt.exam.type,
                 publisher: attempt.exam.publisher,
-                answerKeyUrl: attempt.exam.answerKeyUrl,
+                answerKeyUrl: this.getPublicAnswerKeyUrl(attempt.exam, requestingUser),
                 totalNet,
                 lessonResults,
                 scores,
@@ -593,6 +622,24 @@ export class StudentsService {
             examHistory,
             missedExams,
         };
+    }
+
+    private getPublicAnswerKeyUrl(exam: any, requestingUser?: any) {
+        if (!exam?.answerKeyUrl) return null;
+
+        const role = requestingUser?.role;
+        const isStaff = ['SCHOOL_ADMIN', 'SUPER_ADMIN', 'TEACHER'].includes(role);
+        const isStudentOrParent = ['STUDENT', 'PARENT'].includes(role);
+
+        if (isStaff) {
+            return `/exams/${exam.id}/answer-key`;
+        }
+
+        if (isStudentOrParent && exam.isAnswerKeyPublic) {
+            return `/exams/${exam.id}/answer-key`;
+        }
+
+        return null;
     }
 }
 

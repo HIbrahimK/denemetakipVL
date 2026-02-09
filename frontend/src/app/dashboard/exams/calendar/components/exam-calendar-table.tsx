@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
@@ -129,7 +129,6 @@ export function ExamCalendarTable({
 
             const response = await fetch(`http://localhost:3001/exams/calendar/view?${params}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 
@@ -162,7 +161,6 @@ export function ExamCalendarTable({
             const response = await fetch(`http://localhost:3001/exams/${deleteExamId}`, {
                 method: 'DELETE',
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 
@@ -189,7 +187,6 @@ export function ExamCalendarTable({
             const response = await fetch(`http://localhost:3001/exams/${examId}/toggle-archive`, {
                 method: 'PATCH',
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
 
@@ -216,7 +213,6 @@ export function ExamCalendarTable({
                 {
                     method: 'PATCH',
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 }
             );
@@ -414,7 +410,7 @@ export function ExamCalendarTable({
                                                     size="sm"
                                                     onClick={() =>
                                                         window.open(
-                                                            `http://localhost:3001${exam.answerKeyUrl}`,
+                                                            `http://localhost:3001/exams/${exam.id}/answer-key`,
                                                             '_blank'
                                                         )
                                                     }

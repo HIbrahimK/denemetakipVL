@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -149,7 +149,6 @@ export default function StudyPlanDetailPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:3001/study/plans/${planId}`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
@@ -159,7 +158,6 @@ export default function StudyPlanDetailPage() {
         // If template, fetch assignment summary
         if (data.isTemplate) {
           const summaryRes = await fetch(`http://localhost:3001/study/plans/${planId}/assignment-summary`, {
-            headers: { Authorization: `Bearer ${token}` },
           });
           if (summaryRes.ok) {
             setAssignmentSummary(await summaryRes.json());
@@ -253,7 +251,6 @@ export default function StudyPlanDetailPage() {
     try {
       const response = await fetch(`http://localhost:3001/study/plans/assignments/${assignmentId}/cancel`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         toast({ title: 'Başarılı', description: 'Atama iptal edildi' });

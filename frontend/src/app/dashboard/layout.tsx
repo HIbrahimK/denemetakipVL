@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -43,15 +43,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     useEffect(() => {
         const fetchUserProfile = async () => {
-            const token = localStorage.getItem("token");
-            if (!token) return;
+            const auth = localStorage.getItem("auth");
+            if (!auth) return;
 
             try {
-                const res = await fetch("http://localhost:3001/auth/me", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const res = await fetch("http://localhost:3001/auth/me");
 
                 if (res.ok) {
                     const userData = await res.json();
@@ -72,9 +68,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             fetchUnreadCount();
             
             // Set up SSE for real-time notifications
-            const token = localStorage.getItem("token");
             const eventSource = new EventSource(
-                `http://localhost:3001/messages/stream?token=${token}`
+                `http://localhost:3001/messages/stream`,
+                { withCredentials: true }
             );
 
             eventSource.onmessage = (event) => {
@@ -97,14 +93,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const fetchUnreadCount = async () => {
         try {
-            const token = localStorage.getItem("token");
             const response = await fetch(
-                "http://localhost:3001/messages/unread-count",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                "http://localhost:3001/messages/unread-count"
             );
 
             if (response.ok) {

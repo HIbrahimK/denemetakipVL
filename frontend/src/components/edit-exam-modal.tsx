@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -181,7 +181,7 @@ export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamM
                                         variant="outline"
                                         size="sm"
                                         className="gap-2"
-                                        onClick={() => window.open(`http://localhost:3001${exam.answerKeyUrl}`, '_blank')}
+                                        onClick={() => window.open(`http://localhost:3001/exams/${exam.id}/answer-key`, '_blank')}
                                     >
                                         <Download className="h-4 w-4" />
                                         Mevcut Cevap Anahtarını İndir

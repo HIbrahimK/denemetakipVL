@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +45,6 @@ export default function ProfilePage() {
             try {
                 const res = await fetch("http://localhost:3001/auth/me", {
                     headers: {
-                        Authorization: `Bearer ${token}`,
                     },
                 });
 
@@ -100,7 +99,6 @@ export default function ProfilePage() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     currentPassword,
@@ -135,7 +133,6 @@ export default function ProfilePage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ avatarSeed }),
             });
@@ -168,7 +165,6 @@ export default function ProfilePage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ branch }),
             });
@@ -223,6 +219,8 @@ export default function ProfilePage() {
         return roleLabels[user.role] || user.role;
     };
 
+    const shouldShowEmail = Boolean(user?.email) && user?.role !== "STUDENT" && user?.role !== "PARENT";
+
     if (!user) {
         return (
             <div className="flex items-center justify-center h-full">
@@ -265,12 +263,14 @@ export default function ProfilePage() {
                                 {user.lastName}
                             </p>
                         </div>
-                        <div>
-                            <Label className="text-slate-700 dark:text-slate-300">E-posta</Label>
-                            <p className="text-lg font-semibold text-slate-900 dark:text-white">
-                                {user.email}
-                            </p>
-                        </div>
+                        {shouldShowEmail && (
+                            <div>
+                                <Label className="text-slate-700 dark:text-slate-300">E-posta</Label>
+                                <p className="text-lg font-semibold text-slate-900 dark:text-white">
+                                    {user.email}
+                                </p>
+                            </div>
+                        )}
                         <div>
                             <Label className="text-slate-700 dark:text-slate-300">Rol</Label>
                             <p className="text-lg font-semibold text-slate-900 dark:text-white">

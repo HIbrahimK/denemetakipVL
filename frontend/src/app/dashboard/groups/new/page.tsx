@@ -1,33 +1,64 @@
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Loader2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
 export default function NewGroupPage() {
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [teachers, setTeachers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    gradeIds: [] as string[],
+    maxStudents: '',
+    teacherId: '',
   });
   const router = useRouter();
   const { toast } = useToast();
+
+  const isAdmin = user?.role === 'SCHOOL_ADMIN' || user?.role === 'SUPER_ADMIN';
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const userData = JSON.parse(userStr);
+      setUser(userData);
+      if (userData.role === 'SCHOOL_ADMIN' || userData.role === 'SUPER_ADMIN') {
+        fetchTeachers();
+      }
+    }
+  }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/users?role=TEACHER', {
+        headers: {
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTeachers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      
       // Prepare data - only send non-empty fields
       const requestData: any = {
         name: formData.name,
@@ -36,16 +67,22 @@ export default function NewGroupPage() {
       if (formData.description) {
         requestData.description = formData.description;
       }
-      
-      if (formData.gradeIds && formData.gradeIds.length > 0) {
-        requestData.gradeIds = formData.gradeIds;
+
+      if (formData.maxStudents) {
+        const maxValue = Number(formData.maxStudents);
+        if (Number.isFinite(maxValue) && maxValue > 0) {
+          requestData.maxStudents = maxValue;
+        }
+      }
+
+      if (isAdmin && formData.teacherId) {
+        requestData.teacherId = formData.teacherId;
       }
       
       const response = await fetch('http://localhost:3001/groups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       });
@@ -118,6 +155,36 @@ export default function NewGroupPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
+              />
+            </div>
+
+            {isAdmin && (
+              <div className="space-y-2">
+                <Label>Öğretmen (Opsiyonel)</Label>
+                <Select value={formData.teacherId} onValueChange={(value) => setFormData({ ...formData, teacherId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Öğretmen seçiniz..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        {teacher.firstName} {teacher.lastName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="maxStudents">Maksimum Öğrenci</Label>
+              <Input
+                id="maxStudents"
+                type="number"
+                min={1}
+                placeholder="Örn: 25"
+                value={formData.maxStudents}
+                onChange={(e) => setFormData({ ...formData, maxStudents: e.target.value })}
               />
             </div>
 

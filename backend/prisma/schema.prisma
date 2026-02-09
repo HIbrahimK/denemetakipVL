@@ -70,6 +70,7 @@ model Class {
   school   School    @relation(fields: [schoolId], references: [id])
   messages Message[]
   students Student[]
+  mentorGroups MentorGroup[]
 
   @@unique([schoolId, gradeId, name])
 }
@@ -197,6 +198,7 @@ model Grade {
   classes  Class[]
   school   School    @relation(fields: [schoolId], references: [id])
   messages Message[]
+  mentorGroups MentorGroup[]
 
   @@unique([schoolId, name])
 }
@@ -208,14 +210,80 @@ model GroupGoal {
   targetData  Json
   deadline    DateTime?
   isActive    Boolean     @default(true)
+  isPublished Boolean     @default(true)
+  isCompleted Boolean     @default(false)
   createdAt   DateTime    @default(now())
   updatedAt          DateTime             @updatedAt
   schoolId    String
   group       MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   school      School      @relation(fields: [schoolId], references: [id])
+  posts       GroupPost[]
 
   @@index([groupId, isActive])
   @@index([schoolId])
+}
+
+model GroupPost {
+  id        String         @id @default(uuid())
+  groupId   String
+  schoolId  String
+  authorId  String
+  type      GroupPostType
+  title     String?
+  body      String?
+  filePath  String?
+  fileName  String?
+  fileSize  Int?
+  mimeType  String?
+  goalId    String?
+  planId    String?
+  data      Json?
+  isPinned  Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  group  MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  school School      @relation(fields: [schoolId], references: [id])
+  author User        @relation(fields: [authorId], references: [id])
+  goal   GroupGoal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  plan   StudyPlan?  @relation(fields: [planId], references: [id], onDelete: SetNull)
+  replies    GroupPostReply[]
+  responses  GroupPostResponse[]
+
+  @@index([groupId, createdAt])
+  @@index([schoolId, createdAt])
+}
+
+model GroupPostReply {
+  id        String   @id @default(uuid())
+  postId    String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post   GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+}
+
+model GroupPostResponse {
+  id             String   @id @default(uuid())
+  postId         String
+  studentId      String
+  selectedOption String
+  isCorrect      Boolean?
+  pointsAwarded  Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  post    GroupPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  student Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, studentId])
+  @@index([postId, createdAt])
+  @@index([studentId])
 }
 
 model GroupMembership {
@@ -261,7 +329,7 @@ model Lesson {
 
 model MentorGroup {
   id              String            @id @default(uuid())
-  teacherId       String
+  teacherId       String?
   schoolId        String
   name            String
   description     String?
@@ -269,17 +337,24 @@ model MentorGroup {
   maxStudents     Int               @default(25)
   isActive        Boolean           @default(true)
   coverImage      String?
+  groupType       GroupType         @default(MENTOR)
+  gradeId         String?
+  classId         String?
   createdAt       DateTime          @default(now())
   updatedAt          DateTime             @updatedAt
   goals           GroupGoal[]
+  posts           GroupPost[]
   memberships     GroupMembership[]
   groupPlans      GroupStudyPlan[]
   school          School            @relation(fields: [schoolId], references: [id])
-  teacher         User              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher         User?             @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  grade           Grade?            @relation(fields: [gradeId], references: [id])
+  class           Class?            @relation(fields: [classId], references: [id])
   messages        Message[]
 
   @@index([isActive])
   @@index([teacherId, schoolId])
+  @@index([schoolId, groupType])
 }
 
 model Message {
@@ -488,6 +563,7 @@ model School {
   users                     User[]
   achievements              Achievement[]
   studentAchievements       StudentAchievement[]
+  groupPosts                GroupPost[]
 }
 
 model Student {
@@ -498,6 +574,7 @@ model Student {
   schoolId             String
   parentId             String?
   tcNo                 String?                     @unique
+  rewardPoints         Int                         @default(0)
   examAttempts         ExamAttempt[]
   groupMemberships     GroupMembership[]
   class                Class                       @relation(fields: [classId], references: [id])
@@ -509,6 +586,7 @@ model Student {
   sessions             StudySession[]
   tasks                StudyTask[]
   achievements         StudentAchievement[]
+  groupPostResponses   GroupPostResponse[]
 }
 
 model StudentPerformanceSummary {
@@ -571,6 +649,7 @@ model StudyPlan {
   teacher              User                        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   assignments          StudyPlanAssignment[]
   tasks                StudyTask[]
+  groupPosts           GroupPost[]
 
   @@index([examType, gradeLevels])
   @@index([isShared])
@@ -791,7 +870,7 @@ model TopicResource {
 
 model User {
   id                   String                @id @default(uuid())
-  email                String                @unique
+  email                String?               @unique
   password             String
   role                 Role                  @default(STUDENT)
   firstName            String
@@ -815,6 +894,8 @@ model User {
   approvedTasks        StudyTask[]
   templateRatings      TemplateRating[]
   school               School                @relation(fields: [schoolId], references: [id])
+  groupPosts           GroupPost[]
+  groupPostReplies     GroupPostReply[]
 }
 
 enum AchievementCategory {
@@ -842,6 +923,22 @@ enum ExamType {
 enum GroupMemberRole {
   MEMBER
   CO_LEADER
+}
+
+enum GroupPostType {
+  ANNOUNCEMENT
+  FILE
+  GOAL
+  PLAN
+  POLL
+  VIDEO
+  QUESTION
+}
+
+enum GroupType {
+  MENTOR
+  CLASS
+  GRADE
 }
 
 enum MessageCategory {

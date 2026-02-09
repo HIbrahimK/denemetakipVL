@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,7 +74,7 @@ interface MentorGroup {
   id: string;
   name: string;
   _count?: {
-    students: number;
+    memberships: number;
   };
 }
 
@@ -221,14 +221,12 @@ export default function StudyPlansPage() {
 
       const templatesResponse = await fetch(`http://localhost:3001/study/plans/templates?${templateParams}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
       // Fetch assigned plans
       const plansResponse = await fetch('http://localhost:3001/study/plans?isTemplate=false', {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -267,7 +265,6 @@ export default function StudyPlansPage() {
     for (const plan of allPlans) {
       try {
         const response = await fetch(`http://localhost:3001/study/plans/${plan.id}/assignment-summary`, {
-          headers: { Authorization: `Bearer ${token}` },
         });
         
         if (response.ok) {
@@ -342,7 +339,6 @@ export default function StudyPlansPage() {
     try {
       // Fetch students
       const studentsRes = await fetch('http://localhost:3001/students', {
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (studentsRes.ok) {
         const data = await studentsRes.json();
@@ -351,7 +347,6 @@ export default function StudyPlansPage() {
 
       // Fetch groups
       const groupsRes = await fetch('http://localhost:3001/groups', {
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (groupsRes.ok) {
         const data = await groupsRes.json();
@@ -365,7 +360,6 @@ export default function StudyPlansPage() {
         const schoolId = userData.schoolId;
 
         const gradesRes = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
-          headers: { Authorization: `Bearer ${token}` },
         });
         if (gradesRes.ok) {
           const data = await gradesRes.json();
@@ -375,7 +369,6 @@ export default function StudyPlansPage() {
         }
 
         const classesRes = await fetch(`http://localhost:3001/schools/${schoolId}/classes`, {
-          headers: { Authorization: `Bearer ${token}` },
         });
         if (classesRes.ok) {
           const data = await classesRes.json();
@@ -468,7 +461,6 @@ export default function StudyPlansPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           targets,
@@ -559,14 +551,12 @@ export default function StudyPlansPage() {
         response = await fetch(`http://localhost:3001/study/plans/${selectedPlanForDelete.id}/archive`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
           },
         });
       } else {
         response = await fetch(`http://localhost:3001/study/plans/${selectedPlanForDelete.id}?mode=${deleteMode}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}`,
           },
         });
       }
@@ -1336,7 +1326,7 @@ export default function StudyPlansPage() {
                     />
                     <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer">
                       <div className="font-medium text-foreground">{group.name}</div>
-                      <div className="text-xs text-muted-foreground">{group._count?.students || 0} öğrenci</div>
+                      <div className="text-xs text-muted-foreground">{group._count?.memberships || 0} öğrenci</div>
                     </Label>
                   </div>
                 ))}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ interface StudentDetail {
     user: {
         firstName: string;
         lastName: string;
-        email: string;
+        email?: string | null;
         avatarSeed?: string;
     };
     class: {
@@ -41,7 +41,6 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
         try {
             const response = await fetch(`http://localhost:3001/students/${resolvedParams.id}`, {
                 headers: {
-                    "Authorization": `Bearer ${token}`,
                 }
             });
 
@@ -132,12 +131,6 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
                                     </div>
                                 )}
 
-                                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
-                                    <div className="text-sm text-slate-500 dark:text-slate-400">E-posta</div>
-                                    <div className="text-lg font-semibold mt-1 truncate">
-                                        {student.user.email}
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

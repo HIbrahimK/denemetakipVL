@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -57,7 +57,6 @@ export default function PendingApprovalPage() {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/study/tasks/pending-approval', {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -81,7 +80,6 @@ export default function PendingApprovalPage() {
       const response = await fetch(`http://localhost:3001/study/tasks/${selectedTask.id}/approve`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ comment: approveComment || undefined }),
@@ -115,7 +113,6 @@ export default function PendingApprovalPage() {
       const response = await fetch(`http://localhost:3001/study/tasks/${selectedTask.id}/reject`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ comment: rejectComment }),

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -66,7 +66,6 @@ function SearchPageContent() {
         try {
             const response = await fetch(`http://localhost:3001/students/${studentId}`, {
                 headers: {
-                    "Authorization": `Bearer ${token}`,
                 }
             });
 
@@ -100,7 +99,6 @@ function SearchPageContent() {
                 `http://localhost:3001/students?schoolId=${schoolId}&className=${encodeURIComponent(classNameParam)}`,
                 {
                     headers: {
-                        "Authorization": `Bearer ${token}`,
                     }
                 }
             );
@@ -135,7 +133,6 @@ function SearchPageContent() {
                 `http://localhost:3001/search?q=${encodeURIComponent(searchQuery)}&schoolId=${schoolId}`,
                 {
                     headers: {
-                        "Authorization": `Bearer ${token}`,
                     }
                 }
             );

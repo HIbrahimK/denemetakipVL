@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
@@ -64,7 +64,6 @@ export function ExamCalendarSettings() {
                 `http://localhost:3001/exams/calendar/settings?schoolId=${schoolId}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                 }
             );
@@ -90,7 +89,6 @@ export function ExamCalendarSettings() {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${localStorage.getItem('token')}`,
                     },
                     body: JSON.stringify(settings),
                 }

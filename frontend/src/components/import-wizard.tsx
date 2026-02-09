@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,12 +26,7 @@ function ImportWizardContent() {
 
     useEffect(() => {
         if (examId) {
-            const token = localStorage.getItem('token');
-            fetch(`http://localhost:3001/exams/${examId}`, {
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                }
-            })
+            fetch(`http://localhost:3001/exams/${examId}`)
                 .then(res => res.json())
                 .then(data => setExam(data))
                 .catch(err => console.error("Failed to fetch exam", err));
@@ -60,14 +55,15 @@ function ImportWizardContent() {
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
         const schoolId = user?.schoolId || "";
-        const token = localStorage.getItem('token');
-
+        if (!schoolId) {
+            setError('Okul bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+            setUploading(false);
+            setIsValidating(false);
+            return;
+        }
         try {
             const response = await fetch(`http://localhost:3001/import/validate?schoolId=${schoolId}`, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                },
                 body: formData,
             });
 
@@ -85,7 +81,6 @@ function ImportWizardContent() {
                 try {
                     const classesRes = await fetch(`${API_URL}/schools/${schoolId}/classes`, {
                         headers: {
-                            "Authorization": `Bearer ${token}`,
                         },
                     });
                     if (classesRes.ok) {
@@ -126,27 +121,36 @@ function ImportWizardContent() {
         const userStr = localStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
         const schoolId = user?.schoolId || "";
-        const token = localStorage.getItem('token');
-
+        if (!schoolId) {
+            setError('Okul bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+            setUploading(false);
+            return;
+        }
         try {
             const response = await fetch(`http://localhost:3001/import/confirm?schoolId=${schoolId}`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     data: importData,
                     examId,
-                    examType: exam?.type
+                    examType: exam?.type || "TYT"
                 }),
             });
 
             if (response.ok) {
                 setStep(3);
+            } else {
+                const errorData = await response.json().catch(() => ({ message: 'Bilinmeyen hata' }));
+                const errorMessage = errorData.message || errorData.error || `Kaydetme başarısız (HTTP ${response.status})`;
+                console.error("Confirm failed:", errorMessage);
+                setError(errorMessage);
             }
         } catch (error) {
             console.error("Confirm error:", error);
+            const errorMessage = error instanceof Error ? error.message : 'Bağlantı hatası';
+            setError(`Kaydetme hatası: ${errorMessage}`);
         } finally {
             setUploading(false);
         }

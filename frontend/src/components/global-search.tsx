@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -61,7 +61,6 @@ export function GlobalSearch() {
                 `http://localhost:3001/search/autocomplete?q=${encodeURIComponent(searchQuery)}&schoolId=${schoolId}`,
                 {
                     headers: {
-                        "Authorization": `Bearer ${token}`,
                     }
                 }
             );

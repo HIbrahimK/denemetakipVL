@@ -13,44 +13,40 @@ async function bootstrap() {
     logger: ['log', 'error', 'warn', 'debug', 'verbose'],
   });
 
-  console.log('⚙️ Configuring middleware...');
+  app.set('trust proxy', 1);
 
-  // Increase payload size limit for uploads (10MB)
+  // Increase payload size limit for logo uploads (10MB)
   app.use(require('express').json({ limit: '10mb' }));
   app.use(require('express').urlencoded({ limit: '10mb', extended: true }));
 
-  // Serve static files
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  // Serve public files from uploads/public directory
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'public'), {
     prefix: '/uploads/',
   });
 
+  // Legacy public attachments (backward compatibility)
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'message-attachments'), {
+    prefix: '/uploads/message-attachments/',
+  });
+
   // Security headers
-  app.use(
-    helmet({
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-    }),
-  );
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  }));
 
-  console.log('⚙️ Configuring CORS...');
-
-  /**
-   * ✅ TypeScript-safe CORS origins
-   * (explicit string[] — no undefined)
-   */
-  const allowedOrigins: string[] = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://192.168.1.14:3000',
-  ];
-
-  if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
-  }
-
-  console.log(`🌐 CORS enabled for origins: ${allowedOrigins.join(', ')}`);
+  // Enable CORS for frontend
+  const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'), false);
+    },
     credentials: true,
   });
 
@@ -59,27 +55,16 @@ async function bootstrap() {
   // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      transform: true,
+      whitelist: true, // Strip properties that don't have decorators
+      transform: true, // Transform payloads to DTO instances
       transformOptions: {
-        enableImplicitConversion: true,
+        enableImplicitConversion: true, // Automatically convert types
       },
     }),
   );
 
-  const port = Number(process.env.PORT) || 8080;
-
-  console.log(`🔌 Binding to 0.0.0.0:${port}...`);
-
-  // ✅ DigitalOcean health check fix
-  await app.listen(port, '0.0.0.0');
-
-  console.log(`✅ Application successfully running on http://0.0.0.0:${port}`);
-  console.log(`📊 Health endpoints:`);
-  console.log(`   - Liveness: http://0.0.0.0:${port}/alive`);
-  console.log(`   - Health: http://0.0.0.0:${port}/health`);
-  console.log(`   - Ready: http://0.0.0.0:${port}/ready`);
-  console.log('✅ Application startup complete!');
+  const port = process.env.PORT ?? 8080;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
 }
-
 bootstrap();

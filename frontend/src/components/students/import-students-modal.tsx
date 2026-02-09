@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -25,7 +25,6 @@ export function ImportStudentsModal({ open, onOpenChange, onSuccess }: any) {
             const res = await fetch("http://localhost:3001/students/import", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token}`
                 },
                 body: formData,
             });

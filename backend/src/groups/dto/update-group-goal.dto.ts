@@ -16,4 +16,12 @@ export class UpdateGroupGoalDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isCompleted?: boolean;
 }

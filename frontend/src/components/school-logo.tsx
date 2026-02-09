@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useSchool } from "@/contexts/school-context";
 

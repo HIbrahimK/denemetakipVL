@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -57,7 +57,6 @@ export default function ExamResultsPage() {
             const token = localStorage.getItem('token');
             fetch(`http://localhost:3001/exams/${params.id}/statistics`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
                 }
             })
                 .then(res => {
@@ -319,7 +318,6 @@ export default function ExamResultsPage() {
             const token = localStorage.getItem('token');
             const response = await fetch(`http://localhost:3001/exams/${params.id}/export/excel`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                 },
             });
 
@@ -346,7 +344,6 @@ export default function ExamResultsPage() {
             const token = localStorage.getItem('token');
             const response = await fetch(`http://localhost:3001/exams/${params.id}/export/pdf`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                 },
             });
 

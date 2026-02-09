@@ -3,3 +3,8 @@ export * from './update-mentor-group.dto';
 export * from './add-group-member.dto';
 export * from './create-group-goal.dto';
 export * from './update-group-goal.dto';
+export * from './create-group-post.dto';
+export * from './create-group-post-reply.dto';
+export * from './create-group-post-response.dto';
+export * from './update-group-post.dto';
+export * from './update-group-post-reply.dto';

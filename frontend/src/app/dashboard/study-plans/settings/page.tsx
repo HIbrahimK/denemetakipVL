@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +53,6 @@ export default function StudyPlanSettingsPage() {
     try {
       const response = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -100,7 +99,6 @@ export default function StudyPlanSettingsPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           autoCleanupEnabled,

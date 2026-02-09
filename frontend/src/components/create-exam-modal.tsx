@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -46,7 +46,6 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify(data),
             });
@@ -62,7 +61,6 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
                     await fetch(`http://localhost:3001/exams/${exam.id}/upload-answer-key`, {
                         method: "POST",
                         headers: {
-                            "Authorization": `Bearer ${token}`,
                         },
                         body: fileFormData,
                     });

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -99,7 +99,6 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
         
         // Fetch classes
         const classesResponse = await fetch(`${API_URL}/schools/${schoolId}/classes`, {
-          headers: { Authorization: `Bearer ${token}` },
         });
         if (classesResponse.ok) {
           const classesData = await classesResponse.json();
@@ -108,7 +107,6 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
 
         // Fetch grades
         const gradesResponse = await fetch(`${API_URL}/schools/${schoolId}/grades`, {
-          headers: { Authorization: `Bearer ${token}` },
         });
         if (gradesResponse.ok) {
           const gradesData = await gradesResponse.json();
@@ -140,7 +138,6 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
       if (examType && examType !== 'ALL') url.searchParams.append('examType', examType);
 
       const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -227,7 +224,6 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
 
       
       const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       
       if (response.ok) {

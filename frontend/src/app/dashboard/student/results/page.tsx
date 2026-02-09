@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -116,7 +116,6 @@ function StudentResultsContent() {
                     
                 const response = await fetch(endpoint, {
                     headers: {
-                        "Authorization": `Bearer ${token}`,
                     },
                 });
                 const result = await response.json();
@@ -586,7 +585,7 @@ function StudentResultsContent() {
                                             className="w-full gap-2 mt-2"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                window.open(`http://localhost:3001${exam.answerKeyUrl}`, '_blank');
+                                                window.open(`http://localhost:3001/exams/${exam.examId}/answer-key`, '_blank');
                                             }}
                                         >
                                             <Download className="h-3 w-3" />

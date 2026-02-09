@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -94,7 +94,6 @@ export default function ParentApprovalsPage() {
 
       // Get parent's children tasks that need approval
       const res = await fetch(`http://localhost:3001/study/tasks/parent/${currentUser.parentId || currentUser.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
@@ -103,7 +102,6 @@ export default function ParentApprovalsPage() {
       } else {
         // Fallback: fetch all children tasks
         const childrenRes = await fetch(`http://localhost:3001/parents/children`, {
-          headers: { Authorization: `Bearer ${token}` },
         });
         
         if (childrenRes.ok) {
@@ -112,7 +110,6 @@ export default function ParentApprovalsPage() {
           
           for (const child of children) {
             const tasksRes = await fetch(`http://localhost:3001/study/tasks/student/${child.id}`, {
-              headers: { Authorization: `Bearer ${token}` },
             });
             if (tasksRes.ok) {
               const childTasks = await tasksRes.json();
@@ -148,7 +145,6 @@ export default function ParentApprovalsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           approved: approvalAction === 'approve',
@@ -203,7 +199,6 @@ export default function ParentApprovalsPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             approved: action === 'approve',

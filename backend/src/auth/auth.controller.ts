@@ -1,32 +1,41 @@
-import { Body, Controller, Get, Post, Put, UseGuards, Request, Param } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, UseGuards, Request, Param, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, StudentLoginDto, RegisterDto } from './dto/login.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { UpdateAvatarDto } from './dto/update-avatar.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('login-school')
-    async loginSchool(@Body() loginDto: LoginDto) {
-        return this.authService.loginSchool(loginDto);
+    async loginSchool(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+        const data = await this.authService.loginSchool(loginDto);
+        this.setAuthCookie(res, data.access_token);
+        return data;
     }
 
     @Post('login-student')
-    async loginStudent(@Body() loginDto: StudentLoginDto) {
-        return this.authService.loginStudent(loginDto);
+    async loginStudent(@Body() loginDto: StudentLoginDto, @Res({ passthrough: true }) res: Response) {
+        const data = await this.authService.loginStudent(loginDto);
+        this.setAuthCookie(res, data.access_token);
+        return data;
     }
 
     @Post('login-parent')
-    async loginParent(@Body() loginDto: StudentLoginDto) {
-        return this.authService.loginParent(loginDto);
+    async loginParent(@Body() loginDto: StudentLoginDto, @Res({ passthrough: true }) res: Response) {
+        const data = await this.authService.loginParent(loginDto);
+        this.setAuthCookie(res, data.access_token);
+        return data;
     }
 
     @Post('register')
-    async register(@Body() registerDto: RegisterDto) {
-        return this.authService.register(registerDto);
+    async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) res: Response) {
+        const data = await this.authService.register(registerDto);
+        this.setAuthCookie(res, data.access_token);
+        return data;
     }
 
     @Post('forgot-password')
@@ -60,5 +69,22 @@ export class AuthController {
     @Put('update-avatar')
     async updateAvatar(@Request() req, @Body() updateAvatarDto: UpdateAvatarDto) {
         return this.authService.updateAvatar(req.user.id, updateAvatarDto.avatarSeed);
+    }
+
+    @Post('logout')
+    async logout(@Res({ passthrough: true }) res: Response) {
+        res.clearCookie('token', { path: '/' });
+        return { success: true };
+    }
+
+    private setAuthCookie(res: Response, token: string) {
+        const isProd = process.env.NODE_ENV === 'production';
+        res.cookie('token', token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: isProd,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/',
+        });
     }
 }

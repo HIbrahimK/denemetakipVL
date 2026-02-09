@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, Delete, Patch, UseInterceptors, UploadedFile, UseGuards, Res, HttpStatus, HttpException, Req } from '@nestjs/common';
+﻿import { Controller, Get, Post, Body, Param, Query, Delete, Patch, UseInterceptors, UploadedFile, UseGuards, Res, HttpStatus, HttpException, Req } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { ExamsService } from './exams.service';
@@ -69,12 +69,45 @@ export class ExamsController {
 
     @Post(':id/upload-answer-key')
     @Roles('SCHOOL_ADMIN')
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', {
+        limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+        fileFilter: (req, file, cb) => {
+            const allowedMimes = [
+                'application/pdf',
+                'image/jpeg',
+                'image/jpg',
+                'image/png',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-excel',
+            ];
+            if (allowedMimes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Ge�f§ersiz dosya t�f¼r�f¼'), false);
+            }
+        },
+    }))
     uploadAnswerKey(
         @Param('id') id: string,
         @UploadedFile() file: Express.Multer.File,
     ) {
         return this.examsService.uploadAnswerKey(id, file);
+    }
+
+    @Get(':id/answer-key')
+    @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'SUPER_ADMIN')
+    async getAnswerKey(
+        @Param('id') id: string,
+        @Req() req: any,
+        @Res() res: Response,
+    ) {
+        try {
+            const { filePath, contentType } = await this.examsService.getAnswerKeyFile(id, req.user);
+            res.setHeader('Content-Type', contentType);
+            return res.sendFile(filePath);
+        } catch (error) {
+            throw new HttpException(error.message || 'Dosya bulunamad�"±', HttpStatus.NOT_FOUND);
+        }
     }
 
     @Get(':id/export/excel')
@@ -106,7 +139,7 @@ export class ExamsController {
         } catch (error) {
             console.error('Error exporting Excel:', error);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                message: 'Excel dosyası oluşturulurken bir hata oluştu',
+                message: 'Excel dosyası olu�Yturulurken bir hata olu�Ytu',
                 error: error.message,
             });
         }
@@ -138,7 +171,7 @@ export class ExamsController {
         } catch (error) {
             console.error('Error exporting PDF:', error);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                message: 'PDF dosyası oluşturulurken bir hata oluştu',
+                message: 'PDF dosyası olu�Yturulurken bir hata olu�Ytu',
                 error: error.message,
             });
         }

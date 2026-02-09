@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ export default function ParentLoginPage() {
             }
 
             const data = await res.json();
-            setUserData(data.user, data.access_token);
+            setUserData(data.user);
 
             // Redirect parent to child's results page
             router.push('/dashboard/parent/results');

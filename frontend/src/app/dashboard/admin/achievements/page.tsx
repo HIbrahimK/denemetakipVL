@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,7 +139,6 @@ export default function AchievementManagementPage() {
       const schoolId = userData.schoolId;
       
       const response = await fetch(`http://localhost:3001/students?schoolId=${schoolId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -155,7 +154,6 @@ export default function AchievementManagementPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3001/achievements?includeInactive=true', {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -178,7 +176,6 @@ export default function AchievementManagementPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/achievements/${achievement.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -196,7 +193,6 @@ export default function AchievementManagementPage() {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/achievements/${id}/toggle`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -221,7 +217,6 @@ export default function AchievementManagementPage() {
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:3001/achievements/${achievementToDelete}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -272,7 +267,6 @@ export default function AchievementManagementPage() {
         fetch('http://localhost:3001/achievements/check-unlock', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -341,7 +335,6 @@ export default function AchievementManagementPage() {
       const response = await fetch(url, {
         method: formData.id ? 'PUT' : 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),

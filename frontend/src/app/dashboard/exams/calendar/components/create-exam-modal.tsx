@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
@@ -77,7 +77,6 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
                 body: JSON.stringify(payload),
             });

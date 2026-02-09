@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -56,7 +56,6 @@ export default function MessageInbox({ userId, schoolId }: MessageInboxProps) {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:3001/messages/inbox", {
         headers: {
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -79,7 +78,6 @@ export default function MessageInbox({ userId, schoolId }: MessageInboxProps) {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -101,7 +99,6 @@ export default function MessageInbox({ userId, schoolId }: MessageInboxProps) {
         {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${token}`,
           },
         }
       );

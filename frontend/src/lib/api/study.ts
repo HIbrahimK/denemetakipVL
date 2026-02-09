@@ -1,10 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+﻿const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Study Plans
 export const studyPlansApi = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/study/plans`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -14,7 +13,6 @@ export const studyPlansApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -26,7 +24,6 @@ export const studyPlansApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -38,7 +35,6 @@ export const studyPlansApi = {
 export const studyTasksApi = {
   getMy: async () => {
     const response = await fetch(`${API_BASE_URL}/study/tasks/my`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -48,7 +44,6 @@ export const studyTasksApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -60,7 +55,6 @@ export const studyTasksApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -75,7 +69,6 @@ export const studySessionsApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -85,7 +78,6 @@ export const studySessionsApi = {
   getStats: async (params?: any) => {
     const queryString = new URLSearchParams(params).toString();
     const response = await fetch(`${API_BASE_URL}/study/sessions/stats?${queryString}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -95,7 +87,6 @@ export const studySessionsApi = {
 export const goalsApi = {
   getMy: async () => {
     const response = await fetch(`${API_BASE_URL}/goals/my`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -105,7 +96,6 @@ export const goalsApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -117,7 +107,6 @@ export const goalsApi = {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -129,14 +118,12 @@ export const goalsApi = {
 export const achievementsApi = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/goals/achievements/all`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
 
   getMy: async () => {
     const response = await fetch(`${API_BASE_URL}/goals/achievements/my`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -146,7 +133,6 @@ export const achievementsApi = {
       ? `${API_BASE_URL}/goals/achievements/progress/${studentId}`
       : `${API_BASE_URL}/goals/achievements/progress`;
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -156,7 +142,6 @@ export const achievementsApi = {
 export const groupsApi = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/groups`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -166,7 +151,6 @@ export const groupsApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -178,7 +162,6 @@ export const groupsApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
       body: JSON.stringify(data),
     });
@@ -187,7 +170,6 @@ export const groupsApi = {
 
   getStats: async (groupId: number) => {
     const response = await fetch(`${API_BASE_URL}/groups/${groupId}/stats`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -197,7 +179,6 @@ export const groupsApi = {
 export const recommendationsApi = {
   getForStudent: async (studentId: number) => {
     const response = await fetch(`${API_BASE_URL}/study/recommendations/student/${studentId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
     return response.json();
   },
@@ -207,7 +188,6 @@ export const recommendationsApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
     });
     return response.json();

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
@@ -139,7 +139,6 @@ export default function AdminTopicsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:3001/subjects/${subjectId}`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
@@ -155,7 +154,6 @@ export default function AdminTopicsPage() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:3001/subjects/topics/all?subjectId=${subjectId}`, {
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {
@@ -248,7 +246,6 @@ export default function AdminTopicsPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(body),
       });
@@ -284,7 +281,6 @@ export default function AdminTopicsPage() {
     try {
       const res = await fetch(`http://localhost:3001/subjects/topics/${topicToDelete.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.ok) {

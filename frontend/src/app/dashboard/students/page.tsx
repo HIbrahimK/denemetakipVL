@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,6 @@ export default function StudentsPage() {
         try {
             // Fetch filters
             const filtersRes = await fetch("http://localhost:3001/students/filters", {
-                headers: { "Authorization": `Bearer ${token}` }
             });
             const filtersData = await filtersRes.json();
             setFilters(filtersData);
@@ -93,7 +92,6 @@ export default function StudentsPage() {
             if (selectedClass && selectedClass !== "all") params.append("classId", selectedClass);
 
             const studentsRes = await fetch(`http://localhost:3001/students?${params.toString()}`, {
-                headers: { "Authorization": `Bearer ${token}` }
             });
             const studentsData = await studentsRes.json();
             setStudents(studentsData);
@@ -134,7 +132,6 @@ export default function StudentsPage() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({ studentIds: Array.from(selectedStudents) }),
             });
@@ -155,7 +152,6 @@ export default function StudentsPage() {
         try {
             await fetch(`http://localhost:3001/students/${deleteId}`, {
                 method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` }
             });
             fetchData();
         } catch (error) {
@@ -333,7 +329,6 @@ export default function StudentsPage() {
                                             >
                                                 {student.user.firstName} {student.user.lastName}
                                             </a>
-                                            <div className="text-xs text-slate-500 dark:text-slate-400">{student.user.email}</div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
