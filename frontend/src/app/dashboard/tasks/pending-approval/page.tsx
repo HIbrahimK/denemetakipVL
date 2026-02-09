@@ -92,11 +92,11 @@ export default function PendingApprovalPage() {
         setSelectedTask(null);
         fetchPendingTasks();
       } else {
-        alert('Onaylama baþarýsýz oldu');
+        alert('Onaylama baÅŸarÄ±sÄ±z oldu');
       }
     } catch (error) {
       console.error('Error approving task:', error);
-      alert('Bir hata oluþtu');
+      alert('Bir hata oluÅŸtu');
     } finally {
       setProcessing(false);
     }
@@ -104,7 +104,7 @@ export default function PendingApprovalPage() {
 
   const handleReject = async () => {
     if (!selectedTask || !rejectComment.trim()) {
-      alert('Lütfen reddetme sebebini yazýn');
+      alert('LÃ¼tfen reddetme sebebini yazÄ±n');
       return;
     }
 
@@ -125,11 +125,11 @@ export default function PendingApprovalPage() {
         setSelectedTask(null);
         fetchPendingTasks();
       } else {
-        alert('Reddetme baþarýsýz oldu');
+        alert('Reddetme baÅŸarÄ±sÄ±z oldu');
       }
     } catch (error) {
       console.error('Error rejecting task:', error);
-      alert('Bir hata oluþtu');
+      alert('Bir hata oluÅŸtu');
     } finally {
       setProcessing(false);
     }
@@ -138,7 +138,7 @@ export default function PendingApprovalPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Yükleniyor...</div>
+        <div className="text-lg">YÃ¼kleniyor...</div>
       </div>
     );
   }
@@ -146,15 +146,15 @@ export default function PendingApprovalPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Onay Bekleyen Görevler</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Onay Bekleyen GÃ¶revler</h1>
         <p className="text-gray-600 mt-2">
-          Öðrenciler tarafýndan tamamlanmýþ ve onayýnýzý bekleyen görevler
+          Ã–ÄŸrenciler tarafÄ±ndan tamamlanmÄ±ÅŸ ve onayÄ±nÄ±zÄ± bekleyen gÃ¶revler
         </p>
       </div>
 
       {tasks.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center">
-          <p className="text-gray-500 text-lg">Onay bekleyen görev bulunmuyor</p>
+          <p className="text-gray-500 text-lg">Onay bekleyen gÃ¶rev bulunmuyor</p>
         </div>
       ) : (
         <div className="grid gap-6">
@@ -191,7 +191,7 @@ export default function PendingApprovalPage() {
               <div className="border-t border-gray-200 pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Görev Bilgileri</h4>
+                    <h4 className="font-semibold text-gray-700 mb-2">GÃ¶rev Bilgileri</h4>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Ders:</span> {task.subjectName}
                     </p>
@@ -211,7 +211,7 @@ export default function PendingApprovalPage() {
                     )}
                     {task.targetDuration && (
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">Hedef Süre:</span> {task.targetDuration} dk
+                        <span className="font-medium">Hedef SÃ¼re:</span> {task.targetDuration} dk
                       </p>
                     )}
                     {task.targetResource && (
@@ -222,12 +222,12 @@ export default function PendingApprovalPage() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Gerçekleþen</h4>
+                    <h4 className="font-semibold text-gray-700 mb-2">GerÃ§ekleÅŸen</h4>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Çözülen Soru:</span> {task.completedQuestionCount}
+                      <span className="font-medium">Ã‡Ã¶zÃ¼len Soru:</span> {task.completedQuestionCount}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Süre:</span> {task.actualDuration} dk
+                      <span className="font-medium">SÃ¼re:</span> {task.actualDuration} dk
                     </p>
                     {task.actualResource && (
                       <p className="text-sm text-gray-600">
@@ -237,16 +237,16 @@ export default function PendingApprovalPage() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-gray-700 mb-2">Sonuçlar</h4>
+                    <h4 className="font-semibold text-gray-700 mb-2">SonuÃ§lar</h4>
                     <div className="flex gap-4 text-sm">
                       <span className="text-green-600">
-                        ? {task.correctCount} Doðru
+                        âœ“ {task.correctCount} DoÄŸru
                       </span>
                       <span className="text-red-600">
-                        ? {task.wrongCount} Yanlýþ
+                        âœ— {task.wrongCount} YanlÄ±ÅŸ
                       </span>
                       <span className="text-gray-600">
-                        0 {task.blankCount} Boþ
+                        0 {task.blankCount} BoÅŸ
                       </span>
                     </div>
                   </div>
@@ -254,7 +254,7 @@ export default function PendingApprovalPage() {
 
                 {task.studentNotes && (
                   <div className="mt-4 p-3 bg-gray-50 rounded">
-                    <h4 className="font-semibold text-gray-700 mb-1 text-sm">Öðrenci Notlarý:</h4>
+                    <h4 className="font-semibold text-gray-700 mb-1 text-sm">Ã–ÄŸrenci NotlarÄ±:</h4>
                     <p className="text-sm text-gray-600">{task.studentNotes}</p>
                   </div>
                 )}
@@ -267,7 +267,7 @@ export default function PendingApprovalPage() {
                     }}
                     className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
                   >
-                    ? Onayla
+                    âœ“ Onayla
                   </button>
                   <button
                     onClick={() => {
@@ -276,7 +276,7 @@ export default function PendingApprovalPage() {
                     }}
                     className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
                   >
-                    ? Reddet
+                    âœ— Reddet
                   </button>
                 </div>
               </div>
@@ -289,10 +289,10 @@ export default function PendingApprovalPage() {
       {showApproveModal && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Görevi Onayla</h3>
+            <h3 className="text-xl font-bold mb-4">GÃ¶revi Onayla</h3>
             <p className="text-gray-600 mb-4">
-              {selectedTask.student.user.firstName} {selectedTask.student.user.lastName} adlý öðrencinin
-              görevini onaylamak istediðinize emin misiniz?
+              {selectedTask.student.user.firstName} {selectedTask.student.user.lastName} adlÄ± Ã¶ÄŸrencinin
+              gÃ¶revini onaylamak istediÄŸinize emin misiniz?
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -303,7 +303,7 @@ export default function PendingApprovalPage() {
                 onChange={(e) => setApproveComment(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 rows={3}
-                placeholder="Öðrenciye bir yorum ekleyebilirsiniz..."
+                placeholder="Ã–ÄŸrenciye bir yorum ekleyebilirsiniz..."
               />
             </div>
             <div className="flex gap-3">
@@ -316,14 +316,14 @@ export default function PendingApprovalPage() {
                 disabled={processing}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Ýptal
+                Ä°ptal
               </button>
               <button
                 onClick={handleApprove}
                 disabled={processing}
                 className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
               >
-                {processing ? 'Ýþleniyor...' : 'Onayla'}
+                {processing ? 'Ä°ÅŸleniyor...' : 'Onayla'}
               </button>
             </div>
           </div>
@@ -334,10 +334,10 @@ export default function PendingApprovalPage() {
       {showRejectModal && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Görevi Reddet</h3>
+            <h3 className="text-xl font-bold mb-4">GÃ¶revi Reddet</h3>
             <p className="text-gray-600 mb-4">
-              {selectedTask.student.user.firstName} {selectedTask.student.user.lastName} adlý öðrencinin
-              görevini reddetmek istediðinize emin misiniz?
+              {selectedTask.student.user.firstName} {selectedTask.student.user.lastName} adlÄ± Ã¶ÄŸrencinin
+              gÃ¶revini reddetmek istediÄŸinize emin misiniz?
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -348,7 +348,7 @@ export default function PendingApprovalPage() {
                 onChange={(e) => setRejectComment(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 rows={3}
-                placeholder="Lütfen reddetme sebebini açýklayýn..."
+                placeholder="LÃ¼tfen reddetme sebebini aÃ§Ä±klayÄ±n..."
                 required
               />
             </div>
@@ -362,14 +362,14 @@ export default function PendingApprovalPage() {
                 disabled={processing}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Ýptal
+                Ä°ptal
               </button>
               <button
                 onClick={handleReject}
                 disabled={processing || !rejectComment.trim()}
                 className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {processing ? 'Ýþleniyor...' : 'Reddet'}
+                {processing ? 'Ä°ÅŸleniyor...' : 'Reddet'}
               </button>
             </div>
           </div>

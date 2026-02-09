@@ -61,7 +61,7 @@ interface StudyPlanTemplate {
 
 type Step = 1 | 2 | 3;
 
-const DAYS = ['Pazartesi', 'Salý', 'Çarþamba', 'Perþembe', 'Cuma', 'Cumartesi', 'Pazar'];
+const DAYS = ['Pazartesi', 'SalÄ±', 'Ã‡arÅŸamba', 'PerÅŸembe', 'Cuma', 'Cumartesi', 'Pazar'];
 const EXAM_TYPES = [
   { value: 'TYT', label: 'TYT', grades: [9, 10, 11, 12] },
   { value: 'AYT', label: 'AYT', grades: [10, 11, 12] },
@@ -152,13 +152,13 @@ function NewStudyPlanContent() {
         }
         
         toast({
-          title: 'Plan Yüklendi',
-          description: 'Plan düzenleme için yüklendi',
+          title: 'Plan YÃ¼klendi',
+          description: 'Plan dÃ¼zenleme iÃ§in yÃ¼klendi',
         });
       } else {
         toast({
           title: 'Hata',
-          description: 'Plan yüklenemedi',
+          description: 'Plan yÃ¼klenemedi',
           variant: 'destructive',
         });
       }
@@ -166,7 +166,7 @@ function NewStudyPlanContent() {
       console.error('Error loading plan:', error);
       toast({
         title: 'Hata',
-        description: 'Plan yüklenirken bir hata oluþtu',
+        description: 'Plan yÃ¼klenirken bir hata oluÅŸtu',
         variant: 'destructive',
       });
     } finally {
@@ -177,7 +177,7 @@ function NewStudyPlanContent() {
   // Filter topics when subject changes
   useEffect(() => {
     if (selectedSubjectForTopics) {
-      // "Aktiviteler" seçildiðinde COMMON aktiviteleri konu olarak göster
+      // "Aktiviteler" seÃ§ildiÄŸinde COMMON aktiviteleri konu olarak gÃ¶ster
       if (selectedSubjectForTopics === 'Aktiviteler') {
         const commonActivities = subjects
           .filter(s => s.examType === 'COMMON')
@@ -258,7 +258,7 @@ function NewStudyPlanContent() {
     if (!canProceedToStep2()) {
       toast({
         title: 'Eksik Bilgi',
-        description: 'Lütfen plan adý ve sýnav tipi seçin',
+        description: 'LÃ¼tfen plan adÄ± ve sÄ±nav tipi seÃ§in',
         variant: 'destructive',
       });
       return;
@@ -326,16 +326,16 @@ function NewStudyPlanContent() {
 
     setEditingCellData({ ...cellData });
     toast({
-      title: 'Kopyalandý',
-      description: 'Hücre içeriði panoya kopyalandý. Baþka bir hücreye yapýþtýrabilirsiniz.',
+      title: 'KopyalandÄ±',
+      description: 'HÃ¼cre iÃ§eriÄŸi panoya kopyalandÄ±. BaÅŸka bir hÃ¼creye yapÄ±ÅŸtÄ±rabilirsiniz.',
     });
   };
 
   const pasteCellData = (rowIndex: number, dayIndex: number) => {
     if (!editingCellData || Object.keys(editingCellData).length === 0) {
       toast({
-        title: 'Yapýþtýrýlamadý',
-        description: 'Önce bir hücreyi kopyalayýn.',
+        title: 'YapÄ±ÅŸtÄ±rÄ±lamadÄ±',
+        description: 'Ã–nce bir hÃ¼creyi kopyalayÄ±n.',
         variant: 'destructive',
       });
       return;
@@ -348,8 +348,8 @@ function NewStudyPlanContent() {
     });
 
     toast({
-      title: 'Yapýþtýrýldý',
-      description: 'Hücre içeriði baþarýyla yapýþtýrýldý.',
+      title: 'YapÄ±ÅŸtÄ±rÄ±ldÄ±',
+      description: 'HÃ¼cre iÃ§eriÄŸi baÅŸarÄ±yla yapÄ±ÅŸtÄ±rÄ±ldÄ±.',
     });
   };
 
@@ -374,8 +374,8 @@ function NewStudyPlanContent() {
     });
 
     toast({
-      title: 'Tüm Günlere Kopyalandý',
-      description: 'Hücre içeriði tüm günlere baþarýyla kopyalandý.',
+      title: 'TÃ¼m GÃ¼nlere KopyalandÄ±',
+      description: 'HÃ¼cre iÃ§eriÄŸi tÃ¼m gÃ¼nlere baÅŸarÄ±yla kopyalandÄ±.',
     });
   };
 
@@ -443,23 +443,23 @@ function NewStudyPlanContent() {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.message || 'Plan oluþturulurken hata oluþtu');
+        throw new Error(error.message || 'Plan oluÅŸturulurken hata oluÅŸtu');
       }
 
       toast({
-        title: 'Baþarýlý',
+        title: 'BaÅŸarÄ±lÄ±',
         description: isEditMode
-          ? 'Plan baþarýyla güncellendi'
+          ? 'Plan baÅŸarÄ±yla gÃ¼ncellendi'
           : isTemplate
-            ? 'Çalýþma planý þablon olarak kaydedildi. Artýk öðrencilere atayabilirsiniz.'
-            : 'Çalýþma planý aktif plan olarak kaydedildi.',
+            ? 'Ã‡alÄ±ÅŸma planÄ± ÅŸablon olarak kaydedildi. ArtÄ±k Ã¶ÄŸrencilere atayabilirsiniz.'
+            : 'Ã‡alÄ±ÅŸma planÄ± aktif plan olarak kaydedildi.',
       });
 
       router.push('/dashboard/study-plans');
     } catch (error: any) {
       toast({
         title: 'Hata',
-        description: error.message || 'Bir hata oluþtu',
+        description: error.message || 'Bir hata oluÅŸtu',
         variant: 'destructive',
       });
     } finally {
@@ -473,21 +473,21 @@ function NewStudyPlanContent() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Plan Name */}
         <div className="space-y-2">
-          <Label htmlFor="name">Plan Adý *</Label>
+          <Label htmlFor="name">Plan AdÄ± *</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="örn. TYT Matematik Yoðun Çalýþma"
+            placeholder="Ã–rn. TYT Matematik YoÄŸun Ã‡alÄ±ÅŸma"
           />
         </div>
 
         {/* Exam Type */}
         <div className="space-y-2">
-          <Label>Sýnav Tipi *</Label>
+          <Label>SÄ±nav Tipi *</Label>
           <Select value={examType} onValueChange={handleExamTypeChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Sýnav tipi seçin" />
+              <SelectValue placeholder="SÄ±nav tipi seÃ§in" />
             </SelectTrigger>
             <SelectContent>
               {EXAM_TYPES.map(type => (
@@ -500,12 +500,12 @@ function NewStudyPlanContent() {
 
       {/* Description */}
       <div className="space-y-2">
-        <Label htmlFor="description">Açýklama</Label>
+        <Label htmlFor="description">AÃ§Ä±klama</Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Plan hakkýnda detaylý açýklama..."
+          placeholder="Plan hakkÄ±nda detaylÄ± aÃ§Ä±klama..."
           rows={2}
         />
       </div>
@@ -524,7 +524,7 @@ function NewStudyPlanContent() {
               {isTemplate ? (
                 <>
                   <FileText className="h-4 w-4 text-purple-600" />
-                  <span>Þablon Olarak Kaydet</span>
+                  <span>Åžablon Olarak Kaydet</span>
                 </>
               ) : (
                 <>
@@ -535,8 +535,8 @@ function NewStudyPlanContent() {
             </Label>
             <p className="text-sm text-muted-foreground mt-1">
               {isTemplate
-                ? 'Bu plan þablon olarak kaydedilecek ve ilerleyen zamanlarda tekrar kullanýlabilecek.'
-                : 'Bu plan doðrudan aktif plan olarak kaydedilecek ve þablon olarak kullanýlamayacak.'}
+                ? 'Bu plan ÅŸablon olarak kaydedilecek ve ilerleyen zamanlarda tekrar kullanÄ±labilecek.'
+                : 'Bu plan doÄŸrudan aktif plan olarak kaydedilecek ve ÅŸablon olarak kullanÄ±lamayacak.'}
             </p>
           </div>
         </div>
@@ -545,7 +545,7 @@ function NewStudyPlanContent() {
       {/* Public/Private Toggle - Only show for templates */}
       {isTemplate && (
         <div className="space-y-2">
-          <Label>Plan Görünürlüðü</Label>
+          <Label>Plan GÃ¶rÃ¼nÃ¼rlÃ¼ÄŸÃ¼</Label>
           <div className="flex items-center space-x-4 p-4 border rounded-lg">
             <Switch
               id="isPublic"
@@ -557,19 +557,19 @@ function NewStudyPlanContent() {
                 {isPublic ? (
                   <>
                     <Globe className="h-4 w-4 text-green-600" />
-                    <span>Okuldaki Tüm Öðretmenlerle Paylaþ</span>
+                    <span>Okuldaki TÃ¼m Ã–ÄŸretmenlerle PaylaÅŸ</span>
                   </>
                 ) : (
                   <>
                     <Lock className="h-4 w-4 text-muted-foreground" />
-                    <span>Sadece Ben Görebileyim</span>
+                    <span>Sadece Ben GÃ¶rebileyim</span>
                   </>
                 )}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
                 {isPublic
-                  ? 'Bu plan okuldaki diðer öðretmenler tarafýndan da görülebilir ve kullanýlabilir.'
-                  : 'Bu plan sadece sizin tarafýnýzdan görülebilir ve düzenlenebilir.'}
+                  ? 'Bu plan okuldaki diÄŸer Ã¶ÄŸretmenler tarafÄ±ndan da gÃ¶rÃ¼lebilir ve kullanÄ±labilir.'
+                  : 'Bu plan sadece sizin tarafÄ±nÄ±zdan gÃ¶rÃ¼lebilir ve dÃ¼zenlenebilir.'}
               </p>
             </div>
           </div>
@@ -596,8 +596,8 @@ function NewStudyPlanContent() {
           onClick={() => setSelectedTemplate(null)}
         >
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Boþ Tablo Baþlat</CardTitle>
-            <CardDescription>Sýfýrdan yeni bir çalýþma planý oluþtur</CardDescription>
+            <CardTitle className="text-lg">BoÅŸ Tablo BaÅŸlat</CardTitle>
+            <CardDescription>SÄ±fÄ±rdan yeni bir Ã§alÄ±ÅŸma planÄ± oluÅŸtur</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-24 flex items-center justify-center border-2 border-dashed rounded-lg">
@@ -620,12 +620,12 @@ function NewStudyPlanContent() {
                   <CardTitle className="text-lg">{template.name}</CardTitle>
                   <Badge variant="outline">{template.examType}</Badge>
                 </div>
-                <CardDescription>{template.description || 'Þablon açýklamasý yok'}</CardDescription>
+                <CardDescription>{template.description || 'Åžablon aÃ§Ä±klamasÄ± yok'}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1">
                   {template.gradeLevels.map(g => (
-                    <Badge key={g} variant="secondary" className="text-xs">{g}. Sýnýf</Badge>
+                    <Badge key={g} variant="secondary" className="text-xs">{g}. SÄ±nÄ±f</Badge>
                   ))}
                 </div>
               </CardContent>
@@ -635,7 +635,7 @@ function NewStudyPlanContent() {
 
       {templates.filter(t => t.examType === examType).length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          Bu sýnav tipi için þablon bulunmuyor.
+          Bu sÄ±nav tipi iÃ§in ÅŸablon bulunmuyor.
         </div>
       )}
 
@@ -701,7 +701,7 @@ function NewStudyPlanContent() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); duplicateToAllDays(rowIndex, dayIndex); }}>
                       <CopyIcon className="mr-2 h-4 w-4" />
-                      Tüm Günlere Kopyala
+                      TÃ¼m GÃ¼nlere Kopyala
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
@@ -709,7 +709,7 @@ function NewStudyPlanContent() {
                 {editingCellData && Object.keys(editingCellData).length > 0 && (
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); pasteCellData(rowIndex, dayIndex); }}>
                     <FileText className="mr-2 h-4 w-4" />
-                    Yapýþtýr
+                    YapÄ±ÅŸtÄ±r
                   </DropdownMenuItem>
                 )}
                 {cell && (
@@ -794,12 +794,12 @@ function NewStudyPlanContent() {
               <div className="flex gap-2">
                 <HelpCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-900">
-                  <p className="font-medium mb-1">Hücre Ýþlemleri:</p>
+                  <p className="font-medium mb-1">HÃ¼cre Ä°ÅŸlemleri:</p>
                   <ul className="list-disc list-inside space-y-1 text-blue-800">
-                    <li>Hücreleri sürükleyip günler ve satýrlar arasý taþýyabilirsiniz</li>
-                    <li>Sað üstteki ? menüsünden hücreyi kopyala/yapýþtýr/sil iþlemlerini yapabilirsiniz</li>
-                    <li>"Tüm Günlere Kopyala" ile bir hücreyi hafta boyunca tekrarlayabilirsiniz</li>
-                    <li>Hücreye týklayarak detaylarýný düzenleyebilirsiniz</li>
+                    <li>HÃ¼creleri sÃ¼rÃ¼kleyip gÃ¼nler ve satÄ±rlar arasÄ± taÅŸÄ±yabilirsiniz</li>
+                    <li>SaÄŸ Ã¼stteki â‹® menÃ¼sÃ¼nden hÃ¼creyi kopyala/yapÄ±ÅŸtÄ±r/sil iÅŸlemlerini yapabilirsiniz</li>
+                    <li>"TÃ¼m GÃ¼nlere Kopyala" ile bir hÃ¼creyi hafta boyunca tekrarlayabilirsiniz</li>
+                    <li>HÃ¼creye tÄ±klayarak detaylarÄ±nÄ± dÃ¼zenleyebilirsiniz</li>
                   </ul>
                 </div>
               </div>
@@ -815,7 +815,7 @@ function NewStudyPlanContent() {
                       <th key={day} className="p-3 text-left font-medium min-w-[140px]">
                         <div>{day}</div>
                         <div className="text-xs text-muted-foreground font-normal">
-                          Gün {index + 1}
+                          GÃ¼n {index + 1}
                         </div>
                       </th>
                     ))}
@@ -851,7 +851,7 @@ function NewStudyPlanContent() {
             {/* Add Row Button */}
             <Button type="button" variant="outline" onClick={addRow} className="w-full">
               <Plus className="mr-2 h-4 w-4" />
-              Satýr Ekle
+              SatÄ±r Ekle
             </Button>
 
             {/* Navigation */}
@@ -865,7 +865,7 @@ function NewStudyPlanContent() {
                 disabled={saving}
               >
                 <Save className="mr-2 h-4 w-4" />
-                {saving ? 'Kaydediliyor...' : 'Planý Kaydet'}
+                {saving ? 'Kaydediliyor...' : 'PlanÄ± Kaydet'}
               </Button>
             </div>
 
@@ -874,7 +874,7 @@ function NewStudyPlanContent() {
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>
-                    {selectedCell && `${DAYS[selectedCell.dayIndex]} - Satýr ${selectedCell.rowIndex + 1}`}
+                    {selectedCell && `${DAYS[selectedCell.dayIndex]} - SatÄ±r ${selectedCell.rowIndex + 1}`}
                   </DialogTitle>
                 </DialogHeader>
 
@@ -883,7 +883,7 @@ function NewStudyPlanContent() {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />
-                      Çalýþýlacak Ders
+                      Ã‡alÄ±ÅŸÄ±lacak Ders
                     </Label>
                     <Select
                       value={selectedSubjectForTopics}
@@ -893,10 +893,10 @@ function NewStudyPlanContent() {
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Ders seçin" />
+                        <SelectValue placeholder="Ders seÃ§in" />
                       </SelectTrigger>
                       <SelectContent>
-                        {/* Seçilen sýnav tipine ait dersler */}
+                        {/* SeÃ§ilen sÄ±nav tipine ait dersler */}
                         {subjects
                           .filter(s => s.examType === examType)
                           .map(subject => (
@@ -906,7 +906,7 @@ function NewStudyPlanContent() {
                         {subjects.some(s => s.examType === 'COMMON') && (
                           <>
                             <SelectItem value="---" disabled className="font-semibold text-muted-foreground border-t mt-2 pt-2">
-                              ¦¦ Aktiviteler ¦¦
+                              â€“â€“ Aktiviteler â€“â€“
                             </SelectItem>
                             <SelectItem value="Aktiviteler" className="font-medium text-orange-600">
                               ?? Aktiviteler (Tatil, Mola, vb.)
@@ -919,7 +919,7 @@ function NewStudyPlanContent() {
 
                   {/* Topic / Aktivite */}
                   <div className="space-y-2">
-                    <Label>{selectedSubjectForTopics === 'Aktiviteler' ? 'Aktivite Türü' : 'Konu'}</Label>
+                    <Label>{selectedSubjectForTopics === 'Aktiviteler' ? 'Aktivite TÃ¼rÃ¼' : 'Konu'}</Label>
                     <Select
                       value={editingCellData.topicName || ''}
                       onValueChange={(value) => setEditingCellData(prev => ({ ...prev, topicName: value }))}
@@ -928,10 +928,10 @@ function NewStudyPlanContent() {
                       <SelectTrigger>
                         <SelectValue placeholder={
                           !selectedSubjectForTopics
-                            ? "Önce ders seçin"
+                            ? "Ã–nce ders seÃ§in"
                             : selectedSubjectForTopics === 'Aktiviteler'
-                              ? "Aktivite seçin"
-                              : "Konu seçin"
+                              ? "Aktivite seÃ§in"
+                              : "Konu seÃ§in"
                         } />
                       </SelectTrigger>
                       <SelectContent>
@@ -949,7 +949,7 @@ function NewStudyPlanContent() {
                           }
 
                           if (rootTopics.length === 0 && childTopics.length === 0) {
-                            return <div className="p-2 text-sm text-muted-foreground">Konu bulunamadý</div>;
+                            return <div className="p-2 text-sm text-muted-foreground">Konu bulunamadÄ±</div>;
                           }
 
                           return (
@@ -963,7 +963,7 @@ function NewStudyPlanContent() {
                                     </SelectItem>
                                     {children.map(child => (
                                       <SelectItem key={child.id} value={child.name} className="pl-6 text-sm">
-                                        • {child.name}
+                                        â†’ {child.name}
                                       </SelectItem>
                                     ))}
                                   </div>
@@ -984,12 +984,12 @@ function NewStudyPlanContent() {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <HelpCircle className="h-4 w-4" />
-                      Hedeflenen Soru Sayýsý
+                      Hedeflenen Soru SayÄ±sÄ±
                     </Label>
                     <Input
                       type="number"
                       min={0}
-                      placeholder="Örn: 20"
+                      placeholder="Ã–rn: 20"
                       value={editingCellData.targetQuestionCount || ''}
                       onChange={(e) => setEditingCellData(prev => ({
                         ...prev,
@@ -1002,12 +1002,12 @@ function NewStudyPlanContent() {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Hedeflenen Süre (dakika)
+                      Hedeflenen SÃ¼re (dakika)
                     </Label>
                     <Input
                       type="number"
                       min={0}
-                      placeholder="Örn: 45"
+                      placeholder="Ã–rn: 45"
                       value={editingCellData.targetDuration || ''}
                       onChange={(e) => setEditingCellData(prev => ({
                         ...prev,
@@ -1023,7 +1023,7 @@ function NewStudyPlanContent() {
                       Kaynak Kitap
                     </Label>
                     <Input
-                      placeholder="Örn: Karekök Yayýnlarý TYT Matematik"
+                      placeholder="Ã–rn: KarekÃ¶k YayÄ±nlarÄ± TYT Matematik"
                       value={editingCellData.targetResource || ''}
                       onChange={(e) => setEditingCellData(prev => ({ ...prev, targetResource: e.target.value }))}
                     />
@@ -1033,10 +1033,10 @@ function NewStudyPlanContent() {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      Özel Ýçerik / Not
+                      Ã–zel Ä°Ã§erik / Not
                     </Label>
                     <Textarea
-                      placeholder="Örn: Video izle, Sayfa 45-50 arasý oku..."
+                      placeholder="Ã–rn: Video izle, Sayfa 45-50 arasÄ± oku..."
                       value={editingCellData.customContent || ''}
                       onChange={(e) => setEditingCellData(prev => ({ ...prev, customContent: e.target.value }))}
                       rows={2}
@@ -1064,8 +1064,8 @@ function NewStudyPlanContent() {
     <div className="container mx-auto py-6 max-w-6xl">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Yeni Çalýþma Planý Oluþtur</h1>
-        <p className="text-muted-foreground">Öðrencileriniz için detaylý bir çalýþma planý hazýrlayýn</p>
+        <h1 className="text-2xl font-bold">Yeni Ã‡alÄ±ÅŸma PlanÄ± OluÅŸtur</h1>
+        <p className="text-muted-foreground">Ã–ÄŸrencileriniz iÃ§in detaylÄ± bir Ã§alÄ±ÅŸma planÄ± hazÄ±rlayÄ±n</p>
       </div>
 
       {/* Step Indicator */}
@@ -1087,8 +1087,8 @@ function NewStudyPlanContent() {
         </div>
         <div className="flex justify-center mt-2 gap-16 text-sm">
           <span className={currentStep === 1 ? 'font-medium' : 'text-muted-foreground'}>Plan Bilgileri</span>
-          <span className={currentStep === 2 ? 'font-medium' : 'text-muted-foreground'}>Þablon Seçimi</span>
-          <span className={currentStep === 3 ? 'font-medium' : 'text-muted-foreground'}>Tablo Düzenleme</span>
+          <span className={currentStep === 2 ? 'font-medium' : 'text-muted-foreground'}>Åžablon SeÃ§imi</span>
+          <span className={currentStep === 3 ? 'font-medium' : 'text-muted-foreground'}>Tablo DÃ¼zenleme</span>
         </div>
       </div>
 

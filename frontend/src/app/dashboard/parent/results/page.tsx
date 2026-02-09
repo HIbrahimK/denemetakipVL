@@ -44,7 +44,7 @@ export default function ParentResultsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <p className="text-slate-500">Y�kleniyor...</p>
+                <p className="text-slate-500">Yükleniyor...</p>
             </div>
         );
     }
@@ -53,8 +53,8 @@ export default function ParentResultsPage() {
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                    <p className="text-slate-500 text-lg">Kay�tl� ��renci bulunamad�.</p>
-                    <p className="text-slate-400 text-sm mt-2">L�tfen okul y�netimine ba�vurun.</p>
+                    <p className="text-slate-500 text-lg">Kayıtlı öğrenci bulunamadı.</p>
+                    <p className="text-slate-400 text-sm mt-2">Lütfen okul yönetimine başvurun.</p>
                 </div>
             </div>
         );

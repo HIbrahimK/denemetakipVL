@@ -69,7 +69,7 @@ export default function ParentStudentsPage() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-slate-500">Y�kleniyor...</p>
+                    <p className="text-slate-500">Yükleniyor...</p>
                 </div>
             </div>
         );
@@ -81,9 +81,9 @@ export default function ParentStudentsPage() {
                 <Card className="max-w-md">
                     <CardContent className="pt-6 text-center">
                         <UserCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Kay�tl� ��renci Bulunamad�</h3>
+                        <h3 className="text-lg font-semibold mb-2">Kayıtlı Öğrenci Bulunamadı</h3>
                         <p className="text-slate-500 text-sm">
-                            Hesab�n�za ba�l� ��renci kayd� bulunmuyor. L�tfen okul y�netimine ba�vurun.
+                            Hesabınıza bağlı öğrenci kaydı bulunmuyor. Lütfen okul yönetimine başvurun.
                         </p>
                     </CardContent>
                 </Card>
@@ -96,10 +96,10 @@ export default function ParentStudentsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-                        ��rencilerim
+                        Öğrencilerim
                     </h1>
                     <p className="text-slate-500 mt-1">
-                        {parentData.students.length} ��renci kayd� bulundu
+                        {parentData.students.length} öğrenci kaydı bulundu
                     </p>
                 </div>
             </div>
@@ -150,7 +150,7 @@ export default function ParentStudentsPage() {
                                     }}
                                 >
                                     <TrendingUp className="w-4 h-4 mr-2" />
-                                    Sonu�lar� G�r�nt�le
+                                    Sonuçları Görüntüle
                                 </Button>
                             </div>
                         </CardContent>
@@ -166,12 +166,12 @@ export default function ParentStudentsPage() {
                         </div>
                         <div>
                             <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                                ��renci Takibi
+                                Öğrenci Takibi
                             </h3>
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                                ��rencilerinizin s�nav sonu�lar�n�, geli�im raporlar�n� ve mesajlar�n� bu
-                                panelden takip edebilirsiniz. Her ��renciye t�klayarak detayl� bilgilere
-                                ula�abilirsiniz.
+                                Öğrencilerinizin sınav sonuçlarını, gelişim raporlarını ve mesajlarını bu
+                                panelden takip edebilirsiniz. Her öğrenciye tıklayarak detaylı bilgilere
+                                ulaşabilirsiniz.
                             </p>
                         </div>
                     </div>

@@ -99,11 +99,11 @@ export default function UsersPage() {
     const getRoleBadge = (role: string) => {
         switch (role) {
             case "SCHOOL_ADMIN":
-                return <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800">Yönetici</Badge>;
+                return <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800">YÃ¶netici</Badge>;
             case "TEACHER":
-                return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">Öðretmen</Badge>;
+                return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">Ã–ÄŸretmen</Badge>;
             case "SUPER_ADMIN":
-                return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800">Süper Admin</Badge>;
+                return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800">SÃ¼per Admin</Badge>;
             default:
                 return <Badge variant="outline">{role}</Badge>;
         }
@@ -115,13 +115,13 @@ export default function UsersPage() {
                 <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
                         <UsersIcon className="h-8 w-8 text-indigo-600" />
-                        Kullanýcý Yönetimi
+                        KullanÄ±cÄ± YÃ¶netimi
                     </h2>
-                    <p className="text-slate-500">Okul yöneticilerini ve öðretmenleri buradan yönetebilirsiniz.</p>
+                    <p className="text-slate-500">Okul yÃ¶neticilerini ve Ã¶ÄŸretmenleri buradan yÃ¶netebilirsiniz.</p>
                 </div>
                 <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-600/20" onClick={() => setIsAddOpen(true)}>
                     <Plus className="h-4 w-4" />
-                    Yeni Kullanýcý
+                    Yeni KullanÄ±cÄ±
                 </Button>
             </div>
 
@@ -130,7 +130,7 @@ export default function UsersPage() {
                     <div className="relative col-span-2">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
-                            placeholder="Ýsim veya e-posta ile ara..."
+                            placeholder="Ä°sim veya e-posta ile ara..."
                             className="pl-10"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -141,12 +141,12 @@ export default function UsersPage() {
                         onValueChange={(value) => setSelectedRole(value)}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Tüm Yetkiler" />
+                            <SelectValue placeholder="TÃ¼m Yetkiler" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">Tüm Yetkiler</SelectItem>
-                            <SelectItem value="SCHOOL_ADMIN">Yöneticiler</SelectItem>
-                            <SelectItem value="TEACHER">Öðretmenler</SelectItem>
+                            <SelectItem value="all">TÃ¼m Yetkiler</SelectItem>
+                            <SelectItem value="SCHOOL_ADMIN">YÃ¶neticiler</SelectItem>
+                            <SelectItem value="TEACHER">Ã–ÄŸretmenler</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -158,21 +158,21 @@ export default function UsersPage() {
                                 <TableHead className="w-[80px] text-slate-600 dark:text-slate-400 font-semibold">Profil</TableHead>
                                 <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Ad Soyad / E-posta</TableHead>
                                 <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Yetki</TableHead>
-                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Kayýt Tarihi</TableHead>
-                                <TableHead className="text-right text-slate-600 dark:text-slate-400 font-semibold">Ýþlemler</TableHead>
+                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">KayÄ±t Tarihi</TableHead>
+                                <TableHead className="text-right text-slate-600 dark:text-slate-400 font-semibold">Ä°ÅŸlemler</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-10 text-slate-500">
-                                        Yükleniyor...
+                                        YÃ¼kleniyor...
                                     </TableCell>
                                 </TableRow>
                             ) : users.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-10 text-slate-500">
-                                        Kullanýcý bulunamadý.
+                                        KullanÄ±cÄ± bulunamadÄ±.
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -204,10 +204,10 @@ export default function UsersPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
                                                     <DropdownMenuItem onClick={() => setEditUser(user)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Düzenle
+                                                        <Edit className="mr-2 h-4 w-4" /> DÃ¼zenle
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => setPasswordUser(user)}>
-                                                        <Key className="mr-2 h-4 w-4" /> Þifre Deðiþtir
+                                                        <Key className="mr-2 h-4 w-4" /> Åžifre DeÄŸiÅŸtir
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem className="text-red-600" onClick={() => setDeleteId(user.id)}>
                                                         <Trash2 className="mr-2 h-4 w-4" /> Sil
@@ -248,13 +248,13 @@ export default function UsersPage() {
             <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Kullanýcýyý Sil</AlertDialogTitle>
+                        <AlertDialogTitle>KullanÄ±cÄ±yÄ± Sil</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bu kullanýcýyý sistemden silmek istediðinize emin misiniz? Bu iþlem geri alýnamaz.
+                            Bu kullanÄ±cÄ±yÄ± sistemden silmek istediÄŸinize emin misiniz? Bu iÅŸlem geri alÄ±namaz.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                        <AlertDialogCancel>VazgeÃ§</AlertDialogCancel>
                         <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white border-none" onClick={handleDelete}>
                             Evet, Sil
                         </AlertDialogAction>

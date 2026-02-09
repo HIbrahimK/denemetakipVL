@@ -155,14 +155,14 @@ export default function ParentApprovalsPage() {
 
       if (res.ok) {
         toast({
-          title: 'Baþarýlý',
-          description: `Görev ${approvalAction === 'approve' ? 'onaylandý' : 'reddedildi'}`,
+          title: 'Baï¿½arï¿½lï¿½',
+          description: `Gï¿½rev ${approvalAction === 'approve' ? 'onaylandï¿½' : 'reddedildi'}`,
         });
         setApprovalModalOpen(false);
         fetchTasks();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata oluþtu');
+        throw new Error(error.message || 'Bir hata oluï¿½tu');
       }
     } catch (error: any) {
       toast({
@@ -211,8 +211,8 @@ export default function ParentApprovalsPage() {
       await Promise.all(promises);
 
       toast({
-        title: 'Baþarýlý',
-        description: `${selectedTasks.length} görev ${action === 'approve' ? 'onaylandý' : 'reddedildi'}`,
+        title: 'Baï¿½arï¿½lï¿½',
+        description: `${selectedTasks.length} gï¿½rev ${action === 'approve' ? 'onaylandï¿½' : 'reddedildi'}`,
       });
 
       setSelectedTasks([]);
@@ -220,7 +220,7 @@ export default function ParentApprovalsPage() {
     } catch (error) {
       toast({
         title: 'Hata',
-        description: 'Ýþlem sýrasýnda bir hata oluþtu',
+        description: 'ï¿½ï¿½lem sï¿½rasï¿½nda bir hata oluï¿½tu',
         variant: 'destructive',
       });
     } finally {
@@ -253,9 +253,9 @@ export default function ParentApprovalsPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Onaylarým</h1>
+        <h1 className="text-3xl font-bold">OnaylarÄ±m</h1>
         <p className="text-muted-foreground mt-1">
-          Çocuðunuzun tamamladýðý görevleri inceleyin ve onaylayýn
+          Ã‡ocuÄŸunuzun tamamladÄ±ÄŸÄ± gÃ¶revleri inceleyin ve onaylayÄ±n
         </p>
       </div>
 
@@ -263,7 +263,7 @@ export default function ParentApprovalsPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Görev</CardTitle>
+            <CardTitle className="text-sm font-medium">Toplam GÃ¶rev</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -317,15 +317,15 @@ export default function ParentApprovalsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Onay Bekleyen Görevler</CardTitle>
+                <CardTitle>Onay Bekleyen GÃ¶revler</CardTitle>
                 <CardDescription>
-                  Çocuðunuzun tamamladýðý görevleri inceleyin
+                  Ã‡ocuÄŸunuzun tamamladÄ±ÄŸÄ± gÃ¶revleri inceleyin
                 </CardDescription>
               </div>
               {pendingTasks.length > 0 && (
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={selectAllPending}>
-                    Tümünü Seç
+                    TÃ¼mÃ¼nÃ¼ SeÃ§
                   </Button>
                   {selectedTasks.length > 0 && (
                     <>
@@ -354,7 +354,7 @@ export default function ParentApprovalsPage() {
             </CardHeader>
             <CardContent>
               {pendingTasks.length === 0 ? (
-                <EmptyState message="Onay bekleyen görev bulunmuyor" />
+                <EmptyState message="Onay bekleyen gÃ¶rev bulunmuyor" />
               ) : (
                 <div className="space-y-3">
                   {pendingTasks.map(task => (
@@ -378,14 +378,14 @@ export default function ParentApprovalsPage() {
         <TabsContent value="approved">
           <Card>
             <CardHeader>
-              <CardTitle>Onaylanan Görevler</CardTitle>
+              <CardTitle>Onaylanan GÃ¶revler</CardTitle>
               <CardDescription>
-                Öðretmen onayý bekleyen görevler
+                Ã–ÄŸretmen onayÄ± bekleyen gÃ¶revler
               </CardDescription>
             </CardHeader>
             <CardContent>
               {approvedTasks.length === 0 ? (
-                <EmptyState message="Onaylanan görev bulunmuyor" />
+                <EmptyState message="Onaylanan gÃ¶rev bulunmuyor" />
               ) : (
                 <div className="space-y-3">
                   {approvedTasks.map(task => (
@@ -404,14 +404,14 @@ export default function ParentApprovalsPage() {
         <TabsContent value="completed">
           <Card>
             <CardHeader>
-              <CardTitle>Tamamlanan Görevler</CardTitle>
+              <CardTitle>Tamamlanan GÃ¶revler</CardTitle>
               <CardDescription>
-                Öðretmen tarafýndan onaylanan görevler
+                Ã–ÄŸretmen tarafÄ±ndan onaylanan gÃ¶revler
               </CardDescription>
             </CardHeader>
             <CardContent>
               {completedTasks.length === 0 ? (
-                <EmptyState message="Tamamlanan görev bulunmuyor" />
+                <EmptyState message="Tamamlanan gÃ¶rev bulunmuyor" />
               ) : (
                 <div className="space-y-3">
                   {completedTasks.map(task => (
@@ -433,18 +433,18 @@ export default function ParentApprovalsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {approvalAction === 'approve' ? 'Görevi Onayla' : 'Görevi Reddet'}
+              {approvalAction === 'approve' ? 'GÃ¶revi Onayla' : 'GÃ¶revi Reddet'}
             </DialogTitle>
           </DialogHeader>
           
           {selectedTask && (
             <div className="space-y-4 py-4">
               <div className="bg-muted p-3 rounded-lg space-y-1 text-sm">
-                <div><span className="text-muted-foreground">Öðrenci:</span> {selectedTask.student.user.firstName} {selectedTask.student.user.lastName}</div>
+                <div><span className="text-muted-foreground">Ã–ÄŸrenci:</span> {selectedTask.student.user.firstName} {selectedTask.student.user.lastName}</div>
                 <div><span className="text-muted-foreground">Ders:</span> {selectedTask.subjectName || '-'}</div>
                 <div><span className="text-muted-foreground">Konu:</span> {selectedTask.topicName || '-'}</div>
-                <div><span className="text-muted-foreground">Soru:</span> {selectedTask.completedQuestionCount} çözülen</div>
-                <div><span className="text-muted-foreground">Süre:</span> {selectedTask.actualDuration} dk</div>
+                <div><span className="text-muted-foreground">Soru:</span> {selectedTask.completedQuestionCount} Ã‡Ã¶zÃ¼len</div>
+                <div><span className="text-muted-foreground">SÃ¼re:</span> {selectedTask.actualDuration} dk</div>
                 <div className="flex gap-3 pt-1">
                   <span className="text-green-600">D: {selectedTask.correctCount}</span>
                   <span className="text-red-600">Y: {selectedTask.wrongCount}</span>
@@ -455,7 +455,7 @@ export default function ParentApprovalsPage() {
               <div className="space-y-2">
                 <Label>Yorum (Opsiyonel)</Label>
                 <Textarea
-                  placeholder="Onay veya ret için yorum ekleyin..."
+                  placeholder="Onay veya ret iï¿½in yorum ekleyin..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
@@ -465,7 +465,7 @@ export default function ParentApprovalsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setApprovalModalOpen(false)}>
-              Ýptal
+              Ä°ptal
             </Button>
             <Button 
               variant={approvalAction === 'approve' ? 'default' : 'destructive'}
@@ -555,13 +555,13 @@ function TaskCard({
               <HelpCircle className="h-3 w-3" /> Soru
             </span>
             <span className="font-medium block">
-              {task.completedQuestionCount} çözülen
+              {task.completedQuestionCount} Ã‡Ã¶zÃ¼len
               {task.targetQuestionCount ? ` / ${task.targetQuestionCount} hedef` : ''}
             </span>
           </div>
           <div>
             <span className="text-muted-foreground flex items-center gap-1">
-              <Clock className="h-3 w-3" /> Süre
+              <Clock className="h-3 w-3" /> SÃ¼re
             </span>
             <span className="font-medium block">{task.actualDuration} dk</span>
           </div>
@@ -570,9 +570,9 @@ function TaskCard({
         {/* Results */}
         {(task.correctCount > 0 || task.wrongCount > 0 || task.blankCount > 0) && (
           <div className="flex gap-4 text-sm pt-2 border-t">
-            <span className="text-green-600 font-medium">Doðru: {task.correctCount}</span>
-            <span className="text-red-600 font-medium">Yanlýþ: {task.wrongCount}</span>
-            <span className="text-gray-600 font-medium">Boþ: {task.blankCount}</span>
+            <span className="text-green-600 font-medium">DoÄŸru: {task.correctCount}</span>
+            <span className="text-red-600 font-medium">YanlÄ±ÅŸ: {task.wrongCount}</span>
+            <span className="text-gray-600 font-medium">BoÅŸ: {task.blankCount}</span>
             {task.correctCount + task.wrongCount + task.blankCount > 0 && (
               <span className="text-muted-foreground">
                 Net: {((task.correctCount - (task.wrongCount * 0.25))).toFixed(2)}
@@ -584,7 +584,7 @@ function TaskCard({
         {/* Notes */}
         {task.studentNotes && (
           <div className="text-sm bg-muted p-2 rounded">
-            <span className="text-muted-foreground">Öðrenci Notu:</span> {task.studentNotes}
+            <span className="text-muted-foreground">Ã–ÄŸrenci Notu:</span> {task.studentNotes}
           </div>
         )}
 

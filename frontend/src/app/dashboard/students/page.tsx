@@ -181,19 +181,19 @@ export default function StudentsPage() {
                 <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
                         <GraduationCap className="h-8 w-8 text-indigo-600" />
-                        Öðrenciler
+                        Ã–ÄŸrenciler
                     </h2>
-                    <p className="text-slate-500">Okulunuzdaki öðrencileri yönetin ve kaydedin.</p>
+                    <p className="text-slate-500">Okulunuzdaki Ã¶ÄŸrencileri yÃ¶netin ve kaydedin.</p>
                 </div>
                 {userRole !== 'TEACHER' && (
                     <div className="flex items-center gap-3">
                         <Button variant="outline" className="gap-2 border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsImportOpen(true)}>
                             <FileUp className="h-4 w-4" />
-                            Excel'den Yükle
+                            Excel'den YÃ¼kle
                         </Button>
                         <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-lg shadow-indigo-600/20" onClick={() => setIsAddOpen(true)}>
                             <Plus className="h-4 w-4" />
-                            Yeni Öðrenci
+                            Yeni Ã–ÄŸrenci
                         </Button>
                     </div>
                 )}
@@ -204,7 +204,7 @@ export default function StudentsPage() {
                 {selectedStudents.size > 0 && userRole !== 'TEACHER' && (
                     <div className="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-between">
                         <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
-                            {selectedStudents.size} öðrenci seçildi
+                            {selectedStudents.size} Ã¶ÄŸrenci seÃ§ildi
                         </span>
                         <div className="flex gap-2">
                             <Button
@@ -214,7 +214,7 @@ export default function StudentsPage() {
                                 onClick={() => setIsBulkTransferOpen(true)}
                             >
                                 <Users className="h-4 w-4" />
-                                Sýnýf Deðiþtir
+                                SÄ±nÄ±f DeÄŸiÅŸtir
                             </Button>
                             <Button
                                 variant="destructive"
@@ -233,7 +233,7 @@ export default function StudentsPage() {
                     <div className="relative col-span-2">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
-                            placeholder="Öðrenci adý, no veya TC ile ara..."
+                            placeholder="Ã–ÄŸrenci adÄ±, no veya TC ile ara..."
                             className="pl-10"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -247,10 +247,10 @@ export default function StudentsPage() {
                         }}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Tüm Sýnýflar" />
+                            <SelectValue placeholder="TÃ¼m SÄ±nÄ±flar" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">Tüm Sýnýflar</SelectItem>
+                            <SelectItem value="all">TÃ¼m SÄ±nÄ±flar</SelectItem>
                             {filters.map((grade) => (
                                 <SelectItem key={grade.id} value={grade.id}>{grade.name}</SelectItem>
                             ))}
@@ -262,10 +262,10 @@ export default function StudentsPage() {
                         disabled={!selectedGrade || selectedGrade === "all"}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Tüm Þubeler" />
+                            <SelectValue placeholder="TÃ¼m Åžubeler" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">Tüm Þubeler</SelectItem>
+                            <SelectItem value="all">TÃ¼m Åžubeler</SelectItem>
                             {classesList.map((cls: any) => (
                                 <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
                             ))}
@@ -286,23 +286,23 @@ export default function StudentsPage() {
                                     </TableHead>
                                 )}
                                 <TableHead className="w-[80px] text-slate-600 dark:text-slate-400 font-semibold">Profil</TableHead>
-                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Öðrenci Bilgileri</TableHead>
-                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Sýnýf/Þube</TableHead>
-                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Öðrenci No / TC</TableHead>
-                                <TableHead className="text-right text-slate-600 dark:text-slate-400 font-semibold">Ýþlemler</TableHead>
+                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Ã–ÄŸrenci Bilgileri</TableHead>
+                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">SÄ±nÄ±f/Åžube</TableHead>
+                                <TableHead className="text-slate-600 dark:text-slate-400 font-semibold">Ã–ÄŸrenci No / TC</TableHead>
+                                <TableHead className="text-right text-slate-600 dark:text-slate-400 font-semibold">Ä°ÅŸlemler</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
                                     <TableCell colSpan={userRole !== 'TEACHER' ? 6 : 5} className="text-center py-10 text-slate-500">
-                                        Yüklüyor...
+                                        YÃ¼kleniyor...
                                     </TableCell>
                                 </TableRow>
                             ) : students.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={userRole !== 'TEACHER' ? 6 : 5} className="text-center py-10 text-slate-500">
-                                        Öðrenci bulunamadý.
+                                        Ã–ÄŸrenci bulunamadÄ±.
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -360,14 +360,14 @@ export default function StudentsPage() {
                                                 <DropdownMenuContent align="end" className="w-56">
                                                     {userRole !== 'TEACHER' && (
                                                         <DropdownMenuItem onClick={() => setEditStudent(student)}>
-                                                            <Edit className="mr-2 h-4 w-4" /> Düzenle
+                                                            <Edit className="mr-2 h-4 w-4" /> DÃ¼zenle
                                                         </DropdownMenuItem>
                                                     )}
                                                     <DropdownMenuItem onClick={() => setPasswordStudent(student)}>
-                                                        <Key className="mr-2 h-4 w-4" /> Öðrenci Þifresi Deðiþtir
+                                                        <Key className="mr-2 h-4 w-4" /> Ã–ÄŸrenci Åžifresi DeÄŸiÅŸtir
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => setParentPasswordStudent(student)} className="text-purple-600">
-                                                        <Key className="mr-2 h-4 w-4" /> Veli Þifresi Deðiþtir
+                                                        <Key className="mr-2 h-4 w-4" /> Veli Åžifresi DeÄŸiÅŸtir
                                                     </DropdownMenuItem>
                                                     {userRole !== 'TEACHER' && (
                                                         <DropdownMenuItem className="text-red-600" onClick={() => setDeleteId(student.id)}>
@@ -422,13 +422,13 @@ export default function StudentsPage() {
             <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Öðrenciyi Sil</AlertDialogTitle>
+                        <AlertDialogTitle>Ã–ÄŸrenciyi Sil</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bu öðrenciyi ve tüm verilerini silmek istediðinize emin misiniz? Bu iþlem geri alýnamaz.
+                            Bu Ã¶ÄŸrenciyi ve tÃ¼m verilerini silmek istediÄŸinize emin misiniz? Bu iÅŸlem geri alÄ±namaz.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                        <AlertDialogCancel>VazgeÃ§</AlertDialogCancel>
                         <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
                             Evet, Sil
                         </AlertDialogAction>
@@ -440,15 +440,15 @@ export default function StudentsPage() {
             <AlertDialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Toplu Öðrenci Silme</AlertDialogTitle>
+                        <AlertDialogTitle>Toplu Ã–ÄŸrenci Silme</AlertDialogTitle>
                         <AlertDialogDescription>
-                            {selectedStudents.size} öðrenciyi ve tüm verilerini silmek istediðinize emin misiniz? Bu iþlem geri alýnamaz.
+                            {selectedStudents.size} Ã¶ÄŸrenciyi ve tÃ¼m verilerini silmek istediÄŸinize emin misiniz? Bu iÅŸlem geri alÄ±namaz.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                        <AlertDialogCancel>VazgeÃ§</AlertDialogCancel>
                         <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleBulkDelete}>
-                            Evet, {selectedStudents.size} Öðrenciyi Sil
+                            Evet, {selectedStudents.size} Ã¶ÄŸrenciyi Sil
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

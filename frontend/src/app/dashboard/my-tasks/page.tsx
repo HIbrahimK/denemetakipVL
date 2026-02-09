@@ -73,8 +73,8 @@ export default function MyTasksPage() {
 
       if (response.ok) {
         const data = await response.json();
-        // Öðrenci için: atanan planlarý göster (isTemplate true olsa bile)
-        // Backend zaten sadece öðrenciye atanan planlarý döndürüyor
+        // ï¿½ï¿½renci iï¿½in: atanan planlarï¿½ gï¿½ster (isTemplate true olsa bile)
+        // Backend zaten sadece ï¿½ï¿½renciye atanan planlarï¿½ dï¿½ndï¿½rï¿½yor
         const assignedPlans = data.filter((p: StudyPlan) => 
           p.status === 'ACTIVE' || p.status === 'ASSIGNED'
         );
@@ -130,7 +130,7 @@ export default function MyTasksPage() {
   };
 
   const getDayName = (index: number) => {
-    const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    const days = ['Pzt', 'Sal', 'Ã‡ar', 'Per', 'Cum', 'Cmt', 'Paz'];
     return days[index];
   };
 
@@ -147,9 +147,9 @@ export default function MyTasksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Çalýþma Görevlerim</h1>
+          <h1 className="text-3xl font-bold">ï¿½alï¿½ï¿½ma Gï¿½revlerim</h1>
           <p className="text-muted-foreground mt-1">
-            Size atanan çalýþma planlarýný görüntüleyin ve görevlerinizi tamamlayýn
+            Size atanan ï¿½alï¿½ï¿½ma planlarï¿½nï¿½ gï¿½rï¿½ntï¿½leyin ve gï¿½revlerinizi tamamlayï¿½n
           </p>
         </div>
       </div>
@@ -160,7 +160,7 @@ export default function MyTasksPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-center">
-              Henüz size atanmýþ bir çalýþma planý bulunmuyor.
+              HenÃ¼z size atanmÄ±ÅŸ bir Ã§alÄ±ÅŸma planÄ± bulunmuyor.
             </p>
           </CardContent>
         </Card>
@@ -182,7 +182,7 @@ export default function MyTasksPage() {
                   </div>
                   <CardTitle className="text-lg mt-2">{plan.name}</CardTitle>
                   <CardDescription className="line-clamp-2">
-                    {plan.description || 'Açýklama yok'}
+                    {plan.description || 'AÃ§Ä±klama yok'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -190,20 +190,20 @@ export default function MyTasksPage() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Target className="h-4 w-4" />
                     <span>
-                      Öðretmen: {plan.teacher?.firstName} {plan.teacher?.lastName}
+                      Ã–ÄŸretmen: {plan.teacher?.firstName} {plan.teacher?.lastName}
                     </span>
                   </div>
                   
                   {/* Week Start Date */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>Hafta Baþlangýcý: {formatDate(plan.weekStartDate)}</span>
+                    <span>Hafta BaÅŸlangÄ±cÄ±: {formatDate(plan.weekStartDate)}</span>
                   </div>
                   
                   {/* Completion Progress */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tamamlanan Görevler</span>
+                      <span className="text-muted-foreground">Tamamlanan GÃ¶revler</span>
                       <span className="font-medium">
                         {stats.completed} / {stats.total}
                       </span>
@@ -222,12 +222,12 @@ export default function MyTasksPage() {
                       {stats.percentage === 100 ? (
                         <>
                           <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Planý Görüntüle
+                          PlanÄ± GÃ¶rÃ¼ntÃ¼le
                         </>
                       ) : (
                         <>
                           <Clock className="mr-2 h-4 w-4" />
-                          Görevleri Gör
+                          GÃ¶revleri GÃ¶r
                         </>
                       )}
                       <ChevronRight className="ml-auto h-4 w-4" />

@@ -166,7 +166,7 @@ function SearchPageContent() {
                         Geri
                     </Button>
                     <h1 className="text-2xl font-bold">
-                        {type === 'class' ? `${className} Sýnýfý` : 'Öðrenci Detayý'}
+                        {type === 'class' ? `${className} SÄ±nÄ±fÄ±` : 'Ã–ÄŸrenci DetayÄ±'}
                     </h1>
                 </div>
 
@@ -183,11 +183,11 @@ function SearchPageContent() {
                                             {student.firstName} {student.lastName}
                                         </h3>
                                         <p className="text-sm text-slate-500">
-                                            Okul No: {student.studentNumber} • Sýnýf: {student.className}
+                                            Okul No: {student.studentNumber} â€“ SÄ±nÄ±f: {student.className}
                                         </p>
                                     </div>
                                     <Button onClick={() => router.push(`/dashboard/student/results?studentId=${student.id}`)}>
-                                        Detaylarý Gör
+                                        DetaylarÄ± GÃ¶r
                                     </Button>
                                 </div>
                             </CardContent>
@@ -210,14 +210,14 @@ function SearchPageContent() {
                         Geri
                     </Button>
                     <h1 className="text-2xl font-bold">
-                        &quot;{query}&quot; için arama sonuçlarý
+                        &quot;{query}&quot; iÃ§in arama sonuÃ§larÄ±
                     </h1>
                 </div>
 
                 {!hasResults && (
                     <Card>
                         <CardContent className="pt-6 text-center text-slate-500">
-                            Sonuç bulunamadý. Farklý bir arama terimi deneyin.
+                            SonuÃ§ bulunamadÄ±. FarklÄ± bir arama terimi deneyin.
                         </CardContent>
                     </Card>
                 )}
@@ -228,7 +228,7 @@ function SearchPageContent() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
-                                Öðrenciler ({results.students.length})
+                                Ã–ÄŸrenciler ({results.students.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -243,7 +243,7 @@ function SearchPageContent() {
                                                 {student.firstName} {student.lastName}
                                             </div>
                                             <div className="text-sm text-slate-500">
-                                                {student.studentNumber} • {student.className}
+                                                {student.studentNumber} â€“ {student.className}
                                             </div>
                                         </div>
                                         <Button
@@ -266,7 +266,7 @@ function SearchPageContent() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <BookOpen className="h-5 w-5" />
-                                Sýnavlar ({results.exams.length})
+                                SÄ±navlar ({results.exams.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -279,7 +279,7 @@ function SearchPageContent() {
                                         <div>
                                             <div className="font-medium">{exam.title}</div>
                                             <div className="text-sm text-slate-500">
-                                                {exam.type} • {exam.gradeLevel}. Sýnýf
+                                                {exam.type} â€“ {exam.gradeLevel}. SÄ±nÄ±f
                                             </div>
                                         </div>
                                         <Button
@@ -287,7 +287,7 @@ function SearchPageContent() {
                                             size="sm"
                                             onClick={() => router.push(`/dashboard/exams/${exam.id}/results`)}
                                         >
-                                            Sonuçlar
+                                            SonuÃ§lar
                                         </Button>
                                     </div>
                                 ))}
@@ -302,7 +302,7 @@ function SearchPageContent() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Users className="h-5 w-5" />
-                                Sýnýflar ({results.classes.length})
+                                SÄ±nÄ±flar ({results.classes.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -315,7 +315,7 @@ function SearchPageContent() {
                                         <div>
                                             <div className="font-medium">{cls.className}</div>
                                             <div className="text-sm text-slate-500">
-                                                {cls.studentCount} öðrenci
+                                                {cls.studentCount} Ã¶ÄŸrenci
                                             </div>
                                         </div>
                                         <Button
@@ -323,7 +323,7 @@ function SearchPageContent() {
                                             size="sm"
                                             onClick={() => router.push(`/dashboard/search?type=class&name=${encodeURIComponent(cls.className)}`)}
                                         >
-                                            Öðrenciler
+                                            Ã–ÄŸrenciler
                                         </Button>
                                     </div>
                                 ))}
