@@ -10,6 +10,7 @@
     "npm": "10.x"
   },
   "scripts": {
+    "prebuild": "prisma generate",
     "build": "node --max-old-space-size=1024 ./node_modules/.bin/nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/src/main",
@@ -28,6 +29,7 @@
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",
+    "@nestjs/cli": "^11.0.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -40,6 +42,9 @@
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.2.1",
     "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^22.10.7",
     "@types/pdfkit": "^0.17.4",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.66.7",
@@ -56,20 +61,16 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
-    "@nestjs/cli": "^11.0.0",
-    "typescript": "^5.7.3",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0"
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
-    "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^22.10.7",
     "@types/nodemailer": "^7.0.9",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
