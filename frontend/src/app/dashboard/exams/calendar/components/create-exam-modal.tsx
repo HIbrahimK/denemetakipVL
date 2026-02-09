@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface CreateExamModalProps {
     open: boolean;
@@ -73,7 +74,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                 date: formData.scheduledDateTime || new Date().toISOString(),
             };
 
-            const response = await fetch('\/exams', {
+            const response = await fetch(`${API_BASE_URL}/exams`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

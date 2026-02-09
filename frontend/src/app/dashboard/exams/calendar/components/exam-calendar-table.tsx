@@ -221,7 +221,7 @@ export function ExamCalendarTable({
             if (response.ok) {
                 toast({
                     title: 'Başarılı',
-                    description: 'Yayın görünürlüğü göncellendi',
+                    description: 'Yayın görünürlüğü güncellendi',
                 });
                 onRefresh();
             }
@@ -368,7 +368,7 @@ export function ExamCalendarTable({
                                     <TableCell>{exam.broughtBy || '-'}</TableCell>
                                     <TableCell>{exam.quantity || '-'}</TableCell>
                                     <TableCell>
-                                        {exam.fee ? `${exam.fee} ?` : '-'}
+                                        {exam.fee ? `${exam.fee} ₺` : '-'}
                                     </TableCell>
                                     <TableCell>
                                         {exam.fee ? (
@@ -453,7 +453,7 @@ export function ExamCalendarTable({
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem>
                                                     <Copy className="w-4 h-4 mr-2" />
-                                                    Baçka Sınıflara Kopyala
+                                                    Başka Sınıflara Kopyala
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem>
                                                     <Upload className="w-4 h-4 mr-2" />

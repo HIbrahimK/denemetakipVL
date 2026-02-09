@@ -154,7 +154,7 @@ export default function AchievementManagementPage() {
   const fetchAchievements = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('\/achievements?includeInactive=true', {
+      const response = await fetch(`${API_BASE_URL}/achievements?includeInactive=true`, {
       });
 
       if (response.ok) {
@@ -265,7 +265,7 @@ export default function AchievementManagementPage() {
       
       // Grant achievement to all selected students
       const promises = selectedStudentIds.map(studentId =>
-        fetch('\/achievements/check-unlock', {
+        fetch(`${API_BASE_URL}/achievements/check-unlock`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

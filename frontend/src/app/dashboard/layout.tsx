@@ -116,11 +116,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Student menu - only results
         if (role === 'STUDENT') {
             return [
-                { name: "Sonularm", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
                 { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
-                { name: "alma Planlarm", href: "/dashboard/my-tasks", icon: BookOpenCheck },
-                { name: "Baarlarm", href: "/dashboard/achievements", icon: Award },
-                { name: "Grup almalarm", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Çalışma Planlarım", href: "/dashboard/my-tasks", icon: BookOpenCheck },
+                { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
+                { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -129,7 +129,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Parent menu - only child results
         if (role === 'PARENT') {
             return [
-                { name: "ocuumun Sonular", href: "/dashboard/parent/results", icon: BarChart2 },
+                { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -138,13 +138,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Teacher menu - limited access (no users, no settings)
         if (role === 'TEACHER') {
             return [
-                { name: "Genel Bak", href: "/dashboard", icon: LayoutDashboard },
-                { name: "Snavlar", href: "/dashboard/exams", icon: BookOpen },
+                { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+                { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
                 { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-                { name: "Sonular", href: "/dashboard/results", icon: BarChart2 },
-                { name: "renciler", href: "/dashboard/students", icon: GraduationCap },
-                { name: "alma Planlar", href: "/dashboard/study-plans", icon: BookOpenCheck },
-                { name: "Mentor Gruplar", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
+                { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
@@ -153,17 +153,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         // Admin menu - full access
         return [
-            { name: "Genel Bak", href: "/dashboard", icon: LayoutDashboard },
-            { name: "Snavlar", href: "/dashboard/exams", icon: BookOpen },
+            { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
             { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-            { name: "renciler", href: "/dashboard/students", icon: GraduationCap },
-            { name: "Snflar", href: "/dashboard/classes", icon: School },
-            { name: "alma Planlar", href: "/dashboard/study-plans", icon: BookOpenCheck },
-            { name: "Mentor Gruplar", href: "/dashboard/groups", icon: UsersRound },
-            { name: "Baarlar", href: "/dashboard/admin/achievements", icon: Award },
+            { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "Sınıflar", href: "/dashboard/classes", icon: School },
+            { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
+            { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
+            { name: "Başarılar", href: "/dashboard/admin/achievements", icon: Award },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
-            { name: "Kullanclar", href: "/dashboard/users", icon: Users },
+            { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
     };
@@ -173,16 +173,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const getRoleLabel = () => {
         if (!user) return "";
         
-        // retmen iin bran kontrol
+        // Öğretmen için branş kontrolü
         if (user.role === "TEACHER") {
-            return user.branch ? `${user.branch} retmeni` : "retmen";
+            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
         }
         
         const roleLabels: Record<string, string> = {
-            SCHOOL_ADMIN: "Okul Yneticisi",
-            STUDENT: "renci",
+            SCHOOL_ADMIN: "Okul Yöneticisi",
+            STUDENT: "Öğrenci",
             PARENT: "Veli",
-            SUPER_ADMIN: "Sper Admin"
+            SUPER_ADMIN: "Süper Admin"
         };
         return roleLabels[user.role] || user.role;
     };

@@ -105,7 +105,7 @@ export function ExamCalendarSettings() {
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Ayarlar göncellenirken bir hata oluştu',
+                description: 'Ayarlar güncellenirken bir hata oluştu',
                 variant: 'destructive',
             });
         } finally {

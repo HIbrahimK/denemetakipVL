@@ -199,7 +199,7 @@ function NewStudyPlanContent() {
   const fetchTemplates = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('\/study/plans?isTemplate=true', {
+      const res = await fetch(`${API_BASE_URL}/study/plans?isTemplate=true`, {
       });
       if (res.ok) {
         const data = await res.json();
@@ -213,7 +213,7 @@ function NewStudyPlanContent() {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('\/subjects', {
+      const res = await fetch(`${API_BASE_URL}/subjects`, {
       });
       if (res.ok) {
         const data = await res.json();
@@ -227,7 +227,7 @@ function NewStudyPlanContent() {
   const fetchTopics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('\/subjects/topics/all', {
+      const res = await fetch(`${API_BASE_URL}/subjects/topics/all`, {
       });
       if (res.ok) {
         const data = await res.json();

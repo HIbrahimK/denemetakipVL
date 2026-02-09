@@ -66,7 +66,7 @@ export default function MyTasksPage() {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch('\/study/plans', {
+      const response = await fetch(`${API_BASE_URL}/study/plans`, {
         headers: {
         },
       });

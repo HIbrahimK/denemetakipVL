@@ -71,7 +71,7 @@ export default function AdminSubjectsPage() {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('\/subjects', {
+      const res = await fetch(`${API_BASE_URL}/subjects`, {
       });
 
       if (res.ok) {

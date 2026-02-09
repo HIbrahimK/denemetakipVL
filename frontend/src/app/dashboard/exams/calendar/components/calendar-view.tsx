@@ -97,7 +97,7 @@ export function CalendarView({
 
     // Ayın başladığı günü bul (0 = Pazar, 1 = Pazartesi, ...)
     const startDay = monthStart.getDay();
-    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi baçlat
+    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi başlat
 
     const getExamsForDay = (day: Date) => {
         return exams.filter((exam) => {

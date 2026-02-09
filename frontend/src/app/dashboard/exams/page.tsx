@@ -158,8 +158,8 @@ export default function ExamsPage() {
         <div className="space-y-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Snavlar</h2>
-                    <p className="text-slate-500 dark:text-slate-400">Tm deneme snavlarn buradan ynetebilirsiniz. Takvim grnm iin <Link href="/dashboard/exams/calendar" className="text-indigo-600 hover:underline font-medium">Deneme Takvimi</Link> sayfasn ziyaret edin.</p>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Sınavlar</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Tüm deneme sınavlarını buradan yönetebilirsiniz. Takvim görünümü için <Link href="/dashboard/exams/calendar" className="text-indigo-600 hover:underline font-medium">Deneme Takvimi</Link> sayfasını ziyaret edin.</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" asChild>
@@ -176,42 +176,42 @@ export default function ExamsPage() {
             <Card className="border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-50 via-indigo-50 to-slate-50 dark:from-slate-900 dark:via-slate-900/70 dark:to-slate-900">
                 <CardHeader className="pb-2 flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-                        <Filter className="h-4 w-4" /> Filtrele ve srala
+                        <Filter className="h-4 w-4" /> Filtrele ve sırala
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Snav tr, tarih aral ve snf seviyesine gre listeyi daraltn. Son eklenen stte.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Sınav türü, tarih aralığı ve sınıf seviyesine göre listeyi daraltın. Son eklenen üstte.</p>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Layers className="h-4 w-4" /> Snav Tr</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Layers className="h-4 w-4" /> Sınav Türü</label>
                         <select
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value="ALL">Tm</option>
+                            <option value="ALL">Tümü</option>
                             <option value="TYT">TYT</option>
                             <option value="AYT">AYT</option>
                             <option value="LGS">LGS</option>
-                            <option value="OZEL">zel</option>
+                            <option value="OZEL">Özel</option>
                         </select>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Users className="h-4 w-4" /> Snf Seviyesi</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Users className="h-4 w-4" /> Sınıf Seviyesi</label>
                         <select
                             value={gradeFilter}
                             onChange={(e) => setGradeFilter(e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value="">Tm</option>
+                            <option value="">Tümü</option>
                             {[5,6,7,8,9,10,11,12].map(grade => (
-                                <option key={grade} value={grade}>{grade}. Snf</option>
+                                <option key={grade} value={grade}>{grade}. Sınıf</option>
                             ))}
                         </select>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Balang</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Başlangıç</label>
                         <Input
                             type="date"
                             value={startDate}
@@ -221,7 +221,7 @@ export default function ExamsPage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Biti</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Bitiş</label>
                         <div className="flex gap-2 items-center">
                             <Input
                                 type="date"
@@ -230,7 +230,7 @@ export default function ExamsPage() {
                                 className="h-10"
                             />
                             <Button variant="outline" size="icon" className="shrink-0 border-slate-300 dark:border-slate-700" onClick={resetFilters}>
-                                Sfrla
+                                Sıfırla
                             </Button>
                         </div>
                     </div>
@@ -239,10 +239,10 @@ export default function ExamsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    <p className="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">Ykleniyor...</p>
+                    <p className="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">Yükleniyor...</p>
                 ) : filteredExams.length === 0 ? (
                     <div className="col-span-full text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-                        <p className="text-slate-500 dark:text-slate-400">Filtrelere uyan snav bulunamad.</p>
+                        <p className="text-slate-500 dark:text-slate-400">Filtrelere uyan sınav bulunamadı.</p>
                     </div>
                 ) : filteredExams.map((exam) => (
                     <Card key={exam.id} className="group hover:shadow-md transition-all duration-200 border-slate-200 dark:border-slate-800 dark:bg-slate-900">
@@ -266,23 +266,23 @@ export default function ExamsPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>lemler</DropdownMenuLabel>
+                                        <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
                                         <DropdownMenuItem asChild>
                                             <Link href={`/dashboard/exams/${exam.id}/results`} className="cursor-pointer">
-                                                <BarChart2 className="mr-2 h-4 w-4" /> statistikler
+                                                <BarChart2 className="mr-2 h-4 w-4" /> İstatistikler
                                             </Link>
                                         </DropdownMenuItem>
                                         {userRole === 'SCHOOL_ADMIN' && (
                                             <>
                                                 <DropdownMenuItem className="cursor-pointer" onClick={() => setEditExam(exam)}>
-                                                    <Edit className="mr-2 h-4 w-4" /> Dzenle
+                                                    <Edit className="mr-2 h-4 w-4" /> Düzenle
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('results'); }}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> Sonular Temizle
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Sonuçları Temizle
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('exam'); }}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> Snav Sil
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Sınavı Sil
                                                 </DropdownMenuItem>
                                             </>
                                         )}
@@ -296,12 +296,12 @@ export default function ExamsPage() {
                                     {exam._count?.attempts > 0 ? (
                                         <>
                                             <Users className="h-4 w-4 text-emerald-600" />
-                                            <span className="font-medium text-emerald-600">{exam._count.attempts} renci Katld</span>
+                                            <span className="font-medium text-emerald-600">{exam._count.attempts} Öğrenci Katıldı</span>
                                         </>
                                     ) : (
                                         <>
                                             <FileSpreadsheet className="h-4 w-4 text-amber-500" />
-                                            <span className="text-amber-500 font-medium">Sonu Bekleniyor</span>
+                                            <span className="text-amber-500 font-medium">Sonuç Bekleniyor</span>
                                         </>
                                     )}
                                 </div>
@@ -311,13 +311,13 @@ export default function ExamsPage() {
                                 <Button variant="outline" className="w-full" asChild>
                                     <Link href={`/dashboard/exams/${exam.id}/results`}>
                                         <BarChart2 className="mr-2 h-4 w-4" />
-                                        Sonular
+                                        Sonuçlar
                                     </Link>
                                 </Button>
                                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
                                     <Link href={`/dashboard/import?examId=${exam.id}`}>
                                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                        Veri Ykle
+                                        Veri Yükle
                                     </Link>
                                 </Button>
                             </div>
@@ -328,7 +328,7 @@ export default function ExamsPage() {
                                     onClick={() => window.open(`${API_BASE_URL}/exams/${exam.id}/answer-key`, '_blank')}
                                 >
                                     <Download className="h-4 w-4" />
-                                    Cevap Anahtar
+                                    Cevap Anahtarı
                                 </Button>
                             )}
                         </CardContent>
@@ -349,13 +349,13 @@ export default function ExamsPage() {
                         <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
                         <AlertDialogDescription>
                             {deleteType === 'exam'
-                                ? "Bu snav ve tm bal verilerini kalc olarak silmek zeresiniz. Bu ilem geri alnamaz."
-                                : "Bu snava ait yklenmi tm renci sonularn silmek zeresiniz. Snav kayd kalacaktr."
+                                ? "Bu sınavı ve tüm bağlı verilerini kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz."
+                                : "Bu sınava ait yüklenmiş tüm öğrenci sonuçlarını silmek üzeresiniz. Sınav kaydı kalacaktır."
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>ptal</AlertDialogCancel>
+                        <AlertDialogCancel>İptal</AlertDialogCancel>
                         <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
                             Evet, Sil
                         </AlertDialogAction>

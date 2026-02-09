@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Loader2, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { API_BASE_URL } from '@/lib/auth';
 
 export default function NewGroupPage() {
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ export default function NewGroupPage() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await fetch('\/users?role=TEACHER', {
+      const response = await fetch(`${API_BASE_URL}/users?role=TEACHER`, {
         headers: {
         },
       });
@@ -79,7 +80,7 @@ export default function NewGroupPage() {
         requestData.teacherId = formData.teacherId;
       }
       
-      const response = await fetch('\/groups', {
+      const response = await fetch(`${API_BASE_URL}/groups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,14 +96,14 @@ export default function NewGroupPage() {
       }
 
       toast({
-        title: 'Baarl',
-        description: 'Mentor grubu oluturuldu',
+        title: 'Başarılı',
+        description: 'Mentor grubu oluşturuldu',
       });
 
       router.push('/dashboard/groups');
     } catch (error) {
       console.error('Error creating group:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Grup oluturulurken bir hata olutu';
+      const errorMessage = error instanceof Error ? error.message : 'Grup oluşturulurken bir hata oluştu';
       toast({
         title: 'Hata',
         description: errorMessage,
@@ -119,7 +120,7 @@ export default function NewGroupPage() {
         <Link href="/dashboard/groups">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Gruplara Dn
+            Gruplara Dön
           </Button>
         </Link>
       </div>
@@ -128,19 +129,19 @@ export default function NewGroupPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Yeni Mentor Grubu Olutur
+            Yeni Mentor Grubu Oluştur
           </CardTitle>
           <CardDescription>
-            rencileriniz iin bir mentor grubu oluturun
+            Öğrencileriniz için bir mentor grubu oluşturun
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Grup Ad *</Label>
+              <Label htmlFor="name">Grup Adı *</Label>
               <Input
                 id="name"
-                placeholder="rn: 12. Snf TYT Grubu"
+                placeholder="Örn: 12. Sınıf TYT Grubu"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -148,10 +149,10 @@ export default function NewGroupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Aklama</Label>
+              <Label htmlFor="description">Açıklama</Label>
               <Textarea
                 id="description"
-                placeholder="Grup hakknda ksa bir aklama..."
+                placeholder="Grup hakkında kısa bir açıklama..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
@@ -160,10 +161,10 @@ export default function NewGroupPage() {
 
             {isAdmin && (
               <div className="space-y-2">
-                <Label>retmen (Opsiyonel)</Label>
+                <Label>Öğretmen (Opsiyonel)</Label>
                 <Select value={formData.teacherId} onValueChange={(value) => setFormData({ ...formData, teacherId: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="retmen seiniz..." />
+                    <SelectValue placeholder="Öğretmen seçiniz..." />
                   </SelectTrigger>
                   <SelectContent>
                     {teachers.map((teacher) => (
@@ -177,12 +178,12 @@ export default function NewGroupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="maxStudents">Maksimum renci</Label>
+              <Label htmlFor="maxStudents">Maksimum Öğrenci</Label>
               <Input
                 id="maxStudents"
                 type="number"
                 min={1}
-                placeholder="rn: 25"
+                placeholder="Örn: 25"
                 value={formData.maxStudents}
                 onChange={(e) => setFormData({ ...formData, maxStudents: e.target.value })}
               />
@@ -193,14 +194,14 @@ export default function NewGroupPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Oluturuluyor...
+                    Oluşturuluyor...
                   </>
                 ) : (
-                  'Grubu Olutur'
+                  'Grubu Oluştur'
                 )}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>
-                ptal
+                İptal
               </Button>
             </div>
           </form>

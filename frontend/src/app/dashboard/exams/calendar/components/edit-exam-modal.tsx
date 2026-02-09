@@ -112,7 +112,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Deneme göncellenirken bir hata oluştu',
+                description: 'Deneme güncellenirken bir hata oluştu',
                 variant: 'destructive',
             });
         } finally {

@@ -12,6 +12,7 @@ import { Plus, Pencil, Trash2, Users, GraduationCap, ArrowRightLeft, Merge } fro
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface Class {
   id: string;
@@ -35,7 +36,7 @@ interface Student {
   };
 }
 
-// Sabit snf seviyeleri (5-12)
+// Sabit sınıf seviyeleri (5-12)
 const FIXED_GRADES = [
   { id: '5', name: '5' },
   { id: '6', name: '6' },
@@ -69,8 +70,6 @@ export default function ClassesPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
   useEffect(() => {
     // Get user info and schoolId
     const userStr = localStorage.getItem('user');
@@ -93,7 +92,7 @@ export default function ClassesPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/schools/${schoolId}/classes`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes`, {
       });
       if (response.ok) {
         const data = await response.json();
@@ -112,7 +111,7 @@ export default function ClassesPage() {
     return grade?.gradeId || '';
   };
 
-  // Snf adn "5/A" formatnda gster
+  // Sınıf adını "5/A" formatında göster
   const displayClassName = (classItem: Class) => {
     return `${classItem.grade.name}/${classItem.name}`;
   };
@@ -122,7 +121,7 @@ export default function ClassesPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/schools/${schoolId}/classes`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,14 +137,14 @@ export default function ClassesPage() {
         setFormData({ gradeLevel: '', section: '' });
         fetchClasses(schoolId);
         toast({
-          title: "Baarl",
-          description: "Snf baaryla eklendi.",
+          title: "Başarılı",
+          description: "Sınıf başarıyla eklendi.",
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Snf eklenemedi',
+          description: error.message || 'Sınıf eklenemedi',
           variant: "destructive",
         });
       }
@@ -159,7 +158,7 @@ export default function ClassesPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/schools/${schoolId}/classes/${selectedClass.id}`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes/${selectedClass.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -176,14 +175,14 @@ export default function ClassesPage() {
         setFormData({ gradeLevel: '', section: '' });
         fetchClasses(schoolId);
         toast({
-          title: "Baarl",
-          description: "Snf baaryla gncellendi.",
+          title: "Başarılı",
+          description: "Sınıf başarıyla güncellendi.",
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Snf gncellenemedi',
+          description: error.message || 'Sınıf güncellenemedi',
           variant: "destructive",
         });
       }
@@ -197,7 +196,7 @@ export default function ClassesPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/schools/${schoolId}/classes/${selectedClass.id}`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes/${selectedClass.id}`, {
         method: 'DELETE',
       });
 
@@ -206,14 +205,14 @@ export default function ClassesPage() {
         setSelectedClass(null);
         fetchClasses(schoolId);
         toast({
-          title: "Baarl",
-          description: "Snf baaryla silindi.",
+          title: "Başarılı",
+          description: "Sınıf başarıyla silindi.",
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Snf silinemedi',
+          description: error.message || 'Sınıf silinemedi',
           variant: "destructive",
         });
       }
@@ -221,7 +220,7 @@ export default function ClassesPage() {
       console.error('Error deleting class:', error);
       toast({
         title: "Hata",
-        description: 'Snf silinirken bir hata olutu',
+        description: 'Sınıf silinirken bir hata oluştu',
         variant: "destructive",
       });
     }
@@ -234,7 +233,7 @@ export default function ClassesPage() {
 
   const openEditDialog = (classItem: Class) => {
     setSelectedClass(classItem);
-    // Mevcut snfn grade ve section deerlerini ayr
+    // Mevcut sınıfın grade ve section değerlerini ayır
     setFormData({ 
       gradeLevel: classItem.grade.name, 
       section: classItem.name 
@@ -263,7 +262,7 @@ export default function ClassesPage() {
   const fetchStudents = async (classId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/students?classId=${classId}`, {
+      const response = await fetch(`${API_BASE_URL}/students?classId=${classId}`, {
       });
       if (response.ok) {
         const data = await response.json();
@@ -279,7 +278,7 @@ export default function ClassesPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/schools/${schoolId}/classes/merge`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes/merge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -292,14 +291,14 @@ export default function ClassesPage() {
         setIsMergeDialogOpen(false);
         fetchClasses(schoolId);
         toast({
-          title: "Baarl",
+          title: "Başarılı",
           description: result.message,
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Snflar birletirilemedi',
+          description: error.message || 'Sınıflar birleştirilemedi',
           variant: "destructive",
         });
       }
@@ -307,7 +306,7 @@ export default function ClassesPage() {
       console.error('Error merging classes:', error);
       toast({
         title: "Hata",
-        description: 'Birletirme srasnda bir hata olutu',
+        description: 'Birleştirme sırasında bir hata oluştu',
         variant: "destructive",
       });
     }
@@ -324,7 +323,7 @@ export default function ClassesPage() {
         body.studentIds = selectedStudents;
       }
 
-      const response = await fetch(`${API_URL}/schools/${schoolId}/classes/${selectedClass.id}/transfer-students`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/classes/${selectedClass.id}/transfer-students`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,14 +338,14 @@ export default function ClassesPage() {
         setSelectedStudents([]);
         fetchClasses(schoolId);
         toast({
-          title: "Baarl",
+          title: "Başarılı",
           description: result.message,
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'renciler aktarlamad',
+          description: error.message || 'Öğrenciler aktarılamadı',
           variant: "destructive",
         });
       }
@@ -354,7 +353,7 @@ export default function ClassesPage() {
       console.error('Error transferring students:', error);
       toast({
         title: "Hata",
-        description: 'Aktarma srasnda bir hata olutu',
+        description: 'Aktarma sırasında bir hata oluştu',
         variant: "destructive",
       });
     }
@@ -380,17 +379,17 @@ export default function ClassesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Snf Ynetimi</h1>
-          <p className="text-muted-foreground">Okuldaki snflar ynetin</p>
+          <h1 className="text-3xl font-bold tracking-tight">Sınıf Yönetimi</h1>
+          <p className="text-muted-foreground">Okuldaki sınıfları yönetin</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={openMergeDialog}>
             <Merge className="mr-2 h-4 w-4" />
-            Snf Birletir
+            Sınıf Birleştir
           </Button>
           <Button onClick={openAddDialog}>
             <Plus className="mr-2 h-4 w-4" />
-            Snf Ekle
+            Sınıf Ekle
           </Button>
         </div>
       </div>
@@ -399,7 +398,7 @@ export default function ClassesPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Snf</CardTitle>
+            <CardTitle className="text-sm font-medium">Toplam Sınıf</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -409,7 +408,7 @@ export default function ClassesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam renci</CardTitle>
+            <CardTitle className="text-sm font-medium">Toplam Öğrenci</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -421,12 +420,12 @@ export default function ClassesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Snf Seviyesi</CardTitle>
+            <CardTitle className="text-sm font-medium">Sınıf Seviyesi</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{FIXED_GRADES.length}</div>
-            <p className="text-xs text-muted-foreground">Farkl snf seviyesi</p>
+            <p className="text-xs text-muted-foreground">Farklı sınıf seviyesi</p>
           </CardContent>
         </Card>
       </div>
@@ -434,37 +433,37 @@ export default function ClassesPage() {
       {/* Classes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Snflar</CardTitle>
-          <CardDescription>Tm snflar grntleyin ve ynetin</CardDescription>
+          <CardTitle>Sınıflar</CardTitle>
+          <CardDescription>Tüm sınıfları görüntüleyin ve yönetin</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Snf</TableHead>
-                <TableHead>ube</TableHead>
-                <TableHead>renci Says</TableHead>
-                <TableHead className="text-right">lemler</TableHead>
+                <TableHead>Sınıf</TableHead>
+                <TableHead>Sınıf</TableHead>
+                <TableHead>Öğrenci Sayısı</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Ykleniyor...</TableCell>
+                  <TableCell colSpan={4} className="text-center">Yükleniyor...</TableCell>
                 </TableRow>
               ) : classes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Henz snf eklenmemi</TableCell>
+                  <TableCell colSpan={4} className="text-center">Henüz sınıf eklenmemiş</TableCell>
                 </TableRow>
               ) : (
                 classes.map((classItem) => (
                   <TableRow key={classItem.id}>
-                    <TableCell className="font-medium">{classItem.grade.name}. Snf</TableCell>
+                    <TableCell className="font-medium">{classItem.grade.name}. Sınıf</TableCell>
                     <TableCell>{displayClassName(classItem)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
-                        {classItem._count.students} renci
+                        {classItem._count.students} öğrenci
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -474,7 +473,7 @@ export default function ClassesPage() {
                           size="sm"
                           onClick={() => openTransferDialog(classItem)}
                           disabled={classItem._count.students === 0}
-                          title="renci Aktar"
+                          title="Öğrenci Aktar"
                         >
                           <ArrowRightLeft className="h-4 w-4" />
                         </Button>
@@ -507,41 +506,41 @@ export default function ClassesPage() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Yeni Snf Ekle</DialogTitle>
-            <DialogDescription>Yeni bir snf oluturun</DialogDescription>
+            <DialogTitle>Yeni Sınıf Ekle</DialogTitle>
+            <DialogDescription>Yeni bir sınıf oluşturun</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="grade">Snf Seviyesi</Label>
+              <Label htmlFor="grade">Sınıf Seviyesi</Label>
               <Select
                 value={formData.gradeLevel}
                 onValueChange={(value) => setFormData({ ...formData, gradeLevel: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seiniz" />
+                  <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {FIXED_GRADES.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id}>
-                      {grade.name}. Snf
+                      {grade.name}. Sınıf
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="section">ube Ad</Label>
+              <Label htmlFor="section">Şube Adı</Label>
               <Input
                 id="section"
-                placeholder="rn: A, B, Szel, Saysal"
+                placeholder="Örn: A, B, C..."
                 value={formData.section}
-                onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, section: e.target.value.toUpperCase() }))}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              ptal
+              İptal
             </Button>
             <Button onClick={handleAddClass}>Ekle</Button>
           </DialogFooter>
@@ -552,33 +551,33 @@ export default function ClassesPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Snf Dzenle</DialogTitle>
-            <DialogDescription>Snf bilgilerini gncelleyin</DialogDescription>
+            <DialogTitle>Sınıf Düzenle</DialogTitle>
+            <DialogDescription>Sınıf bilgilerini güncelleyin</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-grade">Snf Seviyesi</Label>
+              <Label htmlFor="edit-grade">Sınıf Seviyesi</Label>
               <Select
                 value={formData.gradeLevel}
                 onValueChange={(value) => setFormData({ ...formData, gradeLevel: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seiniz" />
+                  <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {FIXED_GRADES.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id}>
-                      {grade.name}. Snf
+                      {grade.name}. Sınıf
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-section">ube Ad</Label>
+              <Label htmlFor="edit-section">Şube Adı</Label>
               <Input
                 id="edit-section"
-                placeholder="rn: A, B, Szel, Saysal"
+                placeholder="Örn: A, B, Sözel, Sayısal"
                 value={formData.section}
                 onChange={(e) => setFormData({ ...formData, section: e.target.value })}
               />
@@ -586,9 +585,9 @@ export default function ClassesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              ptal
+              İptal
             </Button>
-            <Button onClick={handleEditClass}>Gncelle</Button>
+            <Button onClick={handleEditClass}>Güncelle</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -597,15 +596,15 @@ export default function ClassesPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Snf Sil</DialogTitle>
+            <DialogTitle>Sınıf Sil</DialogTitle>
             <DialogDescription>
-              {selectedClass && displayClassName(selectedClass)} snfn silmek istediinizden emin misiniz?
-              Bu ilem geri alnamaz.
+              {selectedClass && displayClassName(selectedClass)} sınıfını silmek istediğinizden emin misiniz?
+              Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              ptal
+              İptal
             </Button>
             <Button variant="destructive" onClick={handleDeleteClass}>
               Sil
@@ -618,45 +617,45 @@ export default function ClassesPage() {
       <Dialog open={isMergeDialogOpen} onOpenChange={setIsMergeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Snflar Birletir</DialogTitle>
+            <DialogTitle>Sınıfları Birleştir</DialogTitle>
             <DialogDescription>
-              Kaynak snftaki tm renciler hedef snfa aktarlacak ve kaynak snf silinecektir.
+              Kaynak sınıftaki tüm öğrenciler hedef sınıfa aktarılacak ve kaynak sınıf silinecektir.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Kaynak Snf (Silinecek)</Label>
+              <Label>Kaynak Sınıf (Silinecek)</Label>
               <Select
                 value={mergeData.sourceClassId}
                 onValueChange={(value) => setMergeData({ ...mergeData, sourceClassId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seiniz" />
+                  <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {displayClassName(cls)} ({cls._count.students} renci)
+                      {displayClassName(cls)} ({cls._count.students} öğrenci)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Hedef Snf</Label>
+              <Label>Hedef Sınıf</Label>
               <Select
                 value={mergeData.targetClassId}
                 onValueChange={(value) => setMergeData({ ...mergeData, targetClassId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seiniz" />
+                  <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes
                     .filter(cls => cls.id !== mergeData.sourceClassId)
                     .map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {displayClassName(cls)} ({cls._count.students} renci)
+                        {displayClassName(cls)} ({cls._count.students} öğrenci)
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -665,9 +664,9 @@ export default function ClassesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsMergeDialogOpen(false)}>
-              ptal
+              İptal
             </Button>
-            <Button onClick={handleMergeClasses}>Birletir</Button>
+            <Button onClick={handleMergeClasses}>Birleştir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -676,27 +675,27 @@ export default function ClassesPage() {
       <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>renci Aktar</DialogTitle>
+            <DialogTitle>Öğrenci Aktar</DialogTitle>
             <DialogDescription>
-              {selectedClass && displayClassName(selectedClass)} snfndan renci aktarn
+              {selectedClass && displayClassName(selectedClass)} sınıfından öğrenci aktarın
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Hedef Snf</Label>
+              <Label>Hedef Sınıf</Label>
               <Select
                 value={transferData.targetClassId}
                 onValueChange={(value) => setTransferData({ targetClassId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seiniz" />
+                  <SelectValue placeholder="Seçiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes
                     .filter(cls => cls.id !== selectedClass?.id)
                     .map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {displayClassName(cls)} ({cls._count.students} renci)
+                        {displayClassName(cls)} ({cls._count.students} öğrenci)
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -705,19 +704,19 @@ export default function ClassesPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>renci Seimi</Label>
+                <Label>Öğrenci Seçimi</Label>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={toggleAllStudents}
                 >
-                  {selectedStudents.length === students.length ? 'Tmn Kaldr' : 'Tmn Se'}
+                  {selectedStudents.length === students.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
                 </Button>
               </div>
               <div className="border rounded-md max-h-64 overflow-y-auto">
                 {students.length === 0 ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
-                    Bu snfta renci bulunmuyor
+                    Bu sınıfta öğrenci bulunmuyor
                   </div>
                 ) : (
                   <div className="divide-y">
@@ -737,17 +736,17 @@ export default function ClassesPage() {
               </div>
               <p className="text-xs text-muted-foreground">
                 {selectedStudents.length > 0
-                  ? `${selectedStudents.length} renci seildi`
-                  : 'Hi renci seilmedi (tm renciler aktarlacak)'}
+                  ? `${selectedStudents.length} öğrenci seçildi`
+                  : 'Hiç öğrenci seçilmedi (tüm öğrenciler aktarılacak)'}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsTransferDialogOpen(false)}>
-              ptal
+              İptal
             </Button>
             <Button onClick={handleTransferStudents}>
-              {selectedStudents.length > 0 ? 'Seilenleri Aktar' : 'Tmn Aktar'}
+              {selectedStudents.length > 0 ? 'Seçilenleri Aktar' : 'Tümünü Aktar'}
             </Button>
           </DialogFooter>
         </DialogContent>
