@@ -1,4 +1,11 @@
 ﻿/**
+ * API Base URL Configuration
+ * Uses NEXT_PUBLIC_API_URL environment variable in production
+ * Falls back to localhost:3001 for local development
+ */
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+/**
  * Set user data in localStorage for client-side access
  */
 export function setUserData(user: any) {
@@ -11,7 +18,7 @@ export function setUserData(user: any) {
  */
 export function clearUserData() {
     if (typeof window !== 'undefined') {
-        fetch('http://localhost:3001/auth/logout', { method: 'POST' });
+        fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
     }
 
     localStorage.removeItem('user');

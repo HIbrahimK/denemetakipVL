@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface SchoolData {
   name: string;
@@ -44,7 +45,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         // Otherwise fetch from API
         if (user.schoolId) {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
+          const response = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
           });
           
           if (response.ok) {
@@ -64,7 +65,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
       } else {
         // No user logged in, check if there's a default school
         try {
-          const response = await fetch('http://localhost:3001/schools', {
+          const response = await fetch(`${API_BASE_URL}/schools`, {
             headers: { 'Content-Type': 'application/json' }
           });
           

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -22,11 +23,11 @@ function ImportWizardContent() {
     const [error, setError] = useState<string | null>(null);
     const [existingClasses, setExistingClasses] = useState<any[]>([]);
     const [classesIndex, setClassesIndex] = useState<Set<string>>(new Set());
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const API_URL = API_BASE_URL;
 
     useEffect(() => {
         if (examId) {
-            fetch(`http://localhost:3001/exams/${examId}`)
+            fetch(`${API_BASE_URL}/exams/${examId}`)
                 .then(res => res.json())
                 .then(data => setExam(data))
                 .catch(err => console.error("Failed to fetch exam", err));
@@ -62,7 +63,7 @@ function ImportWizardContent() {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:3001/import/validate?schoolId=${schoolId}`, {
+            const response = await fetch(`${API_BASE_URL}/import/validate?schoolId=${schoolId}`, {
                 method: "POST",
                 body: formData,
             });
@@ -127,7 +128,7 @@ function ImportWizardContent() {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:3001/import/confirm?schoolId=${schoolId}`, {
+            const response = await fetch(`${API_BASE_URL}/import/confirm?schoolId=${schoolId}`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, GraduationCap, AlertCircle, User } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { setUserData } from "@/lib/auth";
+import { setUserData, API_BASE_URL } from "@/lib/auth";
 import SchoolLogo from "@/components/school-logo";
 
 export default function StudentLoginPage() {
@@ -24,7 +24,7 @@ export default function StudentLoginPage() {
         setError("");
 
         try {
-            const res = await fetch('http://localhost:3001/auth/login-student', {
+            const res = await fetch(`${API_BASE_URL}/auth/login-student`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentNumber, password }),

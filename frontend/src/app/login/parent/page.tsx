@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Loader2, AlertCircle, Users } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { setUserData } from "@/lib/auth";
+import { setUserData, API_BASE_URL } from "@/lib/auth";
 import SchoolLogo from "@/components/school-logo";
 
 export default function ParentLoginPage() {
@@ -24,7 +24,7 @@ export default function ParentLoginPage() {
         setError("");
 
         try {
-            const res = await fetch('http://localhost:3001/auth/login-parent', {
+            const res = await fetch(`${API_BASE_URL}/auth/login-parent`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentNumber, password }),

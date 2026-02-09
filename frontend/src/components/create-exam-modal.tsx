@@ -42,7 +42,7 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch("http://localhost:3001/exams", {
+            const response = await fetch(`${API_BASE_URL}/exams`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export function CreateExamModal({ onSuccess }: CreateExamModalProps) {
                     const fileFormData = new FormData();
                     fileFormData.append('file', answerKeyFile);
                     
-                    await fetch(`http://localhost:3001/exams/${exam.id}/upload-answer-key`, {
+                    await fetch(`${API_BASE_URL}/exams/${exam.id}/upload-answer-key`, {
                         method: "POST",
                         headers: {
                         },

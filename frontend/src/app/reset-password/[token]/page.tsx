@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/auth";
 import { use } from "react";
 
 export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
@@ -23,7 +24,7 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
 
     useEffect(() => {
         // Validate token on mount
-        fetch(`http://localhost:3001/auth/validate-reset-token/${resolvedParams.token}`)
+        fetch(`${API_BASE_URL}/auth/validate-reset-token/${resolvedParams.token}`)
             .then(res => {
                 if (res.ok) {
                     setTokenValid(true);
@@ -51,7 +52,7 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
         setError("");
 
         try {
-            const res = await fetch('http://localhost:3001/auth/reset-password', {
+            const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

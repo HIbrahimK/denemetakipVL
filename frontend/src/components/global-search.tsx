@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/auth";
 import { Search, User, BookOpen, Users, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -58,7 +59,7 @@ export function GlobalSearch() {
         setLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:3001/search/autocomplete?q=${encodeURIComponent(searchQuery)}&schoolId=${schoolId}`,
+                `${API_BASE_URL}/search/autocomplete?q=${encodeURIComponent(searchQuery)}&schoolId=${schoolId}`,
                 {
                     headers: {
                     }

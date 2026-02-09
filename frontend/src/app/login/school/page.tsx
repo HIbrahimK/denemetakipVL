@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Loader2, ShieldCheck, School } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { setUserData } from "@/lib/auth";
+import { setUserData, API_BASE_URL } from "@/lib/auth";
 import SchoolLogo from "@/components/school-logo";
 
 export default function SchoolLoginPage() {
@@ -26,7 +26,7 @@ export default function SchoolLoginPage() {
 
         try {
             console.log('Login attempt:', { email });
-            const res = await fetch('http://localhost:3001/auth/login-school', {
+            const res = await fetch(`${API_BASE_URL}/auth/login-school`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),

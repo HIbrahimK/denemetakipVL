@@ -53,7 +53,7 @@ export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamM
         };
 
         try {
-            const response = await fetch(`http://localhost:3001/exams/${exam.id}`, {
+            const response = await fetch(`${API_BASE_URL}/exams/${exam.id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -67,7 +67,7 @@ export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamM
                     const fileFormData = new FormData();
                     fileFormData.append('file', answerKeyFile);
                     
-                    await fetch(`http://localhost:3001/exams/${exam.id}/upload-answer-key`, {
+                    await fetch(`${API_BASE_URL}/exams/${exam.id}/upload-answer-key`, {
                         method: "POST",
                         body: fileFormData,
                     });
@@ -181,7 +181,7 @@ export function EditExamModal({ exam, open, onOpenChange, onSuccess }: EditExamM
                                         variant="outline"
                                         size="sm"
                                         className="gap-2"
-                                        onClick={() => window.open(`http://localhost:3001/exams/${exam.id}/answer-key`, '_blank')}
+                                        onClick={() => window.open(`${API_BASE_URL}/exams/${exam.id}/answer-key`, '_blank')}
                                     >
                                         <Download className="h-4 w-4" />
                                         Mevcut Cevap Anahtarını İndir
