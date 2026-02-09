@@ -1027,7 +1027,7 @@ export default function GroupBoardPage() {
   const getGoalTargetLabel = (goal: MentorGroup["goals"][number]) => {
     const value = goal.targetData?.targetValue;
     const unit = goal.targetData?.unit;
-    if (value === undefined || value === null || value === "") {
+    if (value === undefined || value === null) {
       return "Hedef değeri belirtilmemiş";
     }
     return `${value}${unit ? ` ${unit}` : ""}`;
