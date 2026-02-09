@@ -218,7 +218,7 @@ function StudentResultsContent() {
                     date: new Date(exam.examDate).toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }),
                     puan: primaryScore,
                     net: exam.totalNet,
-                    s�ralama: schoolRank,
+                    sıralama: schoolRank,
                 };
             });
     }, [data, selectedExamType, searchTerm]);
