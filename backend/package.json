@@ -11,7 +11,7 @@
   },
   "scripts": {
     "prebuild": "prisma generate",
-    "build": "node --max-old-space-size=1024 ./node_modules/.bin/nest build",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/src/main",
     "start:dev": "nest start --watch",
