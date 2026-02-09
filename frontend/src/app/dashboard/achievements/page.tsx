@@ -149,11 +149,11 @@ export default function AchievementsPage() {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 0) return 'Bugün';
-    if (diffDays === 1) return 'Dün';
-    if (diffDays < 7) return `${diffDays} gün önce`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta önce`;
-    return `${Math.floor(diffDays / 30)} ay önce`;
+    if (diffDays === 0) return 'BugÃ¼n';
+    if (diffDays === 1) return 'DÃ¼n';
+    if (diffDays < 7) return `${diffDays} gÃ¼n Ã¶nce`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta Ã¶nce`;
+    return `${Math.floor(diffDays / 30)} ay Ã¶nce`;
   };
 
   if (loading) {
@@ -169,13 +169,13 @@ export default function AchievementsPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Baþarýlarým</h1>
+        <h1 className="text-3xl font-bold">BaÅŸarÄ±larÄ±m</h1>
         <p className="text-muted-foreground mt-1">
-          Çalýþma hedeflerinize ulaþarak rozetler kazanýn
+          Ã‡alÄ±ÅŸma hedeflerinize ulaÅŸarak rozetler kazanÄ±n
         </p>
       </div>
 
-      {/* Ýstatistikler */}
+      {/* Ä°statistikler */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -185,14 +185,14 @@ export default function AchievementsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{unlockedAchievements.length}</div>
             <p className="text-xs text-muted-foreground">
-              {totalAchievements} rozetin {unlockedAchievements.length}'si kazanýldý
+              {totalAchievements} rozetin {unlockedAchievements.length}'si kazanld
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tamamlanma Oraný</CardTitle>
+            <CardTitle className="text-sm font-medium">Tamamlanma Oran</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -219,52 +219,52 @@ export default function AchievementsPage() {
             <div className="text-lg font-bold">
               {unlockedAchievements.length > 0 
                 ? unlockedAchievements[0].achievement.name.substring(0, 15) + (unlockedAchievements[0].achievement.name.length > 15 ? '...' : '')
-                : 'Henüz yok'}
+                : 'Henz yok'}
             </div>
             <p className="text-xs text-muted-foreground">
               {unlockedAchievements.length > 0 
                 ? getTimeSince(unlockedAchievements[0].unlockedAt)
-                : 'Ýlk rozetini kazan!'}
+                : 'lk rozetini kazan!'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sýradaki Hedef</CardTitle>
+            <CardTitle className="text-sm font-medium">Sradaki Hedef</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold">
               {availableAchievements.length > 0 
                 ? `${availableAchievements.length} rozet`
-                : 'Tümü kazanýldý!'}
+                : 'Tm kazanld!'}
             </div>
             <p className="text-xs text-muted-foreground">
               {availableAchievements.length > 0 
-                ? 'Kilidi aç'
-                : 'Harika iþ!'}
+                ? 'Kilidi a'
+                : 'Harika i!'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Kazanýlan Rozetler */}
+      {/* Kazanlan Rozetler */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-yellow-500" />
-            Kazanýlan Rozetler
+            Kazanlan Rozetler
           </CardTitle>
-          <CardDescription>Baþarýyla kilidi açtýðýnýz muhteþem rozetler</CardDescription>
+          <CardDescription>Baaryla kilidi atnz muhteem rozetler</CardDescription>
         </CardHeader>
         <CardContent>
           {unlockedAchievements.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Henüz rozet kazanýlmadý</h3>
+              <h3 className="mt-4 text-lg font-semibold">Henz rozet kazanlmad</h3>
               <p className="text-muted-foreground mt-2">
-                Çalýþmaya baþlayarak ilk rozetinizi kazanýn!
+                almaya balayarak ilk rozetinizi kazann!
               </p>
             </div>
           ) : (
@@ -319,7 +319,7 @@ export default function AchievementsPage() {
         </CardContent>
       </Card>
 
-      {/* Kazanýlabilir Rozetler - Accordion */}
+      {/* Kazanlabilir Rozetler - Accordion */}
       {availableAchievements.length > 0 && (
         <Card>
           <CardContent className="pt-6">
@@ -329,9 +329,9 @@ export default function AchievementsPage() {
                   <div className="flex items-center gap-3">
                     <Lock className="h-5 w-5 text-muted-foreground" />
                     <div className="text-left">
-                      <h3 className="text-lg font-semibold">Kazanýlabilir Rozetler</h3>
+                      <h3 className="text-lg font-semibold">Kazanlabilir Rozetler</h3>
                       <p className="text-sm text-muted-foreground">
-                        {availableAchievements.length} rozet kilidi açýlmayý bekliyor
+                        {availableAchievements.length} rozet kilidi almay bekliyor
                       </p>
                     </div>
                   </div>

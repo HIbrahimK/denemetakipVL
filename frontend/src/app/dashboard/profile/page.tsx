@@ -83,12 +83,12 @@ export default function ProfilePage() {
         setError("");
 
         if (newPassword !== confirmPassword) {
-            setError("Yeni �ifreler e�le�miyor!");
+            setError("Yeni şifreler eşleşmiyor!");
             return;
         }
 
         if (newPassword.length < 6) {
-            setError("�ifre en az 6 karakter olmal�d�r!");
+            setError("Şifre en az 6 karakter olmalıdır!");
             return;
         }
 
@@ -108,16 +108,16 @@ export default function ProfilePage() {
             });
 
             if (res.ok) {
-                setMessage("�ifreniz ba�ar�yla de�i�tirildi!");
+                setMessage("Şifreniz başarıyla değiştirildi!");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
                 const data = await res.json();
-                setError(data.message || "�ifre de�i�tirilemedi!");
+                setError(data.message || "Şifre değiştirilemedi!");
             }
         } catch (error) {
-            setError("Bir hata olu�tu!");
+            setError("Bir hata oluştu!");
             console.error(error);
         } finally {
             setLoading(false);
@@ -144,15 +144,15 @@ export default function ProfilePage() {
                 const updatedUser = { ...user, avatarSeed };
                 localStorage.setItem("user", JSON.stringify(updatedUser));
                 setUser(updatedUser);
-                setAvatarMessage("Profil foto�raf�n�z g�ncellendi!");
+                setAvatarMessage("Profil fotoğrafınız güncellendi!");
                 
                 // Reload page to update sidebar avatar
                 setTimeout(() => window.location.reload(), 1000);
             } else {
-                setAvatarMessage("Profil foto�raf� g�ncellenemedi!");
+                setAvatarMessage("Profil fotoğrafı güncellenemedi!");
             }
         } catch (error) {
-            setAvatarMessage("Bir hata olu�tu!");
+            setAvatarMessage("Bir hata oluştu!");
             console.error(error);
         }
     };
@@ -176,15 +176,15 @@ export default function ProfilePage() {
                 const updatedUser = { ...user, branch };
                 localStorage.setItem("user", JSON.stringify(updatedUser));
                 setUser(updatedUser);
-                setBranchMessage("Bran� bilginiz g�ncellendi!");
+                setBranchMessage("Branş bilginiz güncellendi!");
                 
                 // Reload page to update sidebar
                 setTimeout(() => window.location.reload(), 1000);
             } else {
-                setBranchMessage("Bran� bilgisi g�ncellenemedi!");
+                setBranchMessage("Branş bilgisi güncellenemedi!");
             }
         } catch (error) {
-            setBranchMessage("Bir hata olu�tu!");
+            setBranchMessage("Bir hata oluştu!");
             console.error(error);
         }
     };
@@ -206,16 +206,16 @@ export default function ProfilePage() {
     const getRoleLabel = () => {
         if (!user) return "";
         
-        // ��retmen i�in bran� kontrol�
+        // Öğretmen için branş kontrolü
         if (user.role === "TEACHER") {
-            return user.branch ? `${user.branch} ��retmeni` : "��retmen";
+            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
         }
         
         const roleLabels: Record<string, string> = {
-            SCHOOL_ADMIN: "Okul Y�neticisi",
-            STUDENT: "��renci",
+            SCHOOL_ADMIN: "Okul Yöneticisi",
+            STUDENT: "Öğrenci",
             PARENT: "Veli",
-            SUPER_ADMIN: "S�per Admin"
+            SUPER_ADMIN: "Süper Admin"
         };
         return roleLabels[user.role] || user.role;
     };
@@ -225,7 +225,7 @@ export default function ProfilePage() {
     if (!user) {
         return (
             <div className="flex items-center justify-center h-full">
-                <p className="text-slate-500">Y�kleniyor...</p>
+                <p className="text-slate-500">Yükleniyor...</p>
             </div>
         );
     }
@@ -238,7 +238,7 @@ export default function ProfilePage() {
                     Profilim
                 </h1>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Profil bilgilerinizi ve �ifrenizi y�netin
+                    Profil bilgilerinizi ve Şifrenizi yönetin
                 </p>
             </div>
 
@@ -247,7 +247,7 @@ export default function ProfilePage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
                         <UserCircle className="h-5 w-5" />
-                        Kullan�c� Bilgileri
+                        Kullanıcı Bilgileri
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserCircle className="h-5 w-5" />
-                            Bran� Bilgisi
+                            Branş Bilgisi
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -298,19 +298,19 @@ export default function ProfilePage() {
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="branch">Bran��n�z</Label>
+                            <Label htmlFor="branch">Branşınız</Label>
                             <Input
                                 id="branch"
-                                placeholder="�rn: Matematik, T�rk�e, Fizik"
+                                placeholder="Örn: Matematik, Türkçe, Fizik"
                                 value={branch}
                                 onChange={(e) => setBranch(e.target.value)}
                             />
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                                Bran� bilginiz dashboard'da isminizin alt�nda g�r�nt�lenecektir.
+                                Branş bilginiz dashboard'da isminizin altında görüntülenecektir.
                             </p>
                         </div>
                         <Button onClick={handleBranchUpdate} className="bg-indigo-600 hover:bg-indigo-700">
-                            Bran�� G�ncelle
+                            Branşı Güncelle
                         </Button>
                     </CardContent>
                 </Card>
@@ -321,7 +321,7 @@ export default function ProfilePage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Image className="h-5 w-5" />
-                        Profil Foto�raf�
+                        Profil Fotoğrafı
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -340,16 +340,16 @@ export default function ProfilePage() {
                             </AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold text-slate-900 dark:text-white">Mevcut Profil Foto�raf�n</p>
+                            <p className="font-semibold text-slate-900 dark:text-white">Mevcut Profil Fotoğrafın</p>
                             <p className="text-sm text-slate-500 dark:text-slate-400">
-                                A�a��dan yeni bir foto�raf se�ebilirsin
+                                Aşağıdan yeni bir fotoğraf seçebilirsin
                             </p>
                         </div>
                     </div>
 
                     {/* Style Selector */}
                     <div className="space-y-3">
-                        <Label>Foto�raf Stili</Label>
+                        <Label>Fotoğraf Stili</Label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {AVATAR_STYLES.map((style) => (
                                 <button
@@ -372,7 +372,7 @@ export default function ProfilePage() {
 
                     {/* Avatar Preview Grid */}
                     <div className="space-y-3">
-                        <Label>Foto�raf Se�</Label>
+                        <Label>Fotoğraf Seç</Label>
                         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
                             {AVATAR_STYLES.find(s => s.id === selectedStyle)?.seeds.map((seed) => (
                                 <button
@@ -398,7 +398,7 @@ export default function ProfilePage() {
                         onClick={handleAvatarUpdate}
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                     >
-                        Profil Foto�raf�n� G�ncelle
+                        Profil Fotoğrafını Güncelle
                     </Button>
                 </CardContent>
             </Card>
@@ -408,7 +408,7 @@ export default function ProfilePage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Key className="h-5 w-5" />
-                        �ifre De�i�tir
+                        Şifre Değiştir
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -425,7 +425,7 @@ export default function ProfilePage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Mevcut �ifre</Label>
+                            <Label htmlFor="currentPassword">Mevcut Şifre</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
@@ -440,7 +440,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword">Yeni �ifre</Label>
+                            <Label htmlFor="newPassword">Yeni Şifre</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
@@ -456,7 +456,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Yeni �ifre (Tekrar)</Label>
+                            <Label htmlFor="confirmPassword">Yeni Şifre (Tekrar)</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
@@ -476,7 +476,7 @@ export default function ProfilePage() {
                             disabled={loading}
                             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                         >
-                            {loading ? "G�ncelleniyor..." : "�ifreyi G�ncelle"}
+                            {loading ? "Göncelleniyor..." : "Şifreyi Güncelle"}
                         </Button>
                     </form>
                 </CardContent>

@@ -73,8 +73,8 @@ export default function MyTasksPage() {
 
       if (response.ok) {
         const data = await response.json();
-        // ��renci i�in: atanan planlar� g�ster (isTemplate true olsa bile)
-        // Backend zaten sadece ��renciye atanan planlar� d�nd�r�yor
+        // Öğrenci için: atanan planları göster (isTemplate true olsa bile)
+        // Backend zaten sadece öğrenciye atanan planları döndürüyor
         const assignedPlans = data.filter((p: StudyPlan) => 
           p.status === 'ACTIVE' || p.status === 'ASSIGNED'
         );
@@ -147,9 +147,9 @@ export default function MyTasksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">�al��ma G�revlerim</h1>
+          <h1 className="text-3xl font-bold">Çalışma Görevlerim</h1>
           <p className="text-muted-foreground mt-1">
-            Size atanan �al��ma planlar�n� g�r�nt�leyin ve g�revlerinizi tamamlay�n
+            Size atanan Çalışma planlarını görüntüleyin ve görevlerinizi tamamlayın
           </p>
         </div>
       </div>

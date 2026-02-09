@@ -35,7 +35,7 @@ export default function MessageSettingsPage() {
       console.error("Error fetching settings:", error);
       toast({
         title: "Hata",
-        description: "Ayarlar yüklenemedi",
+        description: "Ayarlar yklenemedi",
         variant: "destructive",
       });
     } finally {
@@ -58,7 +58,7 @@ export default function MessageSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: "Baþarýlý",
+          title: "Baarl",
           description: "Ayarlar kaydedildi",
         });
       } else {
@@ -72,7 +72,7 @@ export default function MessageSettingsPage() {
       console.error("Error saving settings:", error);
       toast({
         title: "Hata",
-        description: "Bir hata oluþtu",
+        description: "Bir hata olutu",
         variant: "destructive",
       });
     } finally {
@@ -92,7 +92,7 @@ export default function MessageSettingsPage() {
     <div className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <SettingsIcon className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Mesaj Ayarlarý</h1>
+        <h1 className="text-3xl font-bold">Mesaj Ayarlar</h1>
       </div>
 
       <Card className="p-6 max-w-2xl">
@@ -111,12 +111,12 @@ export default function MessageSettingsPage() {
               min={100}
             />
             <p className="text-sm text-gray-500 mt-1">
-              Mesaj baþýna izin verilen maksimum karakter sayýsý
+              Mesaj bana izin verilen maksimum karakter says
             </p>
           </div>
 
           <div>
-            <Label>Otomatik Silme Süresi (Gün)</Label>
+            <Label>Otomatik Silme Sresi (Gn)</Label>
             <Input
               type="number"
               value={settings.autoDeleteDays}
@@ -129,12 +129,12 @@ export default function MessageSettingsPage() {
               min={1}
             />
             <p className="text-sm text-gray-500 mt-1">
-              Mesajlar bu süre sonunda otomatik olarak silinir
+              Mesajlar bu sre sonunda otomatik olarak silinir
             </p>
           </div>
 
           <div>
-            <Label>Hatýrlatma Süresi (Gün)</Label>
+            <Label>Hatrlatma Sresi (Gn)</Label>
             <Input
               type="number"
               value={settings.reminderAfterDays}
@@ -147,8 +147,8 @@ export default function MessageSettingsPage() {
               min={0}
             />
             <p className="text-sm text-gray-500 mt-1">
-              Okunmamýþ mesajlar için hatýrlatma gönderilecek süre (0 =
-              devre dýþý)
+              Okunmam mesajlar iin hatrlatma gnderilecek sre (0 =
+              devre d)
             </p>
           </div>
 
@@ -164,7 +164,7 @@ export default function MessageSettingsPage() {
                 }
               />
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Öðretmen toplu mesajlarý için yönetici onayý gerekli
+                retmen toplu mesajlar iin ynetici onay gerekli
               </label>
             </div>
 

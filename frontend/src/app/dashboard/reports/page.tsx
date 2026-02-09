@@ -91,18 +91,18 @@ export default function ReportsPage() {
     { value: 'TYT', label: 'TYT' },
     { value: 'AYT', label: 'AYT' },
     { value: 'LGS', label: 'LGS' },
-    { value: 'OZEL', label: '�ZEL' },
+    { value: 'OZEL', label: 'ÖZEL' },
   ];
 
   const gradeLevels = [
-    { value: '5', label: '5. S�n�f' },
-    { value: '6', label: '6. S�n�f' },
-    { value: '7', label: '7. S�n�f' },
-    { value: '8', label: '8. S�n�f' },
-    { value: '9', label: '9. S�n�f' },
-    { value: '10', label: '10. S�n�f' },
-    { value: '11', label: '11. S�n�f' },
-    { value: '12', label: '12. S�n�f' },
+    { value: '5', label: '5. Sınıf' },
+    { value: '6', label: '6. Sınıf' },
+    { value: '7', label: '7. Sınıf' },
+    { value: '8', label: '8. Sınıf' },
+    { value: '9', label: '9. Sınıf' },
+    { value: '10', label: '10. Sınıf' },
+    { value: '11', label: '11. Sınıf' },
+    { value: '12', label: '12. Sınıf' },
   ];
 
   useEffect(() => {
@@ -111,13 +111,13 @@ export default function ReportsPage() {
   }, [examType]);
 
   const fetchAvailableLessons = async () => {
-    // S�nav t�r�ne g�re dersleri ayarla
+    // Sınav türüne göre dersleri ayarla
     if (examType === 'LGS') {
-      setAvailableLessons(['T�rk�e', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', '�ngilizce', 'Din K�lt�r�']);
+      setAvailableLessons(['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce', 'Din Kültürü']);
     } else if (examType === 'TYT') {
-      setAvailableLessons(['T�rk�e', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler']);
+      setAvailableLessons(['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler']);
     } else if (examType === 'AYT') {
-      setAvailableLessons(['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Edebiyat', 'Tarih', 'Co�rafya']);
+      setAvailableLessons(['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Edebiyat', 'Tarih', 'Coğrafya']);
     }
   };
 
@@ -373,33 +373,33 @@ export default function ReportsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Raporlar</h1>
-          <p className="text-muted-foreground">Okul deneme sonu�lar� ve istatistikler</p>
+          <p className="text-muted-foreground">Okul deneme sonuçları ve istatistikler</p>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Rapor Olu�tur</CardTitle>
-          <CardDescription>G�r�nt�lemek istedi�iniz rapor t�r�n� se�in</CardDescription>
+          <CardTitle>Rapor Oluştur</CardTitle>
+          <CardDescription>Görüntülemek istediğiniz rapor türünü seçin</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rapor T�r�</label>
+              <label className="text-sm font-medium">Rapor Türü</label>
               <Select value={reportType} onValueChange={(value: 'exam' | 'subject' | 'ranking-matrix') => setReportType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="exam">S�nav Raporu</SelectItem>
-                  <SelectItem value="subject">Ders Bazl� Rapor</SelectItem>
-                  <SelectItem value="ranking-matrix">��renci S�ralama Matrisi</SelectItem>
+                  <SelectItem value="exam">Sınav Raporu</SelectItem>
+                  <SelectItem value="subject">Ders Bazlı Rapor</SelectItem>
+                  <SelectItem value="ranking-matrix">Öğrenci Sıralama Matrisi</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">S�nav T�r�</label>
+              <label className="text-sm font-medium">Sınav Türü</label>
               <Select value={examType} onValueChange={setExamType}>
                 <SelectTrigger>
                   <SelectValue />
@@ -415,11 +415,11 @@ export default function ReportsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">S�n�f Seviyesi</label>
+              <label className="text-sm font-medium">Sınıf Seviyesi</label>
               <div className="flex gap-2">
                 <Select value={gradeLevel} onValueChange={setGradeLevel}>
                   <SelectTrigger>
-                    <SelectValue placeholder="T�m S�n�flar" />
+                    <SelectValue placeholder="Tüm Sınıflar" />
                   </SelectTrigger>
                   <SelectContent>
                     {gradeLevels.map((level) => (
@@ -448,7 +448,7 @@ export default function ReportsPage() {
                 <label className="text-sm font-medium">Ders</label>
                 <Select value={lessonName} onValueChange={setLessonName}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Se�iniz" />
+                    <SelectValue placeholder="Seçiniz" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableLessons.map((lesson) => (
@@ -465,7 +465,7 @@ export default function ReportsPage() {
           <div className="flex items-center gap-2">
             <Button onClick={handleGenerateReport} disabled={loading || (reportType === 'subject' && !lessonName)}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Rapor Olu�tur
+              Rapor Oluştur
             </Button>
             {reportType === 'exam' && (
               <div className="flex gap-1 bg-muted p-1 rounded-md ml-auto">
@@ -474,14 +474,14 @@ export default function ReportsPage() {
                   size="sm"
                   onClick={() => setViewMode('summary')}
                 >
-                  �zet
+                  Özet
                 </Button>
                 <Button
                   variant={viewMode === 'detailed' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('detailed')}
                 >
-                  Ayr�nt�l�
+                  Ayrıntılı
                 </Button>
               </div>
             )}
@@ -511,7 +511,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                <CardTitle className="text-xs font-medium">Ortalama Kat�l�m</CardTitle>
+                <CardTitle className="text-xs font-medium">Ortalama Katılım</CardTitle>
                 <Users className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -554,11 +554,11 @@ export default function ReportsPage() {
             </Card>
           </div>
 
-          {/* Lesson Averages Table - Okul/Deneme Ortalamalar� */}
+          {/* Lesson Averages Table - Okul/Deneme Ortalamaları */}
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Okul Deneme �zet Bilgileri</CardTitle>
+                <CardTitle>Okul Deneme Özet Bilgileri</CardTitle>
                 <div className="flex gap-2 no-print">
                   <Button variant="outline" size="sm" onClick={() => handleDownload('excel')} disabled={exportLoading}>
                     {exportLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}
@@ -576,13 +576,13 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>�ube</TableHead>
+                      <TableHead>Şube</TableHead>
                       {examReports[0]?.lessonAverages.map((lesson) => (
                         <TableHead key={lesson.lessonName} className="text-center">{lesson.lessonName}</TableHead>
                       ))}
                       <TableHead className="text-center">Toplam Net</TableHead>
-                      <TableHead className="text-center">Puan Ortalamas�</TableHead>
-                      <TableHead className="text-center">Kat�l�m</TableHead>
+                      <TableHead className="text-center">Puan Ortalaması</TableHead>
+                      <TableHead className="text-center">Katılım</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -638,7 +638,7 @@ export default function ReportsPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={100} className="text-center text-muted-foreground">
-                          Veri bulunamad�
+                          Veri bulunamadı
                         </TableCell>
                       </TableRow>
                     )}
@@ -648,7 +648,7 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead rowSpan={2}>�ube</TableHead>
+                      <TableHead rowSpan={2}>Şube</TableHead>
                       {examReports[0]?.lessonAverages.map((lesson) => (
                         <React.Fragment key={lesson.lessonName}>
                           <TableHead className="text-center">
@@ -662,11 +662,11 @@ export default function ReportsPage() {
                           </TableHead>
                         </React.Fragment>
                       ))}
-                      <TableHead rowSpan={2} className="text-center">Toplam<br />Do�ru</TableHead>
-                      <TableHead rowSpan={2} className="text-center">Toplam<br />Yanl��</TableHead>
+                      <TableHead rowSpan={2} className="text-center">Toplam<br />Doğru</TableHead>
+                      <TableHead rowSpan={2} className="text-center">Toplam<br />Yanlış</TableHead>
                       <TableHead rowSpan={2} className="text-center">Toplam<br />Net</TableHead>
                       <TableHead rowSpan={2} className="text-center">Puan<br />Ort.</TableHead>
-                      <TableHead rowSpan={2} className="text-center">Kat�l�m</TableHead>
+                      <TableHead rowSpan={2} className="text-center">Katılım</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -742,7 +742,7 @@ export default function ReportsPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={100} className="text-center text-muted-foreground">
-                          Veri bulunamad�
+                          Veri bulunamadı
                         </TableCell>
                       </TableRow>
                     )}
@@ -752,13 +752,13 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Deneme Sonu�lar� Tablosu - All Exams List */}
+          {/* Deneme Sonuçları Tablosu - All Exams List */}
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Deneme �zet Bilgileri</CardTitle>
-                  <CardDescription>T�m denemelerin detayl� sonu�lar�</CardDescription>
+                  <CardTitle>Deneme Özet Bilgileri</CardTitle>
+                  <CardDescription>Tüm denemelerin detaylı sonuçları</CardDescription>
                 </div>
                 <div className="flex gap-2 no-print">
                   <Button variant="outline" size="sm" onClick={() => handleDownloadExamsList('excel')} disabled={exportLoading}>
@@ -776,14 +776,14 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>S�nav Ad�</TableHead>
-                      <TableHead>S�nav Tarihi</TableHead>
+                      <TableHead>Sınav Adı</TableHead>
+                      <TableHead>Sınav Tarihi</TableHead>
                       {examReports[0]?.lessonAverages.map((lesson) => (
                         <TableHead key={lesson.lessonName} className="text-center">{lesson.lessonName}</TableHead>
                       ))}
                       <TableHead className="text-center">Toplam Net</TableHead>
-                      <TableHead className="text-center">Puan Ortalamas�</TableHead>
-                      <TableHead className="text-center">Kat�l�m</TableHead>
+                      <TableHead className="text-center">Puan Ortalaması</TableHead>
+                      <TableHead className="text-center">Katılım</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -812,8 +812,8 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>S�nav Ad�</TableHead>
-                      <TableHead>S�nav Tarihi</TableHead>
+                      <TableHead>Sınav Adı</TableHead>
+                      <TableHead>Sınav Tarihi</TableHead>
                       {examReports[0]?.lessonAverages.map((lesson) => (
                         <React.Fragment key={lesson.lessonName}>
                           <TableHead className="text-center">
@@ -827,11 +827,11 @@ export default function ReportsPage() {
                           </TableHead>
                         </React.Fragment>
                       ))}
-                      <TableHead className="text-center">Toplam<br />Do�ru</TableHead>
-                      <TableHead className="text-center">Toplam<br />Yanl��</TableHead>
+                      <TableHead className="text-center">Toplam<br />Doğru</TableHead>
+                      <TableHead className="text-center">Toplam<br />Yanlış</TableHead>
                       <TableHead className="text-center">Toplam<br />Net</TableHead>
                       <TableHead className="text-center">Puan<br />Ort.</TableHead>
-                      <TableHead className="text-center">Kat�l�m</TableHead>
+                      <TableHead className="text-center">Katılım</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -874,14 +874,14 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Okul Net Ortalamalar� Grafi�i */}
+          {/* Okul Net Ortalamaları Grafişi */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Okul Net Ortalamalar�
+                Okul Net Ortalamaları
               </CardTitle>
-              <CardDescription>Denemelere g�re okul toplam net ortalamalar�</CardDescription>
+              <CardDescription>Denemelere göre okul toplam net ortalamaları</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -902,7 +902,7 @@ export default function ReportsPage() {
                         <div className="bg-white p-3 border rounded shadow-lg">
                           <p className="font-semibold mb-2">{data.fullName}</p>
                           <p className="text-sm text-blue-600">Toplam Net: {data.totalNet}</p>
-                          <p className="text-sm text-gray-600 mt-1">Kat�l�m: {data.participantCount}</p>
+                          <p className="text-sm text-gray-600 mt-1">Katılım: {data.participantCount}</p>
                           <p className="text-sm text-gray-500 mt-1">{data.date}</p>
                         </div>
                       );
@@ -924,14 +924,14 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Okul Puan Ortalamalar� Grafi�i */}
+          {/* Okul Puan Ortalamaları Grafişi */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Okul Puan Ortalamalar�
+                Okul Puan Ortalamaları
               </CardTitle>
-              <CardDescription>Denemelere g�re okul puan ortalamalar�</CardDescription>
+              <CardDescription>Denemelere göre okul puan ortalamaları</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -947,7 +947,7 @@ export default function ReportsPage() {
                           <p className="font-semibold mb-2">{data.fullName}</p>
                           <p className="text-sm text-green-600">Ortalama Puan: {data.avgScore}</p>
                           <p className="text-sm text-blue-600">Toplam Net: {data.totalNet}</p>
-                          <p className="text-sm text-gray-600 mt-1">Kat�l�m: {data.participantCount}</p>
+                          <p className="text-sm text-gray-600 mt-1">Katılım: {data.participantCount}</p>
                           <p className="text-sm text-gray-500 mt-1">{data.date}</p>
                         </div>
                       );
@@ -980,7 +980,7 @@ export default function ReportsPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-                <CardTitle className="text-xs font-medium">Ortalama Kat�l�m</CardTitle>
+                <CardTitle className="text-xs font-medium">Ortalama Katılım</CardTitle>
                 <Users className="h-3 w-3 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -1020,9 +1020,9 @@ export default function ReportsPage() {
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle>
-                    {examType} {gradeLevel && `- ${gradeLevel}. S�n�f`} {subjectReport.lessonName} Ders Raporu
+                    {examType} {gradeLevel && `- ${gradeLevel}. Sınıf`} {subjectReport.lessonName} Ders Raporu
                   </CardTitle>
-                  <CardDescription>Toplam {subjectReport.exams.length} s�nav</CardDescription>
+                  <CardDescription>Toplam {subjectReport.exams.length} sınav</CardDescription>
                 </div>
                 <div className="flex items-center gap-2 no-print">
                   <div className="flex gap-1 bg-muted p-1 rounded-md">
@@ -1031,14 +1031,14 @@ export default function ReportsPage() {
                       size="sm"
                       onClick={() => setViewMode('summary')}
                     >
-                      �zet
+                      Özet
                     </Button>
                     <Button
                       variant={viewMode === 'detailed' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setViewMode('detailed')}
                     >
-                      Ayr�nt�l�
+                      Ayrıntılı
                     </Button>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => handleDownload('excel')} disabled={exportLoading}>
@@ -1060,9 +1060,9 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Deneme Ad�</TableHead>
+                      <TableHead>Deneme Adı</TableHead>
                       <TableHead>Tarih</TableHead>
-                      <TableHead>Kat�l�m</TableHead>
+                      <TableHead>Katılım</TableHead>
                       <TableHead>Ortalama Net</TableHead>
                       <TableHead>Ortalama Puan</TableHead>
                     </TableRow>
@@ -1083,12 +1083,12 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Deneme Ad�</TableHead>
+                      <TableHead>Deneme Adı</TableHead>
                       <TableHead>Tarih</TableHead>
-                      <TableHead>Kat�l�m</TableHead>
-                      <TableHead>Ortalama Do�ru</TableHead>
-                      <TableHead>Ortalama Yanl��</TableHead>
-                      <TableHead>Ortalama Bo�</TableHead>
+                      <TableHead>Katılım</TableHead>
+                      <TableHead>Ortalama Doğru</TableHead>
+                      <TableHead>Ortalama Yanlış</TableHead>
+                      <TableHead>Ortalama Boş</TableHead>
                       <TableHead>Ortalama Net</TableHead>
                       <TableHead>Ortalama Puan</TableHead>
                     </TableRow>
@@ -1117,9 +1117,9 @@ export default function ReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                {subjectReport.lessonName} Dersi Geli�im Grafi�i
+                {subjectReport.lessonName} Dersi Gelişim Grafişi
               </CardTitle>
-              <CardDescription>Denemelere g�re {subjectReport.lessonName} dersi net ortalamalar�</CardDescription>
+              <CardDescription>Denemelere göre {subjectReport.lessonName} dersi net ortalamaları</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -1134,10 +1134,10 @@ export default function ReportsPage() {
                         <div className="bg-white p-3 border rounded shadow-lg">
                           <p className="font-semibold mb-2">{data.fullName}</p>
                           <p className="text-sm text-blue-600">Net: {data.net}</p>
-                          <p className="text-sm text-green-600">Do�ru: {data.correct}</p>
-                          <p className="text-sm text-red-600">Yanl��: {data.incorrect}</p>
-                          <p className="text-sm text-gray-600">Bo�: {data.empty}</p>
-                          <p className="text-sm text-gray-600 mt-1">Kat�l�m: {data.participantCount}</p>
+                          <p className="text-sm text-green-600">Doğru: {data.correct}</p>
+                          <p className="text-sm text-red-600">Yanlış: {data.incorrect}</p>
+                          <p className="text-sm text-gray-600">Boş: {data.empty}</p>
+                          <p className="text-sm text-gray-600 mt-1">Katılım: {data.participantCount}</p>
                         </div>
                       );
                     }
@@ -1145,8 +1145,8 @@ export default function ReportsPage() {
                   }} />
                   <Legend />
                   <Line type="monotone" dataKey="net" stroke="#3b82f6" strokeWidth={3} name="Net" />
-                  <Line type="monotone" dataKey="correct" stroke="#10b981" strokeWidth={2} name="Do�ru" />
-                  <Line type="monotone" dataKey="incorrect" stroke="#ef4444" strokeWidth={2} name="Yanl��" />
+                  <Line type="monotone" dataKey="correct" stroke="#10b981" strokeWidth={2} name="Doğru" />
+                  <Line type="monotone" dataKey="incorrect" stroke="#ef4444" strokeWidth={2} name="Yanlış" />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

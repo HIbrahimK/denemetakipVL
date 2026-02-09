@@ -26,7 +26,7 @@ export default function ExamCalendarPage() {
     const [includeArchived, setIncludeArchived] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Akademik yýl hesaplama (Haziran baþlangýç)
+    // Akademik yl hesaplama (Haziran balang)
     const currentMonth = new Date().getMonth() + 1;
     const academicYear = currentMonth >= 6 ? selectedYear : selectedYear - 1;
     const academicYearLabel = `${academicYear}-${academicYear + 1}`;
@@ -42,10 +42,10 @@ export default function ExamCalendarPage() {
                 <div>
                     <h1 className="text-3xl font-bold">Deneme Takvimi</h1>
                     <p className="text-muted-foreground mt-1">
-                        Akademik Yýl: {academicYearLabel}
+                        Akademik Yl: {academicYearLabel}
                     </p>
                     <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                        ?? "Sýnavlar" sayfasýndan eklenen tüm sýnavlar ve cevap anahtarlarý burada görünür
+                        ?? "Snavlar" sayfasndan eklenen tm snavlar ve cevap anahtarlar burada grnr
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -78,26 +78,26 @@ export default function ExamCalendarPage() {
 
                     <Select value={selectedType} onValueChange={setSelectedType}>
                         <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Deneme Türü" />
+                            <SelectValue placeholder="Deneme Tr" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="ALL">Tüm Türler</SelectItem>
+                            <SelectItem value="ALL">Tm Trler</SelectItem>
                             <SelectItem value="LGS">LGS</SelectItem>
                             <SelectItem value="TYT">TYT</SelectItem>
                             <SelectItem value="AYT">AYT</SelectItem>
-                            <SelectItem value="OZEL">Özel</SelectItem>
+                            <SelectItem value="OZEL">zel</SelectItem>
                         </SelectContent>
                     </Select>
 
                     <Select value={selectedGrade} onValueChange={setSelectedGrade}>
                         <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Sýnýf Seviyesi" />
+                            <SelectValue placeholder="Snf Seviyesi" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="ALL">Tüm Sýnýflar</SelectItem>
+                            <SelectItem value="ALL">Tm Snflar</SelectItem>
                             {[5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
                                 <SelectItem key={grade} value={grade.toString()}>
-                                    {grade}. Sýnýf
+                                    {grade}. Snf
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -109,7 +109,7 @@ export default function ExamCalendarPage() {
                         onClick={() => setIncludeArchived(!includeArchived)}
                     >
                         <Archive className="w-4 h-4 mr-2" />
-                        Arþiv
+                        Ariv
                     </Button>
 
                     <div className="ml-auto">
@@ -126,11 +126,11 @@ export default function ExamCalendarPage() {
                 <TabsList>
                     <TabsTrigger value="table">
                         <List className="w-4 h-4 mr-2" />
-                        Tablo Görünümü
+                        Tablo Grnm
                     </TabsTrigger>
                     <TabsTrigger value="calendar">
                         <CalendarIcon className="w-4 h-4 mr-2" />
-                        Takvim Görünümü
+                        Takvim Grnm
                     </TabsTrigger>
                 </TabsList>
 

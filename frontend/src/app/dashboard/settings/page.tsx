@@ -116,7 +116,7 @@ export default function SettingsPage() {
         if (!file.type.startsWith('image/')) {
             toast({
                 title: "Hata",
-                description: "L�tfen bir resim dosyas� se�in.",
+                description: "Lütfen bir resim dosyası seçin.",
                 variant: "destructive"
             });
             return;
@@ -126,7 +126,7 @@ export default function SettingsPage() {
         if (file.size > 5 * 1024 * 1024) {
             toast({
                 title: "Hata",
-                description: "Dosya boyutu 5MB'dan k���k olmal�d�r.",
+                description: "Dosya boyutu 5MB'dan küçük olmalıdır.",
                 variant: "destructive"
             });
             return;
@@ -152,7 +152,7 @@ export default function SettingsPage() {
                 if (!ctx) {
                     toast({
                         title: "Hata",
-                        description: "Canvas olu�turulamad�.",
+                        description: "Canvas oluşturulamadı.",
                         variant: "destructive"
                     });
                     setUploadingLogo(false);
@@ -206,13 +206,13 @@ export default function SettingsPage() {
                     refreshSchoolData();
                     
                     toast({
-                        title: "Ba�ar�l�",
-                        description: "Logo ba�ar�yla g�ncellendi.",
+                        title: "Başarılı",
+                        description: "Logo başarıyla göncellendi.",
                     });
                 } else {
                     toast({
                         title: "Hata",
-                        description: "Logo y�klenirken bir hata olu�tu.",
+                        description: "Logo yüklenirken bir hata oluştu.",
                         variant: "destructive"
                     });
                 }
@@ -224,7 +224,7 @@ export default function SettingsPage() {
             console.error(error);
             toast({
                 title: "Hata",
-                description: "Logo y�klenirken bir hata olu�tu.",
+                description: "Logo yüklenirken bir hata oluştu.",
                 variant: "destructive"
             });
             setUploadingLogo(false);
@@ -259,13 +259,13 @@ export default function SettingsPage() {
                 refreshSchoolData();
                 
                 toast({
-                    title: "Ba�ar�l�",
-                    description: "Ayarlar ba�ar�yla kaydedildi.",
+                    title: "Başarılı",
+                    description: "Ayarlar başarıyla kaydedildi.",
                 });
             } else {
                 toast({
                     title: "Hata",
-                    description: "Ayarlar kaydedilirken bir hata olu�tu.",
+                    description: "Ayarlar kaydedilirken bir hata oluştu.",
                     variant: "destructive"
                 });
             }
@@ -273,7 +273,7 @@ export default function SettingsPage() {
             console.error(error);
             toast({
                 title: "Hata",
-                description: "Ayarlar kaydedilirken bir hata olu�tu.",
+                description: "Ayarlar kaydedilirken bir hata oluştu.",
                 variant: "destructive"
             });
         } finally {
@@ -284,8 +284,8 @@ export default function SettingsPage() {
     const handlePromote = async () => {
         setConfirmDialog({
             open: true,
-            title: "S�n�f Atlama Onayla",
-            description: "T�m ��rencilerin s�n�f seviyesini bir �st seviyeye ta��mak istedi�inize emin misiniz?",
+            title: "Sınıf Atlama Onayla",
+            description: "Tüm Öğrencilerin sınıf seviyesini bir üst seviyeye taşımak istediğinize emin misiniz?",
             onConfirm: async () => {
                 const token = localStorage.getItem("token");
                 const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -295,14 +295,14 @@ export default function SettingsPage() {
                     });
                     const data = await res.json();
                     toast({
-                        title: "Ba�ar�l�",
+                        title: "Başarılı",
                         description: data.message,
                     });
                 } catch (error) {
                     console.error(error);
                     toast({
                         title: "Hata",
-                        description: "S�n�f atlama i�lemi s�ras�nda bir hata olu�tu.",
+                        description: "Sınıf atlama işlemi sırasında bir hata oluştu.",
                         variant: "destructive"
                     });
                 }
@@ -321,15 +321,15 @@ export default function SettingsPage() {
             });
             const data = await res.json();
             toast({
-                title: "Ba�ar�l�",
-                description: data.message || "Yedek ba�ar�yla olu�turuldu.",
+                title: "Başarılı",
+                description: data.message || "Yedek başarıyla oluşturuldu.",
             });
             fetchBackups();
         } catch (error) {
             console.error(error);
             toast({
                 title: "Hata",
-                description: "Yedekleme s�ras�nda bir hata olu�tu.",
+                description: "Yedekleme sırasında bir hata oluştu.",
                 variant: "destructive"
             });
         } finally {
@@ -353,8 +353,8 @@ export default function SettingsPage() {
             a.click();
             
             toast({
-                title: "Ba�ar�l�",
-                description: "Yedek dosyas� indiriliyor.",
+                title: "Başarılı",
+                description: "Yedek dosyası indiriliyor.",
             });
         } catch (error) {
             console.error(error);
@@ -369,8 +369,8 @@ export default function SettingsPage() {
     const handleRestore = async (backupId: string) => {
         setConfirmDialog({
             open: true,
-            title: "Geri Y�kleme Onayla",
-            description: "Bu yede�i geri y�klemek istedi�inize emin misiniz? Mevcut verilerin �zerine yaz�labilir.",
+            title: "Geri Yükleme Onayla",
+            description: "Bu yedeği geri yüklemek istediğinize emin misiniz? Mevcut verilerin üzerine yazılabilir.",
             onConfirm: async () => {
                 const token = localStorage.getItem("token");
                 const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -384,14 +384,14 @@ export default function SettingsPage() {
                     });
                     const data = await res.json();
                     toast({
-                        title: "Ba�ar�l�",
-                        description: data.message || "Geri y�kleme i�lemi ba�lat�ld�.",
+                        title: "Başarılı",
+                        description: data.message || "Geri yükleme işlemi başlatıldı.",
                     });
                 } catch (error) {
                     console.error(error);
                     toast({
                         title: "Hata",
-                        description: "Geri y�kleme s�ras�nda bir hata olu�tu.",
+                        description: "Geri yükleme sırasında bir hata oluştu.",
                         variant: "destructive"
                     });
                 }
@@ -403,8 +403,8 @@ export default function SettingsPage() {
     const handleDeleteBackup = async (backupId: string) => {
         setConfirmDialog({
             open: true,
-            title: "Yede�i Sil",
-            description: "Bu yede�i silmek istedi�inize emin misiniz?",
+            title: "Yedeği Sil",
+            description: "Bu yedeği silmek istediğinize emin misiniz?",
             onConfirm: async () => {
                 const token = localStorage.getItem("token");
                 const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -414,8 +414,8 @@ export default function SettingsPage() {
                     });
                     const data = await res.json();
                     toast({
-                        title: "Ba�ar�l�",
-                        description: data.message || "Yedek ba�ar�yla silindi.",
+                        title: "Başarılı",
+                        description: data.message || "Yedek başarıyla silindi.",
                     });
                     fetchBackups();
                 } catch (error) {
@@ -439,7 +439,7 @@ export default function SettingsPage() {
         if (!file.name.endsWith('.json')) {
             toast({
                 title: "Hata",
-                description: "L�tfen bir JSON yedek dosyas� se�in.",
+                description: "Lütfen bir JSON yedek dosyası seçin.",
                 variant: "destructive"
             });
             return;
@@ -447,8 +447,8 @@ export default function SettingsPage() {
 
         setConfirmDialog({
             open: true,
-            title: "Dosyadan Geri Y�kleme Onayla",
-            description: "Bu yedek dosyas�n� geri y�klemek istedi�inize emin misiniz? Mevcut verilerin �zerine yaz�labilir.",
+            title: "Dosyadan Geri Yükleme Onayla",
+            description: "Bu yedek dosyasını geri yüklemek istediğinize emin misiniz? Mevcut verilerin üzerine yazılabilir.",
             onConfirm: async () => {
                 setLoading(true);
                 const token = localStorage.getItem("token");
@@ -468,13 +468,13 @@ export default function SettingsPage() {
                     });
 
                     if (!res.ok) {
-                        throw new Error('Geri y�kleme ba�ar�s�z');
+                        throw new Error('Geri yükleme başarısız');
                     }
 
                     const data = await res.json();
                     toast({
-                        title: "Ba�ar�l�",
-                        description: data.message || "Dosyadan geri y�kleme i�lemi ba�lat�ld�.",
+                        title: "Başarılı",
+                        description: data.message || "Dosyadan geri yükleme işlemi başlatıldı.",
                     });
 
                     // Reset file input
@@ -483,7 +483,7 @@ export default function SettingsPage() {
                     console.error(error);
                     toast({
                         title: "Hata",
-                        description: error instanceof Error ? error.message : "Dosya y�klenirken bir hata olu�tu.",
+                        description: error instanceof Error ? error.message : "Dosya yüklenirken bir hata oluştu.",
                         variant: "destructive"
                     });
                     e.target.value = '';
@@ -501,22 +501,22 @@ export default function SettingsPage() {
                 <div>
                     <h2 className="text-3xl font-bold flex items-center gap-3">
                         <SettingsIcon className="h-8 w-8 text-indigo-600" />
-                        Okul Ayarlar�
+                        Okul Ayarları
                     </h2>
-                    <p className="text-slate-600 dark:text-slate-400 mt-2">Okul bilgilerini ve sistem parametrelerini buradan y�netin.</p>
+                    <p className="text-slate-600 dark:text-slate-400 mt-2">Okul bilgilerini ve sistem parametrelerini buradan yönetin.</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Sol Taraf: Okul Ayarlar� */}
+                {/* Sol Taraf: Okul Ayarları */}
                 <Card className="lg:col-span-2 border-slate-200 dark:border-slate-800 shadow-sm">
                     <CardHeader className="border-b border-slate-200 dark:border-slate-800">
                         <CardTitle className="text-lg font-semibold">Okul Bilgileri</CardTitle>
-                        <CardDescription>Okul bilgilerini ve giri� ayarlar�n� d�zenleyin</CardDescription>
+                        <CardDescription>Okul bilgilerini ve giriş ayarlarını düzenleyin</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-6">
                         <form onSubmit={handleSave} className="space-y-6">
-                            {/* Logo Y�kleme */}
+                            {/* Logo Yükleme */}
                             <div className="space-y-3">
                                 <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Okul Logosu</Label>
                                 <div className="flex items-center gap-6">
@@ -530,7 +530,7 @@ export default function SettingsPage() {
                                         )}
                                     </div>
                                     <div className="flex-1 space-y-2">
-                                        <p className="text-sm text-slate-600 dark:text-slate-400">Logo y�kleyin (PNG, JPG, max 2MB)</p>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">Logo yükleyin (PNG, JPG, max 2MB)</p>
                                         <label className="inline-block">
                                             <input
                                                 type="file"
@@ -548,7 +548,7 @@ export default function SettingsPage() {
                                                 className="gap-2"
                                             >
                                                 <Upload className="h-4 w-4" />
-                                                Logo Y�kle
+                                                Logo Yükle
                                             </Button>
                                         </label>
                                     </div>
@@ -557,7 +557,7 @@ export default function SettingsPage() {
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="school-name" className="font-bold text-slate-900 dark:text-slate-100">Okul Ad�:</Label>
+                                    <Label htmlFor="school-name" className="font-bold text-slate-900 dark:text-slate-100">Okul Adı:</Label>
                                     <Input
                                         id="school-name"
                                         value={formData.name}
@@ -566,7 +566,7 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="school-website" className="font-bold text-slate-900 dark:text-slate-100">Okul �nternet Sitesi Adresi:</Label>
+                                    <Label htmlFor="school-website" className="font-bold text-slate-900 dark:text-slate-100">Okul İnternet Sitesi Adresi:</Label>
                                     <Input
                                         id="school-website"
                                         value={formData.website}
@@ -596,7 +596,7 @@ export default function SettingsPage() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-4">
                                 <div className="flex items-center gap-4">
-                                    <Label className="font-bold text-slate-700 dark:text-slate-300 min-w-[100px]">Veli Giri�i</Label>
+                                    <Label className="font-bold text-slate-700 dark:text-slate-300 min-w-[100px]">Veli Girişi</Label>
                                     <div className="flex items-center gap-2">
                                         <Checkbox
                                             id="p-login"
@@ -607,7 +607,7 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                                    <Label className="font-bold text-slate-700 dark:text-slate-300 min-w-[100px]">��renci Giri� Se�enekleri</Label>
+                                    <Label className="font-bold text-slate-700 dark:text-slate-300 min-w-[100px]">Öğrenci Giriş Seçenekleri</Label>
                                     <div className="flex gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer group">
                                             <input
@@ -645,7 +645,7 @@ export default function SettingsPage() {
                                     ) : (
                                         <>
                                             <Save className="h-4 w-4" />
-                                            Ayarlar� Kaydet
+                                            Ayarları Kaydet
                                         </>
                                     )}
                                 </Button>
@@ -654,20 +654,20 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                {/* Sa� Taraf: Sistem ��lemleri */}
+                {/* Saç Taraf: Sistem İşlemleri */}
                 <div className="space-y-6">
-                    {/* S�n�f Atlatma */}
+                    {/* Sınıf Atlatma */}
                     <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
                         <CardHeader className="border-b border-slate-200 dark:border-slate-800">
-                            <CardTitle className="text-base font-semibold">S�n�f Atlatma</CardTitle>
-                            <CardDescription className="text-xs">T�m ��rencileri bir �st s�n�fa ta��</CardDescription>
+                            <CardTitle className="text-base font-semibold">Sınıf Atlatma</CardTitle>
+                            <CardDescription className="text-xs">Tüm Öğrencileri bir üst sınıfa taşı</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6">
                             <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium h-11 rounded-lg gap-2 shadow-sm" onClick={handlePromote} disabled>
                                 <ArrowUpCircle className="h-5 w-5" />
-                                S�n�f Atlama ��lemi
+                                Sınıf Atlama İşlemi
                             </Button>
-                            <p className="text-xs text-slate-500 mt-2 text-center">Yak�nda aktif olacak</p>
+                            <p className="text-xs text-slate-500 mt-2 text-center">Yakında aktif olacak</p>
                         </CardContent>
                     </Card>
 
@@ -675,7 +675,7 @@ export default function SettingsPage() {
                     <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
                         <CardHeader className="border-b border-slate-200 dark:border-slate-800">
                             <CardTitle className="text-base font-semibold">Veri Yedekleme</CardTitle>
-                            <CardDescription className="text-xs">Sistem verilerini yedekle ve geri y�kle</CardDescription>
+                            <CardDescription className="text-xs">Sistem verilerini yedekle ve geri yükle</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
                             <Button 
@@ -691,7 +691,7 @@ export default function SettingsPage() {
                                 ) : (
                                     <>
                                         <Database className="h-4 w-4" />
-                                        Yedek Olu�tur
+                                        Yedek Oluştur
                                     </>
                                 )}
                             </Button>
@@ -713,13 +713,13 @@ export default function SettingsPage() {
                                     className="w-full h-11 gap-2 border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
                                 >
                                     <FileUp className="h-4 w-4" />
-                                    Dosyadan Geri Y�kle
+                                    Dosyadan Geri Yükle
                                 </Button>
                             </div>
 
                             <div className="pt-4 space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <Label className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Al�nan Yedekler</Label>
+                                    <Label className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Alınan Yedekler</Label>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -737,14 +737,14 @@ export default function SettingsPage() {
                                             <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
                                                 <tr>
                                                     <th className="px-3 py-2 text-left font-bold text-slate-600 dark:text-slate-400">Tarih</th>
-                                                    <th className="px-3 py-2 text-right font-bold text-slate-600 dark:text-slate-400">��lem</th>
+                                                    <th className="px-3 py-2 text-right font-bold text-slate-600 dark:text-slate-400">İşlem</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                                 {backups.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={2} className="px-3 py-8 text-center text-slate-400">
-                                                            Hen�z yedek bulunmuyor.
+                                                            Henüz yedek bulunmuyor.
                                                         </td>
                                                     </tr>
                                                 ) : (
@@ -764,7 +764,7 @@ export default function SettingsPage() {
                                                                         variant="ghost"
                                                                         size="icon"
                                                                         className="h-7 w-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                                                        title="�ndir"
+                                                                        title="İndir"
                                                                         onClick={() => handleDownload(b.id)}
                                                                     >
                                                                         <Download className="h-4 w-4" />
@@ -773,7 +773,7 @@ export default function SettingsPage() {
                                                                         variant="ghost"
                                                                         size="icon"
                                                                         className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                                                        title="Geri Y�kle"
+                                                                        title="Geri Yükle"
                                                                         onClick={() => handleRestore(b.id)}
                                                                     >
                                                                         <RotateCcw className="h-4 w-4" />
@@ -813,7 +813,7 @@ export default function SettingsPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>
-                            �ptal
+                            İptal
                         </AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDialog.onConfirm}>
                             Onayla

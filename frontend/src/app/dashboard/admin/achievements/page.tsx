@@ -71,11 +71,11 @@ const COLORS = {
 };
 
 const CATEGORIES = [
-  { value: 'STREAK', label: 'Düzenlilik' },
-  { value: 'MILESTONE', label: 'Baþarý' },
-  { value: 'IMPROVEMENT', label: 'Geliþim' },
+  { value: 'STREAK', label: 'Dzenlilik' },
+  { value: 'MILESTONE', label: 'Baar' },
+  { value: 'IMPROVEMENT', label: 'Geliim' },
   { value: 'GROUP', label: 'Grup' },
-  { value: 'CONSISTENCY', label: 'Kararlýlýk' },
+  { value: 'CONSISTENCY', label: 'Kararllk' },
 ];
 
 const EXAM_TYPES = [
@@ -164,7 +164,7 @@ export default function AchievementManagementPage() {
       console.error('Error fetching achievements:', error);
       toast({
         title: 'Hata',
-        description: 'Rozetler yüklenirken bir hata oluþtu',
+        description: 'Rozetler yklenirken bir hata olutu',
         variant: 'destructive',
       });
     } finally {
@@ -196,11 +196,11 @@ export default function AchievementManagementPage() {
       });
 
       if (response.ok) {
-        toast({ title: 'Baþarýlý', description: 'Rozet durumu güncellendi' });
+        toast({ title: 'Baarl', description: 'Rozet durumu gncellendi' });
         fetchAchievements();
       }
     } catch (error) {
-      toast({ title: 'Hata', description: 'Ýþlem baþarýsýz', variant: 'destructive' });
+      toast({ title: 'Hata', description: 'lem baarsz', variant: 'destructive' });
     }
   };
 
@@ -220,15 +220,15 @@ export default function AchievementManagementPage() {
       });
 
       if (response.ok) {
-        toast({ title: 'Baþarýlý', description: 'Rozet silindi' });
+        toast({ title: 'Baarl', description: 'Rozet silindi' });
         setShowDeleteModal(false);
         setAchievementToDelete(null);
         fetchAchievements();
       } else {
-        toast({ title: 'Hata', description: 'Silme iþlemi baþarýsýz', variant: 'destructive' });
+        toast({ title: 'Hata', description: 'Silme ilemi baarsz', variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Hata', description: 'Silme iþlemi baþarýsýz', variant: 'destructive' });
+      toast({ title: 'Hata', description: 'Silme ilemi baarsz', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -254,7 +254,7 @@ export default function AchievementManagementPage() {
 
   const grantAchievement = async () => {
     if (selectedStudentIds.length === 0 || !selectedAchievement) {
-      toast({ title: 'Uyarý', description: 'Lütfen en az bir öðrenci seçin', variant: 'destructive' });
+      toast({ title: 'Uyar', description: 'Ltfen en az bir renci sein', variant: 'destructive' });
       return;
     }
 
@@ -281,8 +281,8 @@ export default function AchievementManagementPage() {
 
       if (successCount > 0) {
         toast({ 
-          title: 'Baþarýlý', 
-          description: `Rozet ${successCount} öðrenciye verildi` 
+          title: 'Baarl', 
+          description: `Rozet ${successCount} renciye verildi` 
         });
         setShowGrantModal(false);
         setSelectedStudentIds([]);
@@ -294,7 +294,7 @@ export default function AchievementManagementPage() {
         });
       }
     } catch (error) {
-      toast({ title: 'Hata', description: 'Ýþlem baþarýsýz', variant: 'destructive' });
+      toast({ title: 'Hata', description: 'lem baarsz', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -321,7 +321,7 @@ export default function AchievementManagementPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.description || !formData.type) {
-      toast({ title: 'Uyarý', description: 'Lütfen tüm zorunlu alanlarý doldurun', variant: 'destructive' });
+      toast({ title: 'Uyar', description: 'Ltfen tm zorunlu alanlar doldurun', variant: 'destructive' });
       return;
     }
 
@@ -341,12 +341,12 @@ export default function AchievementManagementPage() {
       });
 
       if (response.ok) {
-        toast({ title: 'Baþarýlý', description: formData.id ? 'Rozet güncellendi' : 'Rozet oluþturuldu' });
+        toast({ title: 'Baarl', description: formData.id ? 'Rozet gncellendi' : 'Rozet oluturuldu' });
         setShowFormModal(false);
         fetchAchievements();
       }
     } catch (error) {
-      toast({ title: 'Hata', description: 'Ýþlem baþarýsýz', variant: 'destructive' });
+      toast({ title: 'Hata', description: 'lem baarsz', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -376,9 +376,9 @@ export default function AchievementManagementPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Rozet Yönetimi</h1>
+          <h1 className="text-3xl font-bold">Rozet Ynetimi</h1>
           <p className="text-muted-foreground mt-1">
-            Öðrencilerin kazanabileceði rozetleri yönetin
+            rencilerin kazanabilecei rozetleri ynetin
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -391,7 +391,7 @@ export default function AchievementManagementPage() {
         <CardHeader>
           <CardTitle>Rozetler</CardTitle>
           <CardDescription>
-            Toplam {achievements.length} rozet · {achievements.filter(a => a.isActive).length} aktif
+            Toplam {achievements.length} rozet  {achievements.filter(a => a.isActive).length} aktif
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -450,7 +450,7 @@ export default function AchievementManagementPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => openGrantModal(achievement)}
-                            title="Öðrenciye rozet ver"
+                            title="renciye rozet ver"
                           >
                             <Plus className="h-4 w-4 mr-1" />
                             Rozet Ver
@@ -508,7 +508,7 @@ export default function AchievementManagementPage() {
                       <div>
                         <p className="font-medium">{sa.student.user.firstName} {sa.student.user.lastName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {sa.student.class.grade.name}. Sýnýf {sa.student.class.name}
+                          {sa.student.class.grade.name}. Snf {sa.student.class.name}
                         </p>
                       </div>
                       <div className="text-sm text-muted-foreground">
@@ -518,7 +518,7 @@ export default function AchievementManagementPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">Henüz kimse kazanmadý</p>
+                <p className="text-center text-muted-foreground py-8">Henz kimse kazanmad</p>
               )}
             </div>
           </div>
@@ -531,20 +531,20 @@ export default function AchievementManagementPage() {
           <DialogHeader>
             <DialogTitle>Rozet Ver: {selectedAchievement?.name}</DialogTitle>
             <DialogDescription>
-              Bu rozeti manuel olarak öðrencilere verebilirsiniz. Birden fazla öðrenci seçebilirsiniz.
+              Bu rozeti manuel olarak rencilere verebilirsiniz. Birden fazla renci seebilirsiniz.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Öðrenci Ara ve Seç</Label>
+              <Label>renci Ara ve Se</Label>
               <Command className="border rounded-lg">
                 <CommandInput 
-                  placeholder="Öðrenci adý veya sýnýf ara..." 
+                  placeholder="renci ad veya snf ara..." 
                   value={studentSearch}
                   onValueChange={setStudentSearch}
                 />
                 <CommandList className="max-h-[300px]">
-                  <CommandEmpty>Öðrenci bulunamadý.</CommandEmpty>
+                  <CommandEmpty>renci bulunamad.</CommandEmpty>
                   <CommandGroup>
                     {students
                       .filter(student => {
@@ -569,7 +569,7 @@ export default function AchievementManagementPage() {
                               {student.user.firstName} {student.user.lastName}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {student.class.grade.name}. Sýnýf {student.class.name}
+                              {student.class.grade.name}. Snf {student.class.name}
                             </p>
                           </div>
                         </CommandItem>
@@ -601,7 +601,7 @@ export default function AchievementManagementPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowGrantModal(false)}>
-              Ýptal
+              ptal
             </Button>
             <Button 
               onClick={grantAchievement} 
@@ -629,7 +629,7 @@ export default function AchievementManagementPage() {
           <DialogHeader>
             <DialogTitle>Rozeti Sil</DialogTitle>
             <DialogDescription>
-              Bu rozeti silmek istediðinize emin misiniz? Bu iþlem geri alýnamaz.
+              Bu rozeti silmek istediinize emin misiniz? Bu ilem geri alnamaz.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -638,7 +638,7 @@ export default function AchievementManagementPage() {
               onClick={() => setShowDeleteModal(false)}
               disabled={submitting}
             >
-              Ýptal
+              ptal
             </Button>
             <Button 
               variant="destructive" 
@@ -665,16 +665,16 @@ export default function AchievementManagementPage() {
       <Dialog open={showFormModal} onOpenChange={setShowFormModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{formData.id ? 'Rozet Düzenle' : 'Yeni Rozet'}</DialogTitle>
+            <DialogTitle>{formData.id ? 'Rozet Dzenle' : 'Yeni Rozet'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Rozet Adý *</Label>
+                <Label>Rozet Ad *</Label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Örn: Matematik Ustasý"
+                  placeholder="rn: Matematik Ustas"
                 />
               </div>
               <div className="space-y-2">
@@ -682,17 +682,17 @@ export default function AchievementManagementPage() {
                 <Input
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  placeholder="Örn: FULL_MATH_LGS"
+                  placeholder="rn: FULL_MATH_LGS"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Açýklama *</Label>
+              <Label>Aklama *</Label>
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Rozet açýklamasý"
+                placeholder="Rozet aklamas"
                 rows={3}
               />
             </div>
@@ -713,13 +713,13 @@ export default function AchievementManagementPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Sýnav Türü</Label>
+                <Label>Snav Tr</Label>
                 <Select value={formData.examType || 'none'} onValueChange={(value) => setFormData({ ...formData, examType: value === 'none' ? undefined : value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Seçiniz</SelectItem>
+                    <SelectItem value="none">Seiniz</SelectItem>
                     {EXAM_TYPES.map(type => (
                       <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                     ))}
@@ -730,7 +730,7 @@ export default function AchievementManagementPage() {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Ýkon</Label>
+                <Label>kon</Label>
                 <Select value={formData.iconName} onValueChange={(value) => setFormData({ ...formData, iconName: value })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -768,10 +768,10 @@ export default function AchievementManagementPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFormModal(false)}>Ýptal</Button>
+            <Button variant="outline" onClick={() => setShowFormModal(false)}>ptal</Button>
             <Button onClick={handleSubmit} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-              {formData.id ? 'Güncelle' : 'Oluþtur'}
+              {formData.id ? 'Gncelle' : 'Olutur'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -37,7 +37,7 @@ export default function MessagesPage() {
           {user?.role === "SCHOOL_ADMIN" && (
             <Button variant="outline" onClick={() => router.push("/dashboard/messages/settings")}>
               <Settings className="h-4 w-4 mr-2" />
-              Mesaj Ayarlarý
+              Mesaj Ayarlar
             </Button>
           )}
           {canSendMessages && (
@@ -58,7 +58,7 @@ export default function MessagesPage() {
           {canSendMessages && (
             <TabsTrigger value="sent">
               <Send className="h-4 w-4 mr-2" />
-              Gönderilmiþ
+              Gnderilmi
             </TabsTrigger>
           )}
         </TabsList>
@@ -125,7 +125,7 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
             <div className="flex-1">
               <h3 className="text-lg font-medium">{message.subject}</h3>
               <p className="text-sm text-gray-600 mt-1">
-                {message._count.recipients} alýcý •{" "}
+                {message._count.recipients} alc {" "}
                 {message.recipients.filter((r: any) => r.isRead).length} okudu
               </p>
               <p className="text-sm text-gray-500 mt-1">
@@ -138,7 +138,7 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
       {messages.length === 0 && (
         <Card className="p-8 text-center text-gray-500">
           <Send className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Henüz mesaj göndermediniz</p>
+          <p>Henz mesaj gndermediniz</p>
         </Card>
       )}
     </div>

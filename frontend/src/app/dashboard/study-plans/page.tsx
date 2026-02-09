@@ -506,7 +506,7 @@ export default function StudyPlansPage() {
     } catch (error: any) {
       toast({
         title: 'Hata',
-        description: error.message || 'Bir hata olu�tu',
+        description: error.message || 'Bir hata oluştu',
         variant: 'destructive',
       });
     } finally {
@@ -564,14 +564,14 @@ export default function StudyPlansPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || '��lem s�ras�nda hata olu�tu');
+        throw new Error(error.message || 'İşlem sırasında hata oluştu');
       }
 
       toast({
-        title: 'Ba�ar�l�',
+        title: 'Başarılı',
         description: deleteMode === 'archive'
-          ? 'Plan ar�ivlendi'
-          : (deleteMode === 'delete' ? '�ablon silindi' : 'Atamalar iptal edildi'),
+          ? 'Plan arşivlendi'
+          : (deleteMode === 'delete' ? 'Şablon silindi' : 'Atamalar iptal edildi'),
       });
 
       setDeleteModalOpen(false);
@@ -579,7 +579,7 @@ export default function StudyPlansPage() {
     } catch (error: any) {
       toast({
         title: 'Hata',
-        description: error.message || 'Bir hata olu�tu',
+        description: error.message || 'Bir hata oluştu',
         variant: 'destructive',
       });
     } finally {
@@ -610,11 +610,11 @@ export default function StudyPlansPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">�al��ma Planlar�</h1>
+          <h1 className="text-3xl font-bold">Çalışma Planları</h1>
           <p className="text-muted-foreground mt-1">
             {user?.role === 'STUDENT'
-              ? '�al��ma planlar�n�z� g�r�nt�leyin ve takip edin'
-              : 'Plan �ablonlar� olu�turun ve ��rencilere atay�n'}
+              ? 'Çalışma planlarınızı görüntüleyin ve takip edin'
+              : 'Plan Şablonları oluşturun ve öğrencilere atayın'}
           </p>
         </div>
         {user?.role !== 'STUDENT' && (
@@ -624,7 +624,7 @@ export default function StudyPlansPage() {
                 <Link href="/dashboard/admin/subjects">
                   <Button variant="outline">
                     <GraduationCap className="mr-2 h-4 w-4" />
-                    Ders/Konu Y�netimi
+                    Ders/Konu Yönetimi
                   </Button>
                 </Link>
                 <Link href="/dashboard/study-plans/settings">
@@ -638,7 +638,7 @@ export default function StudyPlansPage() {
             <Link href="/dashboard/study-plans/new">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Yeni �al��ma Plan� Haz�rla
+                Yeni Çalışma Planı Hazırla
               </Button>
             </Link>
           </div>
@@ -649,12 +649,12 @@ export default function StudyPlansPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">�ablonlar</CardTitle>
+            <CardTitle className="text-sm font-medium">Şablonlar</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.templates}</div>
-            <p className="text-xs text-muted-foreground">Olu�turulan �ablonlar</p>
+            <p className="text-xs text-muted-foreground">Oluşturulan Şablonlar</p>
           </CardContent>
         </Card>
 
@@ -665,7 +665,7 @@ export default function StudyPlansPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.assigned}</div>
-            <p className="text-xs text-muted-foreground">��rencilere atanan</p>
+            <p className="text-xs text-muted-foreground">öğrencilere atanan</p>
           </CardContent>
         </Card>
 
@@ -709,10 +709,10 @@ export default function StudyPlansPage() {
             </div>
             <Select value={examTypeFilter} onValueChange={setExamTypeFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="S�nav Tipi" />
+                <SelectValue placeholder="Sınav Tipi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">T�m S�navlar</SelectItem>
+                <SelectItem value="ALL">Tüm Sınavlar</SelectItem>
                 <SelectItem value="TYT">TYT</SelectItem>
                 <SelectItem value="AYT">AYT</SelectItem>
                 <SelectItem value="LGS">LGS</SelectItem>
@@ -724,11 +724,11 @@ export default function StudyPlansPage() {
                   <SelectValue placeholder="Durum" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">T�m Durumlar</SelectItem>
+                  <SelectItem value="ALL">Tüm Durumlar</SelectItem>
                   <SelectItem value="ACTIVE">Aktif</SelectItem>
-                  <SelectItem value="ASSIGNED">Atand�</SelectItem>
-                  <SelectItem value="COMPLETED">Tamamland�</SelectItem>
-                  <SelectItem value="CANCELLED">�ptal Edildi</SelectItem>
+                  <SelectItem value="ASSIGNED">Atandı</SelectItem>
+                  <SelectItem value="COMPLETED">Tamamlandı</SelectItem>
+                  <SelectItem value="CANCELLED">İptal Edildi</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -746,7 +746,7 @@ export default function StudyPlansPage() {
             </TabsTrigger>
             <TabsTrigger value="templates">
               <FileText className="mr-2 h-4 w-4" />
-              �ablonlar ({templates.length})
+              Şablonlar ({templates.length})
             </TabsTrigger>
           </TabsList>
 
@@ -756,16 +756,16 @@ export default function StudyPlansPage() {
               <CardHeader>
                 <CardTitle>Aktif Planlar</CardTitle>
                 <CardDescription>
-                  {filteredPlans.length} aktif plan g�steriliyor
+                  {filteredPlans.length} aktif plan gösteriliyor
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {filteredPlans.length === 0 ? (
                   <div className="text-center py-12">
                     <Target className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">Hen�z aktif plan yok</h3>
+                    <h3 className="mt-4 text-lg font-semibold">Henüz aktif plan yok</h3>
                     <p className="text-muted-foreground mt-2">
-                      �ablon atayarak aktif planlar olu�turun.
+                      Şablon atayarak aktif planlar oluşturun.
                     </p>
                   </div>
                 ) : (
@@ -777,7 +777,7 @@ export default function StudyPlansPage() {
                             <div className="flex-1 min-w-0">
                               <CardTitle className="text-lg truncate">{plan.name}</CardTitle>
                               <CardDescription className="line-clamp-1">
-                                {plan.description || 'A��klama yok'}
+                                {plan.description || 'Açıklama yok'}
                               </CardDescription>
                             </div>
                           </div>
@@ -814,7 +814,7 @@ export default function StudyPlansPage() {
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>G�r�nt�le</p>
+                                      <p>Görüntüle</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -830,7 +830,7 @@ export default function StudyPlansPage() {
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>D�zenle</p>
+                                      <p>Düzenle</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -885,7 +885,7 @@ export default function StudyPlansPage() {
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Ar�ivle</p>
+                                      <p>Arşivle</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -919,24 +919,24 @@ export default function StudyPlansPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">Ocak</SelectItem>
-                        <SelectItem value="2">�ubat</SelectItem>
+                        <SelectItem value="2">Şubat</SelectItem>
                         <SelectItem value="3">Mart</SelectItem>
                         <SelectItem value="4">Nisan</SelectItem>
-                        <SelectItem value="5">May�s</SelectItem>
+                        <SelectItem value="5">Mayıs</SelectItem>
                         <SelectItem value="6">Haziran</SelectItem>
                         <SelectItem value="7">Temmuz</SelectItem>
-                        <SelectItem value="8">A�ustos</SelectItem>
-                        <SelectItem value="9">Eyl�l</SelectItem>
+                        <SelectItem value="8">Ağustos</SelectItem>
+                        <SelectItem value="9">Eylül</SelectItem>
                         <SelectItem value="10">Ekim</SelectItem>
-                        <SelectItem value="11">Kas�m</SelectItem>
-                        <SelectItem value="12">Aral�k</SelectItem>
+                        <SelectItem value="11">Kasım</SelectItem>
+                        <SelectItem value="12">Aralık</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {/* Year Selector */}
                   <div className="space-y-2">
-                    <Label>Y�l</Label>
+                    <Label>Yıl</Label>
                     <Select value={templateYear.toString()} onValueChange={(v) => setTemplateYear(parseInt(v))}>
                       <SelectTrigger>
                         <SelectValue />
@@ -951,14 +951,14 @@ export default function StudyPlansPage() {
 
                   {/* Created By Filter */}
                   <div className="space-y-2">
-                    <Label>Olu�turan</Label>
+                    <Label>Oluşturan</Label>
                     <Select value={templateCreatedBy} onValueChange={setTemplateCreatedBy}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">T�m �ablonlar</SelectItem>
-                        <SelectItem value="mine">Kendi �ablonlar�m</SelectItem>
+                        <SelectItem value="all">Tüm Şablonlar</SelectItem>
+                        <SelectItem value="mine">Kendi Şablonlarım</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -972,8 +972,8 @@ export default function StudyPlansPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="newest">En Yeni</SelectItem>
-                        <SelectItem value="most-used">En �ok Kullan�lan</SelectItem>
-                        <SelectItem value="name">�sme G�re</SelectItem>
+                        <SelectItem value="most-used">En Çok Kullanılan</SelectItem>
+                        <SelectItem value="name">İsme Göre</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -983,23 +983,23 @@ export default function StudyPlansPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Plan �ablonlar�</CardTitle>
+                <CardTitle>Plan Şablonları</CardTitle>
                 <CardDescription>
-                  {filteredTemplates.length} �ablon g�steriliyor
+                  {filteredTemplates.length} Şablon gösteriliyor
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {filteredTemplates.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">Hen�z �ablon yok</h3>
+                    <h3 className="mt-4 text-lg font-semibold">Henüz Şablon yok</h3>
                     <p className="text-muted-foreground mt-2">
-                      Yeni bir �al��ma plan� �ablonu olu�turarak ba�lay�n.
+                      Yeni bir Çalışma planı Şablonu oluşturarak başlayın.
                     </p>
                     <Link href="/dashboard/study-plans/new">
                       <Button className="mt-4">
                         <Plus className="mr-2 h-4 w-4" />
-                        �lk �ablonu Olu�tur
+                        İlk Şablonu Oluştur
                       </Button>
                     </Link>
                   </div>
@@ -1012,7 +1012,7 @@ export default function StudyPlansPage() {
                             <div className="flex-1 min-w-0">
                               <CardTitle className="text-lg truncate">{plan.name}</CardTitle>
                               <CardDescription className="line-clamp-1">
-                                {plan.description || 'A��klama yok'}
+                                {plan.description || 'Açıklama yok'}
                               </CardDescription>
                             </div>
                           </div>
@@ -1021,14 +1021,14 @@ export default function StudyPlansPage() {
                           <div className="space-y-3">
                             {/* Badges */}
                             <div className="flex flex-wrap gap-2">
-                              <Badge className="bg-purple-600 text-white">�ablon</Badge>
+                              <Badge className="bg-purple-600 text-white">Şablon</Badge>
                               <Badge className={getExamTypeBadge(plan.examType)}>{plan.examType}</Badge>
                               {plan.isPublic && (
-                                <Badge variant="outline" className="text-green-600 border-green-600">Payla��ld�</Badge>
+                                <Badge variant="outline" className="text-green-600 border-green-600">Paylaşıldı</Badge>
                               )}
                               {plan._count && plan._count.assignments && plan._count.assignments > 0 && (
                                 <Badge variant="outline" className="text-blue-600 border-blue-600">
-                                  {plan._count.assignments}x Kullan�ld�
+                                  {plan._count.assignments}x Kullanıldı
                                 </Badge>
                               )}
                             </div>
@@ -1036,7 +1036,7 @@ export default function StudyPlansPage() {
                             {/* Teacher info */}
                             {plan.teacher && (
                               <div className="text-xs text-muted-foreground">
-                                Olu�turan: {plan.teacher.firstName} {plan.teacher.lastName}
+                                Oluşturan: {plan.teacher.firstName} {plan.teacher.lastName}
                               </div>
                             )}
 
@@ -1044,7 +1044,7 @@ export default function StudyPlansPage() {
                             <div className="flex flex-wrap gap-1">
                               {plan.gradeLevels.map(grade => (
                                 <Badge key={grade} variant="outline" className="text-xs">
-                                  {grade}. S�n�f
+                                  {grade}. Sınıf
                                 </Badge>
                               ))}
                             </div>
@@ -1090,7 +1090,7 @@ export default function StudyPlansPage() {
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>D�zenle</p>
+                                      <p>Düzenle</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 </TooltipProvider>
@@ -1145,18 +1145,18 @@ export default function StudyPlansPage() {
         /* Student View */
         <Card>
           <CardHeader>
-            <CardTitle>�al��ma Planlar�m</CardTitle>
+            <CardTitle>Çalışma Planlarım</CardTitle>
             <CardDescription>
-              {filteredPlans.length} plan g�steriliyor
+              {filteredPlans.length} plan gösteriliyor
             </CardDescription>
           </CardHeader>
           <CardContent>
             {filteredPlans.length === 0 ? (
               <div className="text-center py-12">
                 <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">Hen�z plan yok</h3>
+                <h3 className="mt-4 text-lg font-semibold">Henüz plan yok</h3>
                 <p className="text-muted-foreground mt-2">
-                  Size hen�z bir �al��ma plan� atanmam��.
+                  Size henüz bir Çalışma planı atanmamış.
                 </p>
               </div>
             ) : (
@@ -1172,7 +1172,7 @@ export default function StudyPlansPage() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg truncate">{plan.name}</CardTitle>
                         <CardDescription className="line-clamp-1">
-                          {plan.description || 'A��klama yok'}
+                          {plan.description || 'Açıklama yok'}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
@@ -1204,7 +1204,7 @@ export default function StudyPlansPage() {
           <DialogHeader>
             <DialogTitle>Plan Ata: {selectedPlanForAssignment?.name}</DialogTitle>
             <DialogDescription>
-              Ad�m ad�m atama i�lemini tamamlay�n
+              Adım adım atama işlemini tamamlayın
             </DialogDescription>
           </DialogHeader>
 
@@ -1218,7 +1218,7 @@ export default function StudyPlansPage() {
               <div className="h-0.5 flex-1 bg-muted mx-4" />
               <div className={`flex flex-col items-center ${selectedTargets.length > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                 <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold mb-1 ${selectedTargets.length > 0 ? 'bg-primary text-white border-primary' : 'border-muted-foreground'}`}>2</div>
-                <span className="text-xs">Se�im</span>
+                <span className="text-xs">Seçim</span>
               </div>
               <div className="h-0.5 flex-1 bg-muted mx-4" />
               <div className={`flex flex-col items-center ${assignmentYear ? 'text-primary' : 'text-muted-foreground'}`}>
@@ -1229,14 +1229,14 @@ export default function StudyPlansPage() {
 
             {/* Step 1: Target Type Selection */}
             <div className="space-y-4">
-              <Label className="text-base">Atama Yap�lacak Grup/Ki�i Tipi</Label>
+              <Label className="text-base">Atama Yapılacak Grup/Kişi Tipi</Label>
               <div className="grid grid-cols-3 gap-4">
                 <div
                   className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'CLASS' ? 'border-primary bg-primary/5' : ''}`}
                   onClick={() => { setAssignmentTargetType('CLASS'); setSelectedTargets([]); setSelectedGradeId(''); }}
                 >
                   <GraduationCap className="h-6 w-6 mb-2 text-primary" />
-                  <div className="font-medium">S�n�f Seviyesi ve �ube</div>
+                  <div className="font-medium">Sınıf Seviyesi ve Şube</div>
                   <div className="text-xs text-muted-foreground">12-A, 11-B vb.</div>
                 </div>
                 <div
@@ -1244,16 +1244,16 @@ export default function StudyPlansPage() {
                   onClick={() => { setAssignmentTargetType('GROUP'); setSelectedTargets([]); setSelectedGradeId(''); }}
                 >
                   <Users className="h-6 w-6 mb-2 text-green-600" />
-                  <div className="font-medium">Ment�r Grubu</div>
-                  <div className="text-xs text-muted-foreground">�zel �al��ma gruplar�</div>
+                  <div className="font-medium">Mentör Grubu</div>
+                  <div className="text-xs text-muted-foreground">Özel Çalışma grupları</div>
                 </div>
                 <div
                   className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${assignmentTargetType === 'STUDENT' ? 'border-primary bg-primary/5' : ''}`}
                   onClick={() => { setAssignmentTargetType('STUDENT'); setSelectedTargets([]); setSelectedGradeId(''); }}
                 >
                   <Users className="h-6 w-6 mb-2 text-orange-600" />
-                  <div className="font-medium">Bireysel ��renci</div>
-                  <div className="text-xs text-muted-foreground">Tek tek se�im</div>
+                  <div className="font-medium">Bireysel Öğrenci</div>
+                  <div className="text-xs text-muted-foreground">Tek tek seçim</div>
                 </div>
               </div>
             </div>
@@ -1262,27 +1262,27 @@ export default function StudyPlansPage() {
             <div className="space-y-4 border-t pt-4">
               <Label className="text-base flex justify-between">
                 <span>
-                  {assignmentTargetType === 'CLASS' && 'S�n�f Seviyesi ve �ube Se�in'}
-                  {assignmentTargetType === 'GROUP' && 'Ment�r Gruplar�n� Se�in'}
-                  {assignmentTargetType === 'STUDENT' && '��rencileri Se�in'}
+                  {assignmentTargetType === 'CLASS' && 'Sınıf Seviyesi ve Şube Seçin'}
+                  {assignmentTargetType === 'GROUP' && 'Mentör Gruplarını Seçin'}
+                  {assignmentTargetType === 'STUDENT' && 'Öğrencileri Seçin'}
                 </span>
                 {selectedTargets.length > 0 && (
-                  <Badge variant="secondary">{selectedTargets.length} Se�ildi</Badge>
+                  <Badge variant="secondary">{selectedTargets.length} Seçildi</Badge>
                 )}
               </Label>
 
               {/* Grade selector for CLASS type */}
               {assignmentTargetType === 'CLASS' && (
                 <div className="space-y-2">
-                  <Label>S�n�f Seviyesi</Label>
+                  <Label>Sınıf Seviyesi</Label>
                   <Select value={selectedGradeId} onValueChange={setSelectedGradeId}>
                     <SelectTrigger>
-                      <SelectValue placeholder="S�n�f seviyesi se�in" />
+                      <SelectValue placeholder="Sınıf seviyesi seçin" />
                     </SelectTrigger>
                     <SelectContent>
                       {grades.map(grade => (
                         <SelectItem key={grade.id} value={grade.id.toString()}>
-                          {grade.level}. S�n�f
+                          {grade.level}. Sınıf
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1295,7 +1295,7 @@ export default function StudyPlansPage() {
                 {assignmentTargetType === 'STUDENT' && (
                   <div className="p-2">
                     <Input
-                      placeholder="��renci ara..."
+                      placeholder="Öğrenci ara..."
                       value={studentSearch}
                       onChange={(e) => setStudentSearch(e.target.value)}
                       className="mb-2"
@@ -1310,7 +1310,7 @@ export default function StudyPlansPage() {
                         <Label htmlFor={`student-${student.id}`} className="flex-1 cursor-pointer">
                           <div className="font-medium text-foreground">{student.user.firstName} {student.user.lastName}</div>
                           <div className="text-xs text-muted-foreground">
-                            {student.studentNumber} - {student.class?.name || 'S�n�f yok'}
+                            {student.studentNumber} - {student.class?.name || 'Sınıf yok'}
                           </div>
                         </Label>
                       </div>
@@ -1327,7 +1327,7 @@ export default function StudyPlansPage() {
                     />
                     <Label htmlFor={`group-${group.id}`} className="flex-1 cursor-pointer">
                       <div className="font-medium text-foreground">{group.name}</div>
-                      <div className="text-xs text-muted-foreground">{group._count?.memberships || 0} ��renci</div>
+                      <div className="text-xs text-muted-foreground">{group._count?.memberships || 0} Öğrenci</div>
                     </Label>
                   </div>
                 ))}
@@ -1367,8 +1367,8 @@ export default function StudyPlansPage() {
                               const gradeClasses = classes.filter(cls => cls.gradeId?.toString() === selectedGradeId);
                               const allSelected = gradeClasses.every(cls => selectedTargets.includes(cls.id));
                               return allSelected
-                                ? `T�m ${gradeLevel}. S�n�f �ubelerini Kald�r`
-                                : `T�m ${gradeLevel}. S�n�f �ubelerini Se�`;
+                                ? `Tüm ${gradeLevel}. Sınıf Şubelerini Kaldır`
+                                : `Tüm ${gradeLevel}. Sınıf Şubelerini Seç`;
                             })()}
                           </Button>
                         </div>
@@ -1381,19 +1381,19 @@ export default function StudyPlansPage() {
                             />
                             <Label htmlFor={`class-${cls.id}`} className="flex-1 cursor-pointer">
                               <div className="font-medium text-foreground">{cls.name}</div>
-                              <div className="text-xs text-muted-foreground">{cls.grade?.level}. S�n�f - {cls._count?.students || 0} ��renci</div>
+                              <div className="text-xs text-muted-foreground">{cls.grade?.level}. Sınıf - {cls._count?.students || 0} Öğrenci</div>
                             </Label>
                           </div>
                         ))}
                       </>
                     ) : (
                       <div className="p-4 text-center text-muted-foreground">
-                        Bu s�n�f seviyesinde �ube bulunmuyor
+                        Bu sınıf seviyesinde Şube bulunmuyor
                       </div>
                     )
                   ) : (
                     <div className="p-4 text-center text-muted-foreground">
-                      L�tfen �nce s�n�f seviyesi se�in
+                      Lütfen önce sınıf seviyesi seçin
                     </div>
                   )
                 )}
@@ -1402,10 +1402,10 @@ export default function StudyPlansPage() {
 
             {/* Step 3: Date Selection */}
             <div className="space-y-4 border-t pt-4">
-              <Label className="text-base">Plan Ba�lang�� Tarihi</Label>
+              <Label className="text-base">Plan Başlangıç Tarihi</Label>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Y�l</Label>
+                  <Label>Yıl</Label>
                   <Select
                     value={assignmentYear.toString()}
                     onValueChange={(v) => setAssignmentYear(parseInt(v))}
@@ -1457,14 +1457,14 @@ export default function StudyPlansPage() {
               </div>
               <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-sm flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                <span>Se�ilen Ba�lang��: <strong>{getMonthName(assignmentMonth)} {assignmentYear}, {assignmentWeek}. Hafta</strong></span>
+                <span>Seçilen Başlangıç: <strong>{getMonthName(assignmentMonth)} {assignmentYear}, {assignmentWeek}. Hafta</strong></span>
               </div>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignModalOpen(false)}>
-              �ptal
+              İptal
             </Button>
             <Button
               onClick={handleAssign}
@@ -1474,12 +1474,12 @@ export default function StudyPlansPage() {
               {assigning ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Atan�yor...
+                  Atanıyor...
                 </>
               ) : (
                 <>
                   <Send className="mr-2 h-4 w-4" />
-                  Atamay� Tamamla ({selectedTargets.length})
+                  Atamayı Tamamla ({selectedTargets.length})
                 </>
               )}
             </Button>
@@ -1492,14 +1492,14 @@ export default function StudyPlansPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {selectedPlanForDelete?.isTemplate ? '�ablonu Sil' : 'Plan� Sil'}: {selectedPlanForDelete?.name}
+              {selectedPlanForDelete?.isTemplate ? 'Şablonu Sil' : 'Planı Sil'}: {selectedPlanForDelete?.name}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {selectedPlanForDelete?.isTemplate
-                ? 'Bu �ablon kal�c� olarak silinecektir. Bu i�lem geri al�namaz.'
+                ? 'Bu Şablon kalıcı olarak silinecektir. Bu işlem geri alınamaz.'
                 : (deleteMode === 'archive'
-                  ? 'Bu plan� ar�ivlemek istedi�inize emin misiniz?'
-                  : 'Bu i�lem geri al�namaz. L�tfen silme se�ene�ini belirleyin:')}
+                  ? 'Bu planı arşivlemek istediğinize emin misiniz?'
+                  : 'Bu işlem geri alınamaz. Lütfen silme seçeneğini belirleyin:')}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -1509,10 +1509,10 @@ export default function StudyPlansPage() {
                 <div className="flex gap-3">
                   <Archive className="h-5 w-5 text-amber-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-amber-900 mb-1">Plan� Ar�ivle</h4>
+                    <h4 className="font-medium text-amber-900 mb-1">Planı Arşivle</h4>
                     <p className="text-sm text-amber-800">
-                      Bu plan ar�ive kald�r�lacak. ��renci performans verileri ve ge�mi� kay�tlar korunacakt�r.
-                      Plan art�k aktif listesinde g�r�nmeyecektir.
+                      Bu plan arşive kaldırılacak. Öğrenci performans verileri ve geçmiş kayıtlar korunacaktır.
+                      Plan arttık aktif listesinde görünmeyecektir.
                     </p>
                   </div>
                 </div>
@@ -1529,10 +1529,10 @@ export default function StudyPlansPage() {
                 <div className="flex items-center gap-2">
                   <input type="radio" checked={deleteMode === 'cancel'} readOnly />
                   <div>
-                    <div className="font-medium">Sadece Atamalar� �ptal Et</div>
+                    <div className="font-medium">Sadece Atamaları İptal Et</div>
                     <div className="text-sm text-muted-foreground">
-                      �ablon korunur, ancak bu plana yap�lan t�m atamalar iptal edilir.
-                      ��renci performans verileri silinmez.
+                      Şablon korunur, ancak bu plana yapılan tüm atamalar iptal edilir.
+                      Öğrenci performans verileri silinmez.
                     </div>
                   </div>
                 </div>
@@ -1545,10 +1545,10 @@ export default function StudyPlansPage() {
                 <div className="flex items-center gap-2">
                   <input type="radio" checked={deleteMode === 'delete'} readOnly />
                   <div>
-                    <div className="font-medium text-destructive">�ablonu Tamamen Sil</div>
+                    <div className="font-medium text-destructive">Şablonu Tamamen Sil</div>
                     <div className="text-sm text-muted-foreground">
-                      �ablon ve t�m atamalar kal�c� olarak silinir.
-                      ��renci performans verileri korunur.
+                      Şablon ve tüm atamalar kalıcı olarak silinir.
+                      Öğrenci performans verileri korunur.
                     </div>
                   </div>
                 </div>
@@ -1560,11 +1560,11 @@ export default function StudyPlansPage() {
             <div className="py-4">
               <div className="p-4 border border-destructive rounded-lg bg-destructive/5">
                 <div className="text-sm text-muted-foreground">
-                  <p className="font-medium text-destructive mb-2">Uyar�:</p>
+                  <p className="font-medium text-destructive mb-2">Uyarı:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>Bu �ablon kal�c� olarak silinecektir</li>
-                    <li>Bu �ablondan olu�turulmu� aktif planlar etkilenmeyecektir</li>
-                    <li>Bu i�lem geri al�namaz</li>
+                    <li>Bu Şablon kalıcı olarak silinecektir</li>
+                    <li>Bu Şablondan oluşturmuş aktif planlar etkilenmeyecektir</li>
+                    <li>Bu işlem geri alınamaz</li>
                   </ul>
                 </div>
               </div>
@@ -1572,7 +1572,7 @@ export default function StudyPlansPage() {
           )}
 
           <AlertDialogFooter>
-            <AlertDialogCancel>�ptal</AlertDialogCancel>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
@@ -1581,10 +1581,10 @@ export default function StudyPlansPage() {
               {deleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ��leniyor...
+                  İşleniyor...
                 </>
               ) : (
-                deleteMode === 'archive' ? 'Ar�ivle' : (deleteMode === 'cancel' ? 'Atamalar� �ptal Et' : 'Plan� Sil')
+                deleteMode === 'archive' ? 'Arşivle' : (deleteMode === 'cancel' ? 'Atamaları İptal Et' : 'Planı Sil')
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

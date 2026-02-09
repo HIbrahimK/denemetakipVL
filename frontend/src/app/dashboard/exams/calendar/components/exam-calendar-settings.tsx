@@ -96,15 +96,15 @@ export function ExamCalendarSettings() {
 
             if (response.ok) {
                 toast({
-                    title: 'Baþarýlý',
-                    description: 'Ayarlar güncellendi',
+                    title: 'BaÅŸarÄ±lÄ±',
+                    description: 'Ayarlar gÃ¼ncellendi',
                 });
                 setOpen(false);
             }
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Ayarlar güncellenirken bir hata oluþtu',
+                description: 'Ayarlar gÃ¶ncellenirken bir hata oluÅŸtu',
                 variant: 'destructive',
             });
         } finally {
@@ -121,13 +121,13 @@ export function ExamCalendarSettings() {
             </DialogTrigger>
             <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Deneme Takvimi Ayarlarý</DialogTitle>
+                    <DialogTitle>Deneme Takvimi AyarlarÄ±</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6">
-                    {/* Öðrencilere Gösterilecek Alanlar */}
+                    {/* Ã–ÄŸrencilere GÃ¶sterilecek Alanlar */}
                     <div>
-                        <h3 className="font-semibold mb-3">Öðrencilere Gösterilecek Bilgiler</h3>
+                        <h3 className="font-semibold mb-3">Ã–ÄŸrencilere GÃ¶sterilecek Bilgiler</h3>
                         <div className="space-y-3">
                             <div className="flex items-center space-x-2">
                                 <Checkbox
@@ -138,7 +138,7 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showPublisher" className="font-normal">
-                                    Yayýn Evi
+                                    YayÄ±n Evi
                                 </Label>
                             </div>
 
@@ -151,7 +151,7 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showBroughtBy" className="font-normal">
-                                    Getiren Kiþi
+                                    Getiren KiÅŸi
                                 </Label>
                             </div>
 
@@ -164,7 +164,7 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showFee" className="font-normal">
-                                    Ücret Bilgisi
+                                    Ãœcret Bilgisi
                                 </Label>
                             </div>
 
@@ -180,19 +180,19 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showParticipantCounts" className="font-normal">
-                                    Katýlým Sayýlarý
+                                    KatÄ±lÄ±m SayÄ±larÄ±
                                 </Label>
                             </div>
                         </div>
                     </div>
 
-                    {/* Bildirim Ayarlarý */}
+                    {/* Bildirim AyarlarÄ± */}
                     <div>
-                        <h3 className="font-semibold mb-3">Bildirim Ayarlarý</h3>
+                        <h3 className="font-semibold mb-3">Bildirim AyarlarÄ±</h3>
                         <div className="space-y-3">
                             <div>
                                 <Label htmlFor="notifyDaysBefore">
-                                    Sýnavdan Kaç Gün Önce Bildir
+                                    SÄ±navdan KaÃ§ GÃ¼n Ã¶nce Bildir
                                 </Label>
                                 <Input
                                     id="notifyDaysBefore"
@@ -208,13 +208,13 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Öðrencilere otomatik mesaj gönderilir
+                                    Ã–ÄŸrencilere otomatik mesaj gÃ¶nderilir
                                 </p>
                             </div>
 
                             <div>
                                 <Label htmlFor="autoPublishDaysAfter">
-                                    Sonuçlarý Kaç Gün Sonra Yayýnla
+                                    SonuÃ§larÄ± KaÃ§ GÃ¼n Sonra YayÄ±nla
                                 </Label>
                                 <Input
                                     id="autoPublishDaysAfter"
@@ -230,18 +230,18 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    0 = Manuel yayýnlama
+                                    0 = Manuel yayÄ±nlama
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Görünüm Ayarlarý */}
+                    {/* GÃ¶rÃ¼nÃ¼m AyarlarÄ± */}
                     <div>
-                        <h3 className="font-semibold mb-3">Görünüm Ayarlarý</h3>
+                        <h3 className="font-semibold mb-3">GÃ¶rÃ¼nÃ¼m AyarlarÄ±</h3>
                         <div className="space-y-3">
                             <div>
-                                <Label htmlFor="defaultView">Varsayýlan Görünüm</Label>
+                                <Label htmlFor="defaultView">VarsayÄ±lan GÃ¶rÃ¼nÃ¼m</Label>
                                 <Select
                                     value={settings.defaultView}
                                     onValueChange={(value) =>
@@ -259,7 +259,7 @@ export function ExamCalendarSettings() {
                             </div>
 
                             <div>
-                                <Label htmlFor="academicYearStart">Akademik Yýl Baþlangýcý</Label>
+                                <Label htmlFor="academicYearStart">Akademik YÄ±l BaÅŸlangÄ±cÄ±</Label>
                                 <Select
                                     value={settings.academicYearStart.toString()}
                                     onValueChange={(value) =>
@@ -275,8 +275,8 @@ export function ExamCalendarSettings() {
                                     <SelectContent>
                                         <SelectItem value="6">Haziran</SelectItem>
                                         <SelectItem value="7">Temmuz</SelectItem>
-                                        <SelectItem value="8">Aðustos</SelectItem>
-                                        <SelectItem value="9">Eylül</SelectItem>
+                                        <SelectItem value="8">AÄŸustos</SelectItem>
+                                        <SelectItem value="9">EylÃ¼l</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -285,7 +285,7 @@ export function ExamCalendarSettings() {
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={() => setOpen(false)}>
-                            Ýptal
+                            Ä°ptal
                         </Button>
                         <Button onClick={handleSave} disabled={loading}>
                             {loading ? 'Kaydediliyor...' : 'Kaydet'}

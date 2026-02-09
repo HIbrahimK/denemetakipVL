@@ -100,8 +100,8 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
 
             if (response.ok) {
                 toast({
-                    title: 'Baþarýlý',
-                    description: 'Deneme güncellendi',
+                    title: 'BaÅŸarÄ±lÄ±',
+                    description: 'Deneme gÃ¼ncellendi',
                 });
                 onSuccess();
                 onClose();
@@ -111,7 +111,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Deneme güncellenirken bir hata oluþtu',
+                description: 'Deneme gÃ¶ncellenirken bir hata oluÅŸtu',
                 variant: 'destructive',
             });
         } finally {
@@ -125,26 +125,26 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Denemeyi Düzenle</DialogTitle>
+                    <DialogTitle>Denemeyi DÃ¼zenle</DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <Label htmlFor="title">Deneme Adý *</Label>
+                            <Label htmlFor="title">Deneme AdÄ± *</Label>
                             <Input
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) =>
                                     setFormData({ ...formData, title: e.target.value })
                                 }
-                                placeholder="Örn: Matemito A Denemesi"
+                                placeholder="Ã–rn: Matemito A Denemesi"
                                 required
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="type">Deneme Türü *</Label>
+                            <Label htmlFor="type">Deneme TÃ¼rÃ¼ *</Label>
                             <Select
                                 value={formData.type}
                                 onValueChange={(value) =>
@@ -158,13 +158,13 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                     <SelectItem value="TYT">TYT</SelectItem>
                                     <SelectItem value="AYT">AYT</SelectItem>
                                     <SelectItem value="LGS">LGS</SelectItem>
-                                    <SelectItem value="OZEL">Özel</SelectItem>
+                                    <SelectItem value="OZEL">Ã–zel</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div>
-                            <Label htmlFor="gradeLevel">Sýnýf Seviyesi *</Label>
+                            <Label htmlFor="gradeLevel">SÄ±nÄ±f Seviyesi *</Label>
                             <Select
                                 value={formData.gradeLevel.toString()}
                                 onValueChange={(value) =>
@@ -177,7 +177,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 <SelectContent>
                                     {[5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
                                         <SelectItem key={grade} value={grade.toString()}>
-                                            {grade}. Sýnýf
+                                            {grade}. SÄ±nÄ±f
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -185,14 +185,14 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="publisher">Yayýn</Label>
+                            <Label htmlFor="publisher">YayÄ±n</Label>
                             <Input
                                 id="publisher"
                                 value={formData.publisher}
                                 onChange={(e) =>
                                     setFormData({ ...formData, publisher: e.target.value })
                                 }
-                                placeholder="Örn: Matemito"
+                                placeholder="Ã–rn: Matemito"
                             />
                         </div>
 
@@ -209,7 +209,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="scheduledDateTime">Sýnav Tarihi</Label>
+                            <Label htmlFor="scheduledDateTime">SÄ±nav Tarihi</Label>
                             <Input
                                 id="scheduledDateTime"
                                 type="datetime-local"
@@ -239,14 +239,14 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="broughtBy">Getiren Kiþi</Label>
+                            <Label htmlFor="broughtBy">Getiren KiÅŸi</Label>
                             <Input
                                 id="broughtBy"
                                 value={formData.broughtBy}
                                 onChange={(e) =>
                                     setFormData({ ...formData, broughtBy: e.target.value })
                                 }
-                                placeholder="Örn: Ahmet Hoca"
+                                placeholder="Ã–rn: Ahmet Hoca"
                             />
                         </div>
 
@@ -264,7 +264,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="fee">Ücret (?)</Label>
+                            <Label htmlFor="fee">Ãœcret (?)</Label>
                             <Input
                                 id="fee"
                                 type="number"
@@ -286,7 +286,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 }
                             />
                             <Label htmlFor="isPaid" className="cursor-pointer">
-                                Ödendi
+                                Ã–dendi
                             </Label>
                         </div>
 
@@ -299,7 +299,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 }
                             />
                             <Label htmlFor="isPublished" className="cursor-pointer">
-                                Yayýnla (Öðrencilere Görünsün)
+                                YayÄ±nla (Ã–ÄŸrencilere GÃ¶rÃ¼nsÃ¼n)
                             </Label>
                         </div>
 
@@ -315,17 +315,17 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 }
                             />
                             <Label htmlFor="isPublisherVisible" className="cursor-pointer">
-                                Yayýn Adý Görünsün
+                                YayÄ±n AdÄ± GÃ¶rÃ¼nsÃ¼n
                             </Label>
                         </div>
                     </div>
 
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={onClose}>
-                            Ýptal
+                            Ä°ptal
                         </Button>
                         <Button type="submit" disabled={loading}>
-                            {loading ? 'Güncelleniyor...' : 'Güncelle'}
+                            {loading ? 'GÃ¶ncelleniyor...' : 'GÃ¶ncelle'}
                         </Button>
                     </div>
                 </form>

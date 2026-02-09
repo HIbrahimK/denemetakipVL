@@ -95,14 +95,14 @@ export default function NewGroupPage() {
       }
 
       toast({
-        title: 'Baþarýlý',
-        description: 'Mentor grubu oluþturuldu',
+        title: 'Baarl',
+        description: 'Mentor grubu oluturuldu',
       });
 
       router.push('/dashboard/groups');
     } catch (error) {
       console.error('Error creating group:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Grup oluþturulurken bir hata oluþtu';
+      const errorMessage = error instanceof Error ? error.message : 'Grup oluturulurken bir hata olutu';
       toast({
         title: 'Hata',
         description: errorMessage,
@@ -119,7 +119,7 @@ export default function NewGroupPage() {
         <Link href="/dashboard/groups">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Gruplara Dön
+            Gruplara Dn
           </Button>
         </Link>
       </div>
@@ -128,19 +128,19 @@ export default function NewGroupPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Yeni Mentor Grubu Oluþtur
+            Yeni Mentor Grubu Olutur
           </CardTitle>
           <CardDescription>
-            Öðrencileriniz için bir mentor grubu oluþturun
+            rencileriniz iin bir mentor grubu oluturun
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Grup Adý *</Label>
+              <Label htmlFor="name">Grup Ad *</Label>
               <Input
                 id="name"
-                placeholder="Örn: 12. Sýnýf TYT Grubu"
+                placeholder="rn: 12. Snf TYT Grubu"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -148,10 +148,10 @@ export default function NewGroupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Açýklama</Label>
+              <Label htmlFor="description">Aklama</Label>
               <Textarea
                 id="description"
-                placeholder="Grup hakkýnda kýsa bir açýklama..."
+                placeholder="Grup hakknda ksa bir aklama..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
@@ -160,10 +160,10 @@ export default function NewGroupPage() {
 
             {isAdmin && (
               <div className="space-y-2">
-                <Label>Öðretmen (Opsiyonel)</Label>
+                <Label>retmen (Opsiyonel)</Label>
                 <Select value={formData.teacherId} onValueChange={(value) => setFormData({ ...formData, teacherId: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Öðretmen seçiniz..." />
+                    <SelectValue placeholder="retmen seiniz..." />
                   </SelectTrigger>
                   <SelectContent>
                     {teachers.map((teacher) => (
@@ -177,12 +177,12 @@ export default function NewGroupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="maxStudents">Maksimum Öðrenci</Label>
+              <Label htmlFor="maxStudents">Maksimum renci</Label>
               <Input
                 id="maxStudents"
                 type="number"
                 min={1}
-                placeholder="Örn: 25"
+                placeholder="rn: 25"
                 value={formData.maxStudents}
                 onChange={(e) => setFormData({ ...formData, maxStudents: e.target.value })}
               />
@@ -193,14 +193,14 @@ export default function NewGroupPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Oluþturuluyor...
+                    Oluturuluyor...
                   </>
                 ) : (
-                  'Grubu Oluþtur'
+                  'Grubu Olutur'
                 )}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>
-                Ýptal
+                ptal
               </Button>
             </div>
           </form>

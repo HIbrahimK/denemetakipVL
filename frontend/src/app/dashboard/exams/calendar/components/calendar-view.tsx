@@ -94,9 +94,9 @@ export function CalendarView({
     const monthEnd = endOfMonth(currentMonth);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    // Ayýn baþladýðý günü bul (0 = Pazar, 1 = Pazartesi, ...)
+    // AyÄ±n baÅŸladÄ±ÄŸÄ± gÃ¼nÃ¼ bul (0 = Pazar, 1 = Pazartesi, ...)
     const startDay = monthStart.getDay();
-    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi baþlat
+    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi baÃ§lat
 
     const getExamsForDay = (day: Date) => {
         return exams.filter((exam) => {
@@ -126,7 +126,7 @@ export function CalendarView({
                 </h2>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={handleToday}>
-                        Bugün
+                        BugÃ¼n
                     </Button>
                     <Button variant="outline" size="icon" onClick={handlePrevMonth}>
                         <ChevronLeft className="w-4 h-4" />
@@ -139,12 +139,12 @@ export function CalendarView({
 
             {loading ? (
                 <div className="text-center py-12">
-                    <p className="text-muted-foreground">Yükleniyor...</p>
+                    <p className="text-muted-foreground">YÃ¼kleniyor...</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-7 gap-2">
-                    {/* Gün baþlýklarý */}
-                    {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
+                    {/* GÃ¼n baÅŸlÄ±klarÄ± */}
+                    {['Pzt', 'Sal', 'Ã‡ar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
                         <div
                             key={day}
                             className="text-center font-semibold text-sm text-muted-foreground py-2"
@@ -153,12 +153,12 @@ export function CalendarView({
                         </div>
                     ))}
 
-                    {/* Boþ günler (önceki aydan) */}
+                    {/* BoÅŸ gÃ¼nler (Ã¶nceki aydan) */}
                     {Array.from({ length: paddingDays }).map((_, i) => (
                         <div key={`padding-${i}`} className="min-h-[120px] bg-muted/20 rounded-lg" />
                     ))}
 
-                    {/* Günler */}
+                    {/* GÃ¼nler */}
                     {daysInMonth.map((day) => {
                         const dayExams = getExamsForDay(day);
                         const isCurrentDay = isToday(day);
@@ -196,7 +196,7 @@ export function CalendarView({
                                                     color: 'white',
                                                     opacity: exam.isArchived ? 0.5 : 1,
                                                 }}
-                                                title={`${exam.title} - ${exam.gradeLevel}. Sýnýf`}
+                                                title={`${exam.title} - ${exam.gradeLevel}. SÄ±nÄ±f`}
                                             >
                                                 {exam.title}
                                             </div>

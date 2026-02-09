@@ -92,7 +92,7 @@ export function ExamCalendarTable({
     const [loading, setLoading] = useState(true);
     const [deleteExamId, setDeleteExamId] = useState<string | null>(null);
     const [editExam, setEditExam] = useState<Exam | null>(null);
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = son deneme üstte
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // desc = son deneme Ã¼stte
     const { toast } = useToast();
     const router = useRouter();
 
@@ -134,7 +134,7 @@ export function ExamCalendarTable({
 
             if (response.ok) {
                 const data = await response.json();
-                // Varsayýlan: Son deneme üstte (desc)
+                // VarsayÄ±lan: Son deneme Ã¼stte (desc)
                 const sorted = [...data].sort((a, b) => {
                     const dateA = new Date(a.scheduledDateTime || a.date).getTime();
                     const dateB = new Date(b.scheduledDateTime || b.date).getTime();
@@ -146,7 +146,7 @@ export function ExamCalendarTable({
             console.error('Error fetching exams:', error);
             toast({
                 title: 'Hata',
-                description: 'Sýnavlar yüklenirken bir hata oluþtu',
+                description: 'SÄ±navlar yÃ¼klenirken bir hata oluÅŸtu',
                 variant: 'destructive',
             });
         } finally {
@@ -166,15 +166,15 @@ export function ExamCalendarTable({
 
             if (response.ok) {
                 toast({
-                    title: 'Baþarýlý',
-                    description: 'Sýnav silindi',
+                    title: 'BaÅŸarÄ±lÄ±',
+                    description: 'SÄ±nav silindi',
                 });
                 onRefresh();
             }
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Sýnav silinirken bir hata oluþtu',
+                description: 'SÄ±nav silinirken bir hata oluÅŸtu',
                 variant: 'destructive',
             });
         } finally {
@@ -192,15 +192,15 @@ export function ExamCalendarTable({
 
             if (response.ok) {
                 toast({
-                    title: 'Baþarýlý',
-                    description: 'Arþiv durumu güncellendi',
+                    title: 'BaÅŸarÄ±lÄ±',
+                    description: 'ArÅŸiv durumu gÃ¶ncellendi',
                 });
                 onRefresh();
             }
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Ýþlem baþarýsýz',
+                description: 'Ä°ÅŸlem baÅŸarÄ±sÄ±z',
                 variant: 'destructive',
             });
         }
@@ -219,15 +219,15 @@ export function ExamCalendarTable({
 
             if (response.ok) {
                 toast({
-                    title: 'Baþarýlý',
-                    description: 'Yayýn görünürlüðü güncellendi',
+                    title: 'BaÅŸarÄ±lÄ±',
+                    description: 'YayÄ±n gÃ¶rÃ¼nÃ¼rlÃ¼ÄŸÃ¼ gÃ¶ncellendi',
                 });
                 onRefresh();
             }
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Ýþlem baþarýsýz',
+                description: 'Ä°ÅŸlem baÅŸarÄ±sÄ±z',
                 variant: 'destructive',
             });
         }
@@ -246,7 +246,7 @@ export function ExamCalendarTable({
     if (loading) {
         return (
             <Card className="p-8 text-center">
-                <p className="text-muted-foreground">Yükleniyor...</p>
+                <p className="text-muted-foreground">YÃ¼kleniyor...</p>
             </Card>
         );
     }
@@ -254,9 +254,9 @@ export function ExamCalendarTable({
     if (exams.length === 0) {
         return (
             <Card className="p-8 text-center">
-                <p className="text-muted-foreground">Henüz deneme eklenmemiþ.</p>
+                <p className="text-muted-foreground">HenÃ¼z deneme eklenmemiÅŸ.</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                    Yeni deneme eklemek için yukarýdaki butonu kullanýn.
+                    Yeni deneme eklemek iÃ§in yukarÄ±daki butonu kullanÄ±n.
                 </p>
             </Card>
         );
@@ -283,26 +283,26 @@ export function ExamCalendarTable({
                             setExams(sorted);
                         }}
                     >
-                        {sortOrder === 'desc' ? 'v Son deneme üstte' : '^ Ýlk deneme üstte'}
+                        {sortOrder === 'desc' ? 'v Son deneme Ã¼stte' : '^ Ä°lk deneme Ã¼stte'}
                     </Button>
                 </div>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Deneme Adý</TableHead>
-                                <TableHead>Yayýn</TableHead>
-                                <TableHead>Tür</TableHead>
-                                <TableHead>Sýnýf</TableHead>
+                                <TableHead>Deneme AdÄ±</TableHead>
+                                <TableHead>YayÄ±n</TableHead>
+                                <TableHead>TÃ¼r</TableHead>
+                                <TableHead>SÄ±nÄ±f</TableHead>
                                 <TableHead>Tarih</TableHead>
                                 <TableHead>Uygulama</TableHead>
                                 <TableHead>Getiren</TableHead>
                                 <TableHead>Adet</TableHead>
-                                <TableHead>Ücret</TableHead>
-                                <TableHead>Ödeme</TableHead>
-                                <TableHead>Katýlým</TableHead>
+                                <TableHead>Ãœcret</TableHead>
+                                <TableHead>Ã–deme</TableHead>
+                                <TableHead>KatÄ±lÄ±m</TableHead>
                                 <TableHead>Cevap</TableHead>
-                                <TableHead className="text-right">Ýþlemler</TableHead>
+                                <TableHead className="text-right">Ä°ÅŸlemler</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -328,7 +328,7 @@ export function ExamCalendarTable({
                                         {exam.isArchived && (
                                             <Badge variant="secondary" className="ml-2">
                                                 <Archive className="w-3 h-3 mr-1" />
-                                                Arþiv
+                                                ArÅŸiv
                                             </Badge>
                                         )}
                                     </TableCell>
@@ -343,7 +343,7 @@ export function ExamCalendarTable({
                                             {exam.type}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{exam.gradeLevel}. Sýnýf</TableCell>
+                                    <TableCell>{exam.gradeLevel}. SÄ±nÄ±f</TableCell>
                                     <TableCell>
                                         {exam.scheduledDateTime
                                             ? format(
@@ -377,7 +377,7 @@ export function ExamCalendarTable({
                                                     className="bg-green-50 text-green-700 border-green-200"
                                                 >
                                                     <CheckCircle className="w-3 h-3 mr-1" />
-                                                    Ödendi
+                                                    Ã–dendi
                                                 </Badge>
                                             ) : (
                                                 <Badge
@@ -385,7 +385,7 @@ export function ExamCalendarTable({
                                                     className="bg-red-50 text-red-700 border-red-200"
                                                 >
                                                     <XCircle className="w-3 h-3 mr-1" />
-                                                    Ödenmedi
+                                                    Ã–denmedi
                                                 </Badge>
                                             )
                                         ) : (
@@ -422,7 +422,7 @@ export function ExamCalendarTable({
                                                         variant="outline"
                                                         className="bg-green-50 text-green-700 border-green-200 text-xs"
                                                     >
-                                                        Açýk
+                                                        AÃ§Ä±k
                                                     </Badge>
                                                 )}
                                             </div>
@@ -444,19 +444,19 @@ export function ExamCalendarTable({
                                                     }
                                                 >
                                                     <Eye className="w-4 h-4 mr-2" />
-                                                    Sonuçlarý Gör
+                                                    SonuÃ§larÄ± GÃ¶r
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => setEditExam(exam)}>
                                                     <Edit className="w-4 h-4 mr-2" />
-                                                    Düzenle
+                                                    DÃ¼zenle
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem>
                                                     <Copy className="w-4 h-4 mr-2" />
-                                                    Baþka Sýnýflara Kopyala
+                                                    BaÃ§ka SÄ±nÄ±flara Kopyala
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem>
                                                     <Upload className="w-4 h-4 mr-2" />
-                                                    Cevap Anahtarý Yükle
+                                                    Cevap AnahtarÄ± YÃ¼kle
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
@@ -465,12 +465,12 @@ export function ExamCalendarTable({
                                                     {exam.isPublisherVisible ? (
                                                         <>
                                                             <EyeOff className="w-4 h-4 mr-2" />
-                                                            Yayýný Gizle
+                                                            YayÄ±nÄ± Gizle
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Eye className="w-4 h-4 mr-2" />
-                                                            Yayýný Göster
+                                                            YayÄ±nÄ± GÃ¶ster
                                                         </>
                                                     )}
                                                 </DropdownMenuItem>
@@ -478,7 +478,7 @@ export function ExamCalendarTable({
                                                     onClick={() => handleToggleArchive(exam.id)}
                                                 >
                                                     <Archive className="w-4 h-4 mr-2" />
-                                                    {exam.isArchived ? 'Arþivden Çýkar' : 'Arþivle'}
+                                                    {exam.isArchived ? 'ArÅŸivden Ã‡Ä±kar' : 'ArÅŸivle'}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
@@ -503,12 +503,12 @@ export function ExamCalendarTable({
                     <AlertDialogHeader>
                         <AlertDialogTitle>Denemeyi Sil</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Bu denemeyi silmek istediðinizden emin misiniz? Bu iþlem geri alýnamaz
-                            ve tüm sonuçlar silinecektir.
+                            Bu denemeyi silmek istediÄŸinizden emin misiniz? Bu iÅŸlem geri alÄ±namaz
+                            ve tÃ¼m sonuÃ§lar silinecektir.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Ýptal</AlertDialogCancel>
+                        <AlertDialogCancel>Ä°ptal</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} className="bg-red-600">
                             Sil
                         </AlertDialogAction>

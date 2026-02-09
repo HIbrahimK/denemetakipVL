@@ -155,14 +155,14 @@ export default function ParentApprovalsPage() {
 
       if (res.ok) {
         toast({
-          title: 'Ba�ar�l�',
-          description: `G�rev ${approvalAction === 'approve' ? 'onayland�' : 'reddedildi'}`,
+          title: 'Başarılı',
+          description: `Görev ${approvalAction === 'approve' ? 'onaylandı' : 'reddedildi'}`,
         });
         setApprovalModalOpen(false);
         fetchTasks();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata olu�tu');
+        throw new Error(error.message || 'Bir hata oluştu');
       }
     } catch (error: any) {
       toast({
@@ -211,8 +211,8 @@ export default function ParentApprovalsPage() {
       await Promise.all(promises);
 
       toast({
-        title: 'Ba�ar�l�',
-        description: `${selectedTasks.length} g�rev ${action === 'approve' ? 'onayland�' : 'reddedildi'}`,
+        title: 'Başarılı',
+        description: `${selectedTasks.length} görev ${action === 'approve' ? 'onaylandı' : 'reddedildi'}`,
       });
 
       setSelectedTasks([]);
@@ -220,7 +220,7 @@ export default function ParentApprovalsPage() {
     } catch (error) {
       toast({
         title: 'Hata',
-        description: '��lem s�ras�nda bir hata olu�tu',
+        description: 'İşlem sırasında bir hata oluştu',
         variant: 'destructive',
       });
     } finally {
@@ -455,7 +455,7 @@ export default function ParentApprovalsPage() {
               <div className="space-y-2">
                 <Label>Yorum (Opsiyonel)</Label>
                 <Textarea
-                  placeholder="Onay veya ret i�in yorum ekleyin..."
+                  placeholder="Onay veya ret işin yorum ekleyin..."
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />

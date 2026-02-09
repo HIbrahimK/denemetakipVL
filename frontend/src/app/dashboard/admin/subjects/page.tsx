@@ -79,7 +79,7 @@ export default function AdminSubjectsPage() {
       } else {
         toast({
           title: 'Hata',
-          description: 'Dersler yüklenirken bir hata oluþtu',
+          description: 'Dersler yklenirken bir hata olutu',
           variant: 'destructive',
         });
       }
@@ -123,7 +123,7 @@ export default function AdminSubjectsPage() {
     if (!formData.name) {
       toast({
         title: 'Hata',
-        description: 'Ders adý zorunludur',
+        description: 'Ders ad zorunludur',
         variant: 'destructive',
       });
       return;
@@ -149,14 +149,14 @@ export default function AdminSubjectsPage() {
 
       if (res.ok) {
         toast({
-          title: 'Baþarýlý',
-          description: editingSubject ? 'Ders güncellendi' : 'Ders oluþturuldu',
+          title: 'Baarl',
+          description: editingSubject ? 'Ders gncellendi' : 'Ders oluturuldu',
         });
         setModalOpen(false);
         fetchSubjects();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata oluþtu');
+        throw new Error(error.message || 'Bir hata olutu');
       }
     } catch (error: any) {
       toast({
@@ -182,14 +182,14 @@ export default function AdminSubjectsPage() {
 
       if (res.ok) {
         toast({
-          title: 'Baþarýlý',
+          title: 'Baarl',
           description: 'Ders silindi',
         });
         setDeleteModalOpen(false);
         fetchSubjects();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata oluþtu');
+        throw new Error(error.message || 'Bir hata olutu');
       }
     } catch (error: any) {
       toast({
@@ -243,9 +243,9 @@ export default function AdminSubjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Ders Yönetimi</h1>
+          <h1 className="text-3xl font-bold">Ders Ynetimi</h1>
           <p className="text-muted-foreground mt-1">
-            TYT, AYT ve LGS derslerini yönetin
+            TYT, AYT ve LGS derslerini ynetin
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -271,10 +271,10 @@ export default function AdminSubjectsPage() {
             </div>
             <Select value={examTypeFilter} onValueChange={setExamTypeFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sýnav Tipi" />
+                <SelectValue placeholder="Snav Tipi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tümü</SelectItem>
+                <SelectItem value="ALL">Tm</SelectItem>
                 <SelectItem value="TYT">TYT</SelectItem>
                 <SelectItem value="AYT">AYT</SelectItem>
                 <SelectItem value="LGS">LGS</SelectItem>
@@ -306,13 +306,13 @@ export default function AdminSubjectsPage() {
                   <Badge variant="outline">{examSubjects.length} ders</Badge>
                 </div>
                 <CardDescription>
-                  {examType.grades.join(', ')}. sýnýflar
+                  {examType.grades.join(', ')}. snflar
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {examSubjects.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Bu sýnav tipi için ders bulunmuyor
+                    Bu snav tipi iin ders bulunmuyor
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -333,7 +333,7 @@ export default function AdminSubjectsPage() {
                                 <div className="flex gap-1">
                                   {subject.gradeLevels.map(grade => (
                                     <Badge key={grade} variant="secondary" className="text-xs">
-                                      {grade}. Sýnýf
+                                      {grade}. Snf
                                     </Badge>
                                   ))}
                                 </div>
@@ -384,7 +384,7 @@ export default function AdminSubjectsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Ders bulunamadý</h3>
+              <h3 className="mt-4 text-lg font-semibold">Ders bulunamad</h3>
               <p className="text-muted-foreground mt-2">
                 Arama kriterlerinize uygun ders bulunmuyor
               </p>
@@ -398,22 +398,22 @@ export default function AdminSubjectsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingSubject ? 'Ders Düzenle' : 'Yeni Ders'}
+              {editingSubject ? 'Ders Dzenle' : 'Yeni Ders'}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Ders Adý *</Label>
+              <Label>Ders Ad *</Label>
               <Input
-                placeholder="Örn: Matematik"
+                placeholder="rn: Matematik"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Sýnav Tipi *</Label>
+              <Label>Snav Tipi *</Label>
               <Select 
                 value={formData.examType} 
                 onValueChange={(value: 'TYT' | 'AYT' | 'LGS') => {
@@ -437,7 +437,7 @@ export default function AdminSubjectsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Sýnýf Seviyeleri *</Label>
+              <Label>Snf Seviyeleri *</Label>
               <div className="flex flex-wrap gap-3">
                 {getAvailableGrades().map(grade => (
                   <div key={grade} className="flex items-center space-x-2">
@@ -447,7 +447,7 @@ export default function AdminSubjectsPage() {
                       onCheckedChange={() => toggleGrade(grade)}
                     />
                     <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
-                      {grade}. Sýnýf
+                      {grade}. Snf
                     </Label>
                   </div>
                 ))}
@@ -455,7 +455,7 @@ export default function AdminSubjectsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Sýralama</Label>
+              <Label>Sralama</Label>
               <Input
                 type="number"
                 min={0}
@@ -478,7 +478,7 @@ export default function AdminSubjectsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Ýptal
+              ptal
             </Button>
             <Button onClick={handleSubmit} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Kaydet'}
@@ -496,18 +496,18 @@ export default function AdminSubjectsPage() {
           
           <div className="py-4">
             <p>
-              <strong>{subjectToDelete?.name}</strong> dersini silmek istediðinize emin misiniz?
+              <strong>{subjectToDelete?.name}</strong> dersini silmek istediinize emin misiniz?
             </p>
             {subjectToDelete?._count?.topics && subjectToDelete._count.topics > 0 && (
               <p className="text-sm text-destructive mt-2">
-                Bu dersin {subjectToDelete._count.topics} konusu var. Silmek konularý da silecektir.
+                Bu dersin {subjectToDelete._count.topics} konusu var. Silmek konular da silecektir.
               </p>
             )}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-              Ýptal
+              ptal
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sil'}

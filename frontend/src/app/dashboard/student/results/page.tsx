@@ -234,8 +234,8 @@ function StudentResultsContent() {
     if (!data) {
         return (
             <div className="flex flex-col items-center justify-center p-10 gap-4">
-                <p className="text-slate-600 dark:text-slate-400">Veri y�klenemedi.</p>
-                <Button onClick={() => router.push('/dashboard')}>Ana Sayfaya D�n</Button>
+                <p className="text-slate-600 dark:text-slate-400">Veri yüklenemedi.</p>
+                <Button onClick={() => router.push('/dashboard')}>Ana Sayfaya Dün</Button>
             </div>
         );
     }
@@ -246,7 +246,7 @@ function StudentResultsContent() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        Deneme Sonu�lar�m <span className="filter-none">??</span>
+                        Deneme Sonuçlarım <span className="filter-none">??</span>
                     </h1>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                         {data.studentInfo.firstName} {data.studentInfo.lastName} {data.studentInfo.studentNumber && `(${data.studentInfo.studentNumber})`}
@@ -296,7 +296,7 @@ function StudentResultsContent() {
                     <CardContent>
                         <div className="text-3xl font-bold">{filteredExams.length}</div>
                         <p className="text-xs text-white/70 mt-1">
-                            {selectedExamType !== 'ALL' ? `${selectedExamType} denemeleri` : 'T�m denemeler'}
+                            {selectedExamType !== 'ALL' ? `${selectedExamType} denemeleri` : 'Tüm denemeler'}
                         </p>
                     </CardContent>
                 </Card>
@@ -304,7 +304,7 @@ function StudentResultsContent() {
                 <Card className="bg-gradient-to-br from-purple-500 to-pink-600 border-0 text-white overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-white/90">En Y�ksek Puan</CardTitle>
+                        <CardTitle className="text-sm font-medium text-white/90">En Yüksek Puan</CardTitle>
                         <TrendingUp className="h-5 w-5 text-white/80" />
                     </CardHeader>
                     <CardContent>
@@ -329,21 +329,21 @@ function StudentResultsContent() {
                                 ? (filteredExams.reduce((sum, e) => sum + e.totalNet, 0) / filteredExams.length).toFixed(2)
                                 : '0.00'}
                         </div>
-                        <p className="text-xs text-white/70 mt-1">Toplam net ortalamas�</p>
+                        <p className="text-xs text-white/70 mt-1">Toplam net ortalaması</p>
                     </CardContent>
                 </Card>
 
                 <Card className="bg-gradient-to-br from-orange-500 to-red-600 border-0 text-white overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-white/90">Ortalama S�ralama</CardTitle>
+                        <CardTitle className="text-sm font-medium text-white/90">Ortalama Sıralama</CardTitle>
                         <Award className="h-5 w-5 text-white/80" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold">
                             {data.statistics.avgSchoolRank || '-'}
                         </div>
-                        <p className="text-xs text-white/70 mt-1">Okul s�ralamas�</p>
+                        <p className="text-xs text-white/70 mt-1">Okul sıralaması</p>
                     </CardContent>
                 </Card>
             </div>
@@ -351,7 +351,7 @@ function StudentResultsContent() {
             {/* Lesson Cards */}
             <div className="space-y-4">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span className="filter-none">??</span> Ders Ortalamalar�
+                    <span className="filter-none">??</span> Ders Ortalamaları
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {lessonAverages.map((lesson, idx) => {
@@ -407,7 +407,7 @@ function StudentResultsContent() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-sm flex items-center justify-between">
-                            <span>{selectedLesson} Detay�</span>
+                            <span>{selectedLesson} Detayı</span>
                             <button
                                 onClick={() => setSelectedLesson(null)}
                                 className="text-slate-400 hover:text-slate-600"
@@ -475,7 +475,7 @@ function StudentResultsContent() {
             {/* Exam Cards Grid */}
             <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    Girdi�im Denemeler ({filteredExams.length})
+                    Girdişim Denemeler ({filteredExams.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredExams.map(exam => {
@@ -523,20 +523,20 @@ function StudentResultsContent() {
                                             </p>
                                         </div>
                                     </div>
-                                    {/* S�ralamalar */}
+                                    {/* Sıralamalar */}
                                     <div className="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-2">
                                         {primaryScore?.rankClass && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-600 dark:text-slate-400">S�n�f S�ras�:</span>
+                                                <span className="text-slate-600 dark:text-slate-400">Sınıf Sırası:</span>
                                                 <span className="font-semibold">
                                                     {primaryScore.rankClass}
-                                                    {/* S�n�f kat�l�mc� say�s� bilinmiyor; yaln�zca s�ray� g�steriyoruz */}
+                                                    {/* Sınıf katılımcı sayısı bilinmiyor; yalnızca sırayı gösteriyoruz */}
                                                 </span>
                                             </div>
                                         )}
                                         {primaryScore?.rankSchool && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-600 dark:text-slate-400">Okul S�ras�:</span>
+                                                <span className="text-slate-600 dark:text-slate-400">Okul Sırası:</span>
                                                 <span className="font-semibold">
                                                     {primaryScore.rankSchool}
                                                     {exam.schoolParticipantCount && (
@@ -547,7 +547,7 @@ function StudentResultsContent() {
                                         )}
                                         {primaryScore?.rankDistrict && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-600 dark:text-slate-400">�l�e S�ras�:</span>
+                                                <span className="text-slate-600 dark:text-slate-400">İlçe Sırası:</span>
                                                 <span className="font-semibold">
                                                     {primaryScore.rankDistrict}
                                                     {exam.districtParticipantCount && (
@@ -558,7 +558,7 @@ function StudentResultsContent() {
                                         )}
                                         {primaryScore?.rankCity && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-600 dark:text-slate-400">�l S�ras�:</span>
+                                                <span className="text-slate-600 dark:text-slate-400">İl Sırası:</span>
                                                 <span className="font-semibold">
                                                     {primaryScore.rankCity}
                                                     {exam.cityParticipantCount && (
@@ -569,7 +569,7 @@ function StudentResultsContent() {
                                         )}
                                         {primaryScore?.rankGen && (
                                             <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-600 dark:text-slate-400">Genel S�ra:</span>
+                                                <span className="text-slate-600 dark:text-slate-400">Genel Sıra:</span>
                                                 <span className="font-semibold">
                                                     {primaryScore.rankGen}
                                                     {exam.generalParticipantCount && (
@@ -590,7 +590,7 @@ function StudentResultsContent() {
                                             }}
                                         >
                                             <Download className="h-3 w-3" />
-                                            Cevap Anahtar�
+                                            Cevap Anahtarı
                                         </Button>
                                     )}
                                 </CardContent>
@@ -600,11 +600,11 @@ function StudentResultsContent() {
                 </div>
             </div>
 
-            {/* Progress Charts - Deneme listesinin alt�nda */}
+            {/* Progress Charts - Deneme listesinin altında */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm">Puan Geli�imi</CardTitle>
+                        <CardTitle className="text-sm">Puan Gelişimi</CardTitle>
                     </CardHeader>
                     <CardContent className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -622,7 +622,7 @@ function StudentResultsContent() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm">Net Geli�imi</CardTitle>
+                        <CardTitle className="text-sm">Net Gelişimi</CardTitle>
                     </CardHeader>
                     <CardContent className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">

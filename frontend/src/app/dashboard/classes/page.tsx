@@ -35,7 +35,7 @@ interface Student {
   };
 }
 
-// Sabit sýnýf seviyeleri (5-12)
+// Sabit snf seviyeleri (5-12)
 const FIXED_GRADES = [
   { id: '5', name: '5' },
   { id: '6', name: '6' },
@@ -112,7 +112,7 @@ export default function ClassesPage() {
     return grade?.gradeId || '';
   };
 
-  // Sýnýf adýný "5/A" formatýnda göster
+  // Snf adn "5/A" formatnda gster
   const displayClassName = (classItem: Class) => {
     return `${classItem.grade.name}/${classItem.name}`;
   };
@@ -138,14 +138,14 @@ export default function ClassesPage() {
         setFormData({ gradeLevel: '', section: '' });
         fetchClasses(schoolId);
         toast({
-          title: "Baþarýlý",
-          description: "Sýnýf baþarýyla eklendi.",
+          title: "Baarl",
+          description: "Snf baaryla eklendi.",
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Sýnýf eklenemedi',
+          description: error.message || 'Snf eklenemedi',
           variant: "destructive",
         });
       }
@@ -176,14 +176,14 @@ export default function ClassesPage() {
         setFormData({ gradeLevel: '', section: '' });
         fetchClasses(schoolId);
         toast({
-          title: "Baþarýlý",
-          description: "Sýnýf baþarýyla güncellendi.",
+          title: "Baarl",
+          description: "Snf baaryla gncellendi.",
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Sýnýf güncellenemedi',
+          description: error.message || 'Snf gncellenemedi',
           variant: "destructive",
         });
       }
@@ -206,14 +206,14 @@ export default function ClassesPage() {
         setSelectedClass(null);
         fetchClasses(schoolId);
         toast({
-          title: "Baþarýlý",
-          description: "Sýnýf baþarýyla silindi.",
+          title: "Baarl",
+          description: "Snf baaryla silindi.",
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Sýnýf silinemedi',
+          description: error.message || 'Snf silinemedi',
           variant: "destructive",
         });
       }
@@ -221,7 +221,7 @@ export default function ClassesPage() {
       console.error('Error deleting class:', error);
       toast({
         title: "Hata",
-        description: 'Sýnýf silinirken bir hata oluþtu',
+        description: 'Snf silinirken bir hata olutu',
         variant: "destructive",
       });
     }
@@ -234,7 +234,7 @@ export default function ClassesPage() {
 
   const openEditDialog = (classItem: Class) => {
     setSelectedClass(classItem);
-    // Mevcut sýnýfýn grade ve section deðerlerini ayýr
+    // Mevcut snfn grade ve section deerlerini ayr
     setFormData({ 
       gradeLevel: classItem.grade.name, 
       section: classItem.name 
@@ -292,14 +292,14 @@ export default function ClassesPage() {
         setIsMergeDialogOpen(false);
         fetchClasses(schoolId);
         toast({
-          title: "Baþarýlý",
+          title: "Baarl",
           description: result.message,
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Sýnýflar birleþtirilemedi',
+          description: error.message || 'Snflar birletirilemedi',
           variant: "destructive",
         });
       }
@@ -307,7 +307,7 @@ export default function ClassesPage() {
       console.error('Error merging classes:', error);
       toast({
         title: "Hata",
-        description: 'Birleþtirme sýrasýnda bir hata oluþtu',
+        description: 'Birletirme srasnda bir hata olutu',
         variant: "destructive",
       });
     }
@@ -339,14 +339,14 @@ export default function ClassesPage() {
         setSelectedStudents([]);
         fetchClasses(schoolId);
         toast({
-          title: "Baþarýlý",
+          title: "Baarl",
           description: result.message,
         });
       } else {
         const error = await response.json();
         toast({
           title: "Hata",
-          description: error.message || 'Öðrenciler aktarýlamadý',
+          description: error.message || 'renciler aktarlamad',
           variant: "destructive",
         });
       }
@@ -354,7 +354,7 @@ export default function ClassesPage() {
       console.error('Error transferring students:', error);
       toast({
         title: "Hata",
-        description: 'Aktarma sýrasýnda bir hata oluþtu',
+        description: 'Aktarma srasnda bir hata olutu',
         variant: "destructive",
       });
     }
@@ -380,17 +380,17 @@ export default function ClassesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sýnýf Yönetimi</h1>
-          <p className="text-muted-foreground">Okuldaki sýnýflarý yönetin</p>
+          <h1 className="text-3xl font-bold tracking-tight">Snf Ynetimi</h1>
+          <p className="text-muted-foreground">Okuldaki snflar ynetin</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={openMergeDialog}>
             <Merge className="mr-2 h-4 w-4" />
-            Sýnýf Birleþtir
+            Snf Birletir
           </Button>
           <Button onClick={openAddDialog}>
             <Plus className="mr-2 h-4 w-4" />
-            Sýnýf Ekle
+            Snf Ekle
           </Button>
         </div>
       </div>
@@ -399,7 +399,7 @@ export default function ClassesPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Sýnýf</CardTitle>
+            <CardTitle className="text-sm font-medium">Toplam Snf</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -409,7 +409,7 @@ export default function ClassesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Öðrenci</CardTitle>
+            <CardTitle className="text-sm font-medium">Toplam renci</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -421,12 +421,12 @@ export default function ClassesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sýnýf Seviyesi</CardTitle>
+            <CardTitle className="text-sm font-medium">Snf Seviyesi</CardTitle>
             <GraduationCap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{FIXED_GRADES.length}</div>
-            <p className="text-xs text-muted-foreground">Farklý sýnýf seviyesi</p>
+            <p className="text-xs text-muted-foreground">Farkl snf seviyesi</p>
           </CardContent>
         </Card>
       </div>
@@ -434,37 +434,37 @@ export default function ClassesPage() {
       {/* Classes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Sýnýflar</CardTitle>
-          <CardDescription>Tüm sýnýflarý görüntüleyin ve yönetin</CardDescription>
+          <CardTitle>Snflar</CardTitle>
+          <CardDescription>Tm snflar grntleyin ve ynetin</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Sýnýf</TableHead>
-                <TableHead>Þube</TableHead>
-                <TableHead>Öðrenci Sayýsý</TableHead>
-                <TableHead className="text-right">Ýþlemler</TableHead>
+                <TableHead>Snf</TableHead>
+                <TableHead>ube</TableHead>
+                <TableHead>renci Says</TableHead>
+                <TableHead className="text-right">lemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Yükleniyor...</TableCell>
+                  <TableCell colSpan={4} className="text-center">Ykleniyor...</TableCell>
                 </TableRow>
               ) : classes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">Henüz sýnýf eklenmemiþ</TableCell>
+                  <TableCell colSpan={4} className="text-center">Henz snf eklenmemi</TableCell>
                 </TableRow>
               ) : (
                 classes.map((classItem) => (
                   <TableRow key={classItem.id}>
-                    <TableCell className="font-medium">{classItem.grade.name}. Sýnýf</TableCell>
+                    <TableCell className="font-medium">{classItem.grade.name}. Snf</TableCell>
                     <TableCell>{displayClassName(classItem)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
-                        {classItem._count.students} öðrenci
+                        {classItem._count.students} renci
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -474,7 +474,7 @@ export default function ClassesPage() {
                           size="sm"
                           onClick={() => openTransferDialog(classItem)}
                           disabled={classItem._count.students === 0}
-                          title="Öðrenci Aktar"
+                          title="renci Aktar"
                         >
                           <ArrowRightLeft className="h-4 w-4" />
                         </Button>
@@ -507,33 +507,33 @@ export default function ClassesPage() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Yeni Sýnýf Ekle</DialogTitle>
-            <DialogDescription>Yeni bir sýnýf oluþturun</DialogDescription>
+            <DialogTitle>Yeni Snf Ekle</DialogTitle>
+            <DialogDescription>Yeni bir snf oluturun</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="grade">Sýnýf Seviyesi</Label>
+              <Label htmlFor="grade">Snf Seviyesi</Label>
               <Select
                 value={formData.gradeLevel}
                 onValueChange={(value) => setFormData({ ...formData, gradeLevel: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seçiniz" />
+                  <SelectValue placeholder="Seiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {FIXED_GRADES.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id}>
-                      {grade.name}. Sýnýf
+                      {grade.name}. Snf
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="section">Þube Adý</Label>
+              <Label htmlFor="section">ube Ad</Label>
               <Input
                 id="section"
-                placeholder="Örn: A, B, Sözel, Sayýsal"
+                placeholder="rn: A, B, Szel, Saysal"
                 value={formData.section}
                 onChange={(e) => setFormData({ ...formData, section: e.target.value })}
               />
@@ -541,7 +541,7 @@ export default function ClassesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Ýptal
+              ptal
             </Button>
             <Button onClick={handleAddClass}>Ekle</Button>
           </DialogFooter>
@@ -552,33 +552,33 @@ export default function ClassesPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sýnýf Düzenle</DialogTitle>
-            <DialogDescription>Sýnýf bilgilerini güncelleyin</DialogDescription>
+            <DialogTitle>Snf Dzenle</DialogTitle>
+            <DialogDescription>Snf bilgilerini gncelleyin</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-grade">Sýnýf Seviyesi</Label>
+              <Label htmlFor="edit-grade">Snf Seviyesi</Label>
               <Select
                 value={formData.gradeLevel}
                 onValueChange={(value) => setFormData({ ...formData, gradeLevel: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seçiniz" />
+                  <SelectValue placeholder="Seiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {FIXED_GRADES.map((grade) => (
                     <SelectItem key={grade.id} value={grade.id}>
-                      {grade.name}. Sýnýf
+                      {grade.name}. Snf
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-section">Þube Adý</Label>
+              <Label htmlFor="edit-section">ube Ad</Label>
               <Input
                 id="edit-section"
-                placeholder="Örn: A, B, Sözel, Sayýsal"
+                placeholder="rn: A, B, Szel, Saysal"
                 value={formData.section}
                 onChange={(e) => setFormData({ ...formData, section: e.target.value })}
               />
@@ -586,9 +586,9 @@ export default function ClassesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Ýptal
+              ptal
             </Button>
-            <Button onClick={handleEditClass}>Güncelle</Button>
+            <Button onClick={handleEditClass}>Gncelle</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -597,15 +597,15 @@ export default function ClassesPage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sýnýfý Sil</DialogTitle>
+            <DialogTitle>Snf Sil</DialogTitle>
             <DialogDescription>
-              {selectedClass && displayClassName(selectedClass)} sýnýfýný silmek istediðinizden emin misiniz?
-              Bu iþlem geri alýnamaz.
+              {selectedClass && displayClassName(selectedClass)} snfn silmek istediinizden emin misiniz?
+              Bu ilem geri alnamaz.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Ýptal
+              ptal
             </Button>
             <Button variant="destructive" onClick={handleDeleteClass}>
               Sil
@@ -618,45 +618,45 @@ export default function ClassesPage() {
       <Dialog open={isMergeDialogOpen} onOpenChange={setIsMergeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sýnýflarý Birleþtir</DialogTitle>
+            <DialogTitle>Snflar Birletir</DialogTitle>
             <DialogDescription>
-              Kaynak sýnýftaki tüm öðrenciler hedef sýnýfa aktarýlacak ve kaynak sýnýf silinecektir.
+              Kaynak snftaki tm renciler hedef snfa aktarlacak ve kaynak snf silinecektir.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Kaynak Sýnýf (Silinecek)</Label>
+              <Label>Kaynak Snf (Silinecek)</Label>
               <Select
                 value={mergeData.sourceClassId}
                 onValueChange={(value) => setMergeData({ ...mergeData, sourceClassId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seçiniz" />
+                  <SelectValue placeholder="Seiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {displayClassName(cls)} ({cls._count.students} öðrenci)
+                      {displayClassName(cls)} ({cls._count.students} renci)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Hedef Sýnýf</Label>
+              <Label>Hedef Snf</Label>
               <Select
                 value={mergeData.targetClassId}
                 onValueChange={(value) => setMergeData({ ...mergeData, targetClassId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seçiniz" />
+                  <SelectValue placeholder="Seiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes
                     .filter(cls => cls.id !== mergeData.sourceClassId)
                     .map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {displayClassName(cls)} ({cls._count.students} öðrenci)
+                        {displayClassName(cls)} ({cls._count.students} renci)
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -665,9 +665,9 @@ export default function ClassesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsMergeDialogOpen(false)}>
-              Ýptal
+              ptal
             </Button>
-            <Button onClick={handleMergeClasses}>Birleþtir</Button>
+            <Button onClick={handleMergeClasses}>Birletir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -676,27 +676,27 @@ export default function ClassesPage() {
       <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Öðrenci Aktar</DialogTitle>
+            <DialogTitle>renci Aktar</DialogTitle>
             <DialogDescription>
-              {selectedClass && displayClassName(selectedClass)} sýnýfýndan öðrenci aktarýn
+              {selectedClass && displayClassName(selectedClass)} snfndan renci aktarn
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Hedef Sýnýf</Label>
+              <Label>Hedef Snf</Label>
               <Select
                 value={transferData.targetClassId}
                 onValueChange={(value) => setTransferData({ targetClassId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seçiniz" />
+                  <SelectValue placeholder="Seiniz" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes
                     .filter(cls => cls.id !== selectedClass?.id)
                     .map((cls) => (
                       <SelectItem key={cls.id} value={cls.id}>
-                        {displayClassName(cls)} ({cls._count.students} öðrenci)
+                        {displayClassName(cls)} ({cls._count.students} renci)
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -705,19 +705,19 @@ export default function ClassesPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Öðrenci Seçimi</Label>
+                <Label>renci Seimi</Label>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={toggleAllStudents}
                 >
-                  {selectedStudents.length === students.length ? 'Tümünü Kaldýr' : 'Tümünü Seç'}
+                  {selectedStudents.length === students.length ? 'Tmn Kaldr' : 'Tmn Se'}
                 </Button>
               </div>
               <div className="border rounded-md max-h-64 overflow-y-auto">
                 {students.length === 0 ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
-                    Bu sýnýfta öðrenci bulunmuyor
+                    Bu snfta renci bulunmuyor
                   </div>
                 ) : (
                   <div className="divide-y">
@@ -737,17 +737,17 @@ export default function ClassesPage() {
               </div>
               <p className="text-xs text-muted-foreground">
                 {selectedStudents.length > 0
-                  ? `${selectedStudents.length} öðrenci seçildi`
-                  : 'Hiç öðrenci seçilmedi (tüm öðrenciler aktarýlacak)'}
+                  ? `${selectedStudents.length} renci seildi`
+                  : 'Hi renci seilmedi (tm renciler aktarlacak)'}
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsTransferDialogOpen(false)}>
-              Ýptal
+              ptal
             </Button>
             <Button onClick={handleTransferStudents}>
-              {selectedStudents.length > 0 ? 'Seçilenleri Aktar' : 'Tümünü Aktar'}
+              {selectedStudents.length > 0 ? 'Seilenleri Aktar' : 'Tmn Aktar'}
             </Button>
           </DialogFooter>
         </DialogContent>
