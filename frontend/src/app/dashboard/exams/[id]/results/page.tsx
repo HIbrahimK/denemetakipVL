@@ -41,6 +41,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { API_BASE_URL } from '@/lib/auth';
 
 export default function ExamResultsPage() {
     const params = useParams();
@@ -55,7 +56,7 @@ export default function ExamResultsPage() {
     useEffect(() => {
         if (params.id) {
             const token = localStorage.getItem('token');
-            fetch(`http://localhost:3001/exams/${params.id}/statistics`, {
+            fetch(`${API_BASE_URL}/exams/${params.id}/statistics`, {
                 headers: {
                 }
             })
@@ -316,7 +317,7 @@ export default function ExamResultsPage() {
     const handleDownloadExcel = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/exams/${params.id}/export/excel`, {
+            const response = await fetch(`${API_BASE_URL}/exams/${params.id}/export/excel`, {
                 headers: {
                 },
             });
@@ -342,7 +343,7 @@ export default function ExamResultsPage() {
     const handleDownloadPDF = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:3001/exams/${params.id}/export/pdf`, {
+            const response = await fetch(`${API_BASE_URL}/exams/${params.id}/export/pdf`, {
                 headers: {
                 },
             });

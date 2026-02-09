@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -148,7 +149,7 @@ export default function StudyPlanDetailPage() {
   const fetchPlan = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3001/study/plans/${planId}`, {
+      const res = await fetch(`${API_BASE_URL}/study/plans/${planId}`, {
       });
 
       if (res.ok) {
@@ -157,7 +158,7 @@ export default function StudyPlanDetailPage() {
 
         // If template, fetch assignment summary
         if (data.isTemplate) {
-          const summaryRes = await fetch(`http://localhost:3001/study/plans/${planId}/assignment-summary`, {
+          const summaryRes = await fetch(`${API_BASE_URL}/study/plans/${planId}/assignment-summary`, {
           });
           if (summaryRes.ok) {
             setAssignmentSummary(await summaryRes.json());
@@ -249,7 +250,7 @@ export default function StudyPlanDetailPage() {
     setProcessing(true);
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`http://localhost:3001/study/plans/assignments/${assignmentId}/cancel`, {
+      const response = await fetch(`${API_BASE_URL}/study/plans/assignments/${assignmentId}/cancel`, {
         method: 'POST',
       });
       if (response.ok) {

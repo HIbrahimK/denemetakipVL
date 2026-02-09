@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -118,7 +119,7 @@ export default function EditStudyPlanPage() {
     const fetchPlan = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`http://localhost:3001/study/plans/${planId}`, {
+            const res = await fetch(`${API_BASE_URL}/study/plans/${planId}`, {
             });
             if (res.ok) {
                 const data = await res.json();
@@ -144,7 +145,7 @@ export default function EditStudyPlanPage() {
     const fetchSubjects = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/subjects', {
+            const res = await fetch(`${API_BASE_URL}/subjects`, {
             });
             if (res.ok) setSubjects(await res.json());
         } catch (error) { console.error(error); }
@@ -153,7 +154,7 @@ export default function EditStudyPlanPage() {
     const fetchTopics = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('http://localhost:3001/subjects/topics/all', {
+            const res = await fetch(`${API_BASE_URL}/subjects/topics/all`, {
             });
             if (res.ok) setTopics(await res.json());
         } catch (error) { console.error(error); }
@@ -251,8 +252,8 @@ export default function EditStudyPlanPage() {
             };
 
             const url = asCopy
-                ? 'http://localhost:3001/study/plans'
-                : `http://localhost:3001/study/plans/${planId}`;
+                ? `${API_BASE_URL}/study/plans`
+                : `${API_BASE_URL}/study/plans/${planId}`;
 
             const method = asCopy ? 'POST' : 'PATCH';
 

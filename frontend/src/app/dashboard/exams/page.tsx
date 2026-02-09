@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,7 +64,7 @@ export default function ExamsPage() {
         if (!schoolId) return;
 
         setLoading(true);
-        fetch(`http://localhost:3001/exams?schoolId=${schoolId}`, {
+        fetch(`${API_BASE_URL}/exams?schoolId=${schoolId}`, {
             headers: {
             }
         })
@@ -105,8 +105,8 @@ export default function ExamsPage() {
         if (!deleteId || !deleteType) return;
 
         const endpoint = deleteType === 'exam'
-            ? `http://localhost:3001/exams/${deleteId}`
-            : `http://localhost:3001/exams/${deleteId}/results`;
+            ? `${API_BASE_URL}/exams/${deleteId}`
+            : `${API_BASE_URL}/exams/${deleteId}/results`;
 
         try {
             const token = localStorage.getItem('token');
@@ -157,8 +157,8 @@ export default function ExamsPage() {
         <div className="space-y-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">SÄ±navlar</h2>
-                    <p className="text-slate-500 dark:text-slate-400">TÃ¼m deneme sÄ±navlarÄ±nÄ± buradan yÃ¶netebilirsiniz. Takvim gÃ¶rÃ¼nÃ¼mÃ¼ iÃ§in <Link href="/dashboard/exams/calendar" className="text-indigo-600 hover:underline font-medium">Deneme Takvimi</Link> sayfasÄ±nÄ± ziyaret edin.</p>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Sýnavlar</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Tüm deneme sýnavlarýný buradan yönetebilirsiniz. Takvim görünümü için <Link href="/dashboard/exams/calendar" className="text-indigo-600 hover:underline font-medium">Deneme Takvimi</Link> sayfasýný ziyaret edin.</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" asChild>
@@ -175,42 +175,42 @@ export default function ExamsPage() {
             <Card className="border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-50 via-indigo-50 to-slate-50 dark:from-slate-900 dark:via-slate-900/70 dark:to-slate-900">
                 <CardHeader className="pb-2 flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-                        <Filter className="h-4 w-4" /> Filtrele ve sÄ±rala
+                        <Filter className="h-4 w-4" /> Filtrele ve sýrala
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">SÄ±nav tÃ¼rÃ¼, tarih aralÄ±ÄŸÄ± ve sÄ±nÄ±f seviyesine gÃ¶re listeyi daraltÄ±n. Son eklenen Ã¼stte.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Sýnav türü, tarih aralýðý ve sýnýf seviyesine göre listeyi daraltýn. Son eklenen üstte.</p>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Layers className="h-4 w-4" /> SÄ±nav TÃ¼rÃ¼</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Layers className="h-4 w-4" /> Sýnav Türü</label>
                         <select
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value="ALL">TÃ¼mÃ¼</option>
+                            <option value="ALL">Tümü</option>
                             <option value="TYT">TYT</option>
                             <option value="AYT">AYT</option>
                             <option value="LGS">LGS</option>
-                            <option value="OZEL">Ã–zel</option>
+                            <option value="OZEL">Özel</option>
                         </select>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Users className="h-4 w-4" /> SÄ±nÄ±f Seviyesi</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Users className="h-4 w-4" /> Sýnýf Seviyesi</label>
                         <select
                             value={gradeFilter}
                             onChange={(e) => setGradeFilter(e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value="">TÃ¼mÃ¼</option>
+                            <option value="">Tümü</option>
                             {[5,6,7,8,9,10,11,12].map(grade => (
-                                <option key={grade} value={grade}>{grade}. SÄ±nÄ±f</option>
+                                <option key={grade} value={grade}>{grade}. Sýnýf</option>
                             ))}
                         </select>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> BaÅŸlangÄ±Ã§</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Baþlangýç</label>
                         <Input
                             type="date"
                             value={startDate}
@@ -220,7 +220,7 @@ export default function ExamsPage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> BitiÅŸ</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Bitiþ</label>
                         <div className="flex gap-2 items-center">
                             <Input
                                 type="date"
@@ -229,7 +229,7 @@ export default function ExamsPage() {
                                 className="h-10"
                             />
                             <Button variant="outline" size="icon" className="shrink-0 border-slate-300 dark:border-slate-700" onClick={resetFilters}>
-                                SÄ±fÄ±rla
+                                Sýfýrla
                             </Button>
                         </div>
                     </div>
@@ -238,10 +238,10 @@ export default function ExamsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
-                    <p className="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">YÃ¼kleniyor...</p>
+                    <p className="text-slate-500 dark:text-slate-400 col-span-full text-center py-10">Yükleniyor...</p>
                 ) : filteredExams.length === 0 ? (
                     <div className="col-span-full text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
-                        <p className="text-slate-500 dark:text-slate-400">Filtrelere uyan sÄ±nav bulunamadÄ±.</p>
+                        <p className="text-slate-500 dark:text-slate-400">Filtrelere uyan sýnav bulunamadý.</p>
                     </div>
                 ) : filteredExams.map((exam) => (
                     <Card key={exam.id} className="group hover:shadow-md transition-all duration-200 border-slate-200 dark:border-slate-800 dark:bg-slate-900">
@@ -265,23 +265,23 @@ export default function ExamsPage() {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Ä°ÅŸlemler</DropdownMenuLabel>
+                                        <DropdownMenuLabel>Ýþlemler</DropdownMenuLabel>
                                         <DropdownMenuItem asChild>
                                             <Link href={`/dashboard/exams/${exam.id}/results`} className="cursor-pointer">
-                                                <BarChart2 className="mr-2 h-4 w-4" /> Ä°statistikler
+                                                <BarChart2 className="mr-2 h-4 w-4" /> Ýstatistikler
                                             </Link>
                                         </DropdownMenuItem>
                                         {userRole === 'SCHOOL_ADMIN' && (
                                             <>
                                                 <DropdownMenuItem className="cursor-pointer" onClick={() => setEditExam(exam)}>
-                                                    <Edit className="mr-2 h-4 w-4" /> DÃ¼zenle
+                                                    <Edit className="mr-2 h-4 w-4" /> Düzenle
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('results'); }}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> SonuÃ§larÄ± Temizle
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Sonuçlarý Temizle
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={() => { setDeleteId(exam.id); setDeleteType('exam'); }}>
-                                                    <Trash2 className="mr-2 h-4 w-4" /> SÄ±navÄ± Sil
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Sýnavý Sil
                                                 </DropdownMenuItem>
                                             </>
                                         )}
@@ -295,12 +295,12 @@ export default function ExamsPage() {
                                     {exam._count?.attempts > 0 ? (
                                         <>
                                             <Users className="h-4 w-4 text-emerald-600" />
-                                            <span className="font-medium text-emerald-600">{exam._count.attempts} Ã–ÄŸrenci KatÄ±ldÄ±</span>
+                                            <span className="font-medium text-emerald-600">{exam._count.attempts} Öðrenci Katýldý</span>
                                         </>
                                     ) : (
                                         <>
                                             <FileSpreadsheet className="h-4 w-4 text-amber-500" />
-                                            <span className="text-amber-500 font-medium">SonuÃ§ Bekleniyor</span>
+                                            <span className="text-amber-500 font-medium">Sonuç Bekleniyor</span>
                                         </>
                                     )}
                                 </div>
@@ -310,13 +310,13 @@ export default function ExamsPage() {
                                 <Button variant="outline" className="w-full" asChild>
                                     <Link href={`/dashboard/exams/${exam.id}/results`}>
                                         <BarChart2 className="mr-2 h-4 w-4" />
-                                        SonuÃ§lar
+                                        Sonuçlar
                                     </Link>
                                 </Button>
                                 <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
                                     <Link href={`/dashboard/import?examId=${exam.id}`}>
                                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                                        Veri YÃ¼kle
+                                        Veri Yükle
                                     </Link>
                                 </Button>
                             </div>
@@ -324,10 +324,10 @@ export default function ExamsPage() {
                                 <Button
                                     variant="outline"
                                     className="w-full mt-3 gap-2"
-                                    onClick={() => window.open(`http://localhost:3001/exams/${exam.id}/answer-key`, '_blank')}
+                                    onClick={() => window.open(`${API_BASE_URL}/exams/${exam.id}/answer-key`, '_blank')}
                                 >
                                     <Download className="h-4 w-4" />
-                                    Cevap AnahtarÄ±
+                                    Cevap Anahtarý
                                 </Button>
                             )}
                         </CardContent>
@@ -348,13 +348,13 @@ export default function ExamsPage() {
                         <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
                         <AlertDialogDescription>
                             {deleteType === 'exam'
-                                ? "Bu sÄ±navÄ± ve tÃ¼m baÄŸlÄ± verilerini kalÄ±cÄ± olarak silmek Ã¼zeresiniz. Bu iÅŸlem geri alÄ±namaz."
-                                : "Bu sÄ±nava ait yÃ¼klenmiÅŸ tÃ¼m Ã¶ÄŸrenci sonuÃ§larÄ±nÄ± silmek Ã¼zeresiniz. SÄ±nav kaydÄ± kalacaktÄ±r."
+                                ? "Bu sýnavý ve tüm baðlý verilerini kalýcý olarak silmek üzeresiniz. Bu iþlem geri alýnamaz."
+                                : "Bu sýnava ait yüklenmiþ tüm öðrenci sonuçlarýný silmek üzeresiniz. Sýnav kaydý kalacaktýr."
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Ä°ptal</AlertDialogCancel>
+                        <AlertDialogCancel>Ýptal</AlertDialogCancel>
                         <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
                             Evet, Sil
                         </AlertDialogAction>

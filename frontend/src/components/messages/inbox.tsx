@@ -54,7 +54,7 @@ export default function MessageInbox({ userId, schoolId }: MessageInboxProps) {
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/messages/inbox", {
+      const response = await fetch(`${API_BASE_URL}/messages/inbox`, {
         headers: {
         },
       });
@@ -74,7 +74,7 @@ export default function MessageInbox({ userId, schoolId }: MessageInboxProps) {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}`,
+        `${API_BASE_URL}/messages/${messageId}`,
         {
           method: "DELETE",
           headers: {
@@ -95,7 +95,7 @@ export default function MessageInbox({ userId, schoolId }: MessageInboxProps) {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}/favorite`,
+        `${API_BASE_URL}/messages/${messageId}/favorite`,
         {
           method: "PATCH",
           headers: {

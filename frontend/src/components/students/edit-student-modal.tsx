@@ -36,7 +36,7 @@ export function EditStudentModal({ student, open, onOpenChange, onSuccess }: any
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch(`http://localhost:3001/students/${student.id}`, {
+            const res = await fetch(`${API_BASE_URL}/students/${student.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

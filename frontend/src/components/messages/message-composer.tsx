@@ -18,6 +18,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Save, Calendar, ArrowLeft } from "lucide-react";
 
+import { API_BASE_URL } from "@/lib/auth";
+
 interface MessageComposerProps {
   userRole: string;
   schoolId: string;
@@ -71,7 +73,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/messages/settings", {
+      const response = await fetch(`${API_BASE_URL}/messages/settings`, {
         headers: {
         },
       });
@@ -89,7 +91,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/users?schoolId=${schoolId}`,
+        `${API_BASE_URL}/users?schoolId=${schoolId}`,
         {
           headers: {
           },
@@ -109,7 +111,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/schools/${schoolId}/grades`,
+        `${API_BASE_URL}/schools/${schoolId}/grades`,
         {
           headers: {
           },
@@ -129,7 +131,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/schools/${schoolId}/grades/${gradeId}/classes`,
+        `${API_BASE_URL}/schools/${schoolId}/grades/${gradeId}/classes`,
         {
           headers: {
           },
@@ -148,7 +150,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
   const fetchTemplates = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/messages/templates", {
+      const response = await fetch(`${API_BASE_URL}/messages/templates`, {
         headers: {
         },
       });
@@ -203,7 +205,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("http://localhost:3001/messages/upload", {
+      const response = await fetch(`${API_BASE_URL}/messages/upload`, {
         method: "POST",
         headers: {
         },
@@ -214,7 +216,7 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
         const data = await response.json();
         setAttachments([...attachments, {
           filename: data.filename,
-          fileUrl: `http://localhost:3001${data.path}`,
+          fileUrl: `${API_BASE_URL}${data.path}`,
           fileSize: data.size,
           mimeType: data.mimetype,
           originalname: data.originalname,
@@ -286,8 +288,8 @@ export default function MessageComposer({ userRole, schoolId }: MessageComposerP
     try {
       const token = localStorage.getItem("token");
       const endpoint = isDraft
-        ? "http://localhost:3001/messages/drafts"
-        : "http://localhost:3001/messages";
+        ? `${API_BASE_URL}/messages/drafts`
+        : `${API_BASE_URL}/messages`;
 
       const payload: any = {
         subject,

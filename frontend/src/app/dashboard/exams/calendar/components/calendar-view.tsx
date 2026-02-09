@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
@@ -74,7 +74,7 @@ export function CalendarView({
             if (type) params.append('type', type);
             if (gradeLevel) params.append('gradeLevel', gradeLevel.toString());
 
-            const response = await fetch(`http://localhost:3001/exams/calendar/view?${params}`, {
+            const response = await fetch(`${API_BASE_URL}/exams/calendar/view?${params}`, {
                 headers: {
                 },
             });
@@ -94,9 +94,9 @@ export function CalendarView({
     const monthEnd = endOfMonth(currentMonth);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    // AyÄ±n baÅŸladÄ±ÄŸÄ± gÃ¼nÃ¼ bul (0 = Pazar, 1 = Pazartesi, ...)
+    // Ayýn baþladýðý günü bul (0 = Pazar, 1 = Pazartesi, ...)
     const startDay = monthStart.getDay();
-    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi baÅŸlat
+    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi baþlat
 
     const getExamsForDay = (day: Date) => {
         return exams.filter((exam) => {
@@ -126,7 +126,7 @@ export function CalendarView({
                 </h2>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={handleToday}>
-                        BugÃ¼n
+                        Bugün
                     </Button>
                     <Button variant="outline" size="icon" onClick={handlePrevMonth}>
                         <ChevronLeft className="w-4 h-4" />
@@ -139,12 +139,12 @@ export function CalendarView({
 
             {loading ? (
                 <div className="text-center py-12">
-                    <p className="text-muted-foreground">YÃ¼kleniyor...</p>
+                    <p className="text-muted-foreground">Yükleniyor...</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-7 gap-2">
-                    {/* GÃ¼n baÅŸlÄ±klarÄ± */}
-                    {['Pzt', 'Sal', 'Ã‡ar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
+                    {/* Gün baþlýklarý */}
+                    {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
                         <div
                             key={day}
                             className="text-center font-semibold text-sm text-muted-foreground py-2"
@@ -153,12 +153,12 @@ export function CalendarView({
                         </div>
                     ))}
 
-                    {/* BoÅŸ gÃ¼nler (Ã¶nceki aydan) */}
+                    {/* Boþ günler (önceki aydan) */}
                     {Array.from({ length: paddingDays }).map((_, i) => (
                         <div key={`padding-${i}`} className="min-h-[120px] bg-muted/20 rounded-lg" />
                     ))}
 
-                    {/* GÃ¼nler */}
+                    {/* Günler */}
                     {daysInMonth.map((day) => {
                         const dayExams = getExamsForDay(day);
                         const isCurrentDay = isToday(day);
@@ -196,7 +196,7 @@ export function CalendarView({
                                                     color: 'white',
                                                     opacity: exam.isArchived ? 0.5 : 1,
                                                 }}
-                                                title={`${exam.title} - ${exam.gradeLevel}. SÄ±nÄ±f`}
+                                                title={`${exam.title} - ${exam.gradeLevel}. Sýnýf`}
                                             >
                                                 {exam.title}
                                             </div>

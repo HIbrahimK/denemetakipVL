@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Users, ArrowRight } from "lucide-react";
 
+import { API_BASE_URL } from "@/lib/auth";
+
 interface BulkTransferModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -42,7 +44,7 @@ export function BulkTransferModal({ isOpen, onClose, onSuccess, selectedCount, s
     const fetchFilters = async () => {
         const token = localStorage.getItem("token");
         try {
-            const res = await fetch("http://localhost:3001/students/filters", {
+            const res = await fetch(`${API_BASE_URL}/students/filters`, {
             });
             const data = await res.json();
             setFilters(data);
@@ -68,7 +70,7 @@ export function BulkTransferModal({ isOpen, onClose, onSuccess, selectedCount, s
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch("http://localhost:3001/students/bulk-transfer", {
+            const res = await fetch(`${API_BASE_URL}/students/bulk-transfer`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

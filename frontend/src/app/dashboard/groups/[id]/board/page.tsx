@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Megaphone, FileText, Target, BookOpen, Upload, Loader2, Trophy, BarChart3, PlayCircle, HelpCircle, Pin, Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 
 type BoardPostType = "ANNOUNCEMENT" | "FILE" | "GOAL" | "PLAN" | "POLL" | "VIDEO" | "QUESTION";
 
@@ -434,7 +435,7 @@ export default function GroupBoardPage() {
       const userStr = localStorage.getItem("user");
       const localUser = userStr ? JSON.parse(userStr) : null;
 
-      const groupRes = await fetch(`http://localhost:3001/groups/${groupId}`, {
+      const groupRes = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
         headers: {
         },
       });
@@ -444,7 +445,7 @@ export default function GroupBoardPage() {
         setGroup(groupData);
       }
 
-      const statsRes = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
+      const statsRes = await fetch(`${API_BASE_URL}/groups/${groupId}/stats`, {
         headers: {
         },
       });
@@ -453,7 +454,7 @@ export default function GroupBoardPage() {
         setStats(statsData);
       }
 
-      const postsRes = await fetch(`http://localhost:3001/groups/${groupId}/board`, {
+      const postsRes = await fetch(`${API_BASE_URL}/groups/${groupId}/board`, {
         headers: {
         },
       });
@@ -464,7 +465,7 @@ export default function GroupBoardPage() {
       }
 
       if (localUser?.role === "TEACHER" || localUser?.role === "SCHOOL_ADMIN" || localUser?.role === "SUPER_ADMIN") {
-        const plansRes = await fetch("http://localhost:3001/study/plans?status=ACTIVE", {
+        const plansRes = await fetch(`${API_BASE_URL}/study/plans?status=ACTIVE`, {
           headers: {
           },
         });
@@ -506,7 +507,7 @@ export default function GroupBoardPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch(`http://localhost:3001/groups/${groupId}/board/upload`, {
+      const res = await fetch(`${API_BASE_URL}/groups/${groupId}/board/upload`, {
         method: "POST",
         body: formData,
       });
@@ -606,7 +607,7 @@ export default function GroupBoardPage() {
       }
 
       const sendPayload = async (payload: any) => {
-        const response = await fetch(`http://localhost:3001/groups/${groupId}/board`, {
+        const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -753,7 +754,7 @@ export default function GroupBoardPage() {
         };
       }
 
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${editingPost.id}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${editingPost.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -788,7 +789,7 @@ export default function GroupBoardPage() {
     const confirmed = window.confirm("Bu paylaşımı silmek istediğinize emin misiniz?");
     if (!confirmed) return;
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}`, {
         method: "DELETE",
       });
 
@@ -814,7 +815,7 @@ export default function GroupBoardPage() {
 
   const handleTogglePin = async (post: GroupPost) => {
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${post.id}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${post.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -842,7 +843,7 @@ export default function GroupBoardPage() {
     if (!editingReplyBody.trim()) return;
     setSavingReply(true);
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${postId}/replies/${replyId}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}/replies/${replyId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -874,7 +875,7 @@ export default function GroupBoardPage() {
     const confirmed = window.confirm("Bu yanıtı silmek istediğinize emin misiniz?");
     if (!confirmed) return;
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${postId}/replies/${replyId}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}/replies/${replyId}`, {
         method: "DELETE",
       });
 
@@ -929,7 +930,7 @@ export default function GroupBoardPage() {
         isCompleted: goalForm.goalType === "TASK" ? goalForm.isCompleted : false,
       };
 
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/goals`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/goals`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -971,7 +972,7 @@ export default function GroupBoardPage() {
 
   const handleCompleteGoal = async (goalId: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/goals/${goalId}/complete`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/goals/${goalId}/complete`, {
         method: "PATCH",
       });
 
@@ -1124,7 +1125,7 @@ export default function GroupBoardPage() {
     if (!body) return;
     setSubmittingReplyId(postId);
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${postId}/replies`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}/replies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1153,7 +1154,7 @@ export default function GroupBoardPage() {
 
   const handleRespond = async (postId: string, option: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${postId}/respond`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}/respond`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1203,7 +1204,7 @@ export default function GroupBoardPage() {
     setSubmittingResponseId(post.id);
     try {
       const payload = JSON.stringify({ answers });
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/board/${post.id}/respond`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${post.id}/respond`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1943,7 +1944,7 @@ export default function GroupBoardPage() {
                             aria-label={isFileExpanded ? "Görseli küçült" : "Görseli büyüt"}
                           >
                             <img
-                              src={`http://localhost:3001/groups/${groupId}/board/${post.id}/file`}
+                              src={`${API_BASE_URL}/groups/${groupId}/board/${post.id}/file`}
                               alt={post.fileName}
                               className={`object-contain transition-all ${
                                 isFileExpanded
@@ -1963,7 +1964,7 @@ export default function GroupBoardPage() {
                           </div>
                         </div>
                         <a
-                          href={`http://localhost:3001/groups/${groupId}/board/${post.id}/file`}
+                          href={`${API_BASE_URL}/groups/${groupId}/board/${post.id}/file`}
                           className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                           target="_blank"
                           rel="noreferrer"
@@ -2209,8 +2210,8 @@ export default function GroupBoardPage() {
                     const isLetterOptions = options.every((opt) => QUESTION_LETTERS.includes(opt));
                     const questionImageUrl = activeQuestion.filePath && activeQuestion.mimeType?.startsWith("image/")
                       ? isQuestionGroup
-                        ? `http://localhost:3001/groups/${groupId}/board/${post.id}/file?questionId=${encodeURIComponent(activeQuestion.id)}`
-                        : `http://localhost:3001/groups/${groupId}/board/${post.id}/file`
+                        ? `${API_BASE_URL}/groups/${groupId}/board/${post.id}/file?questionId=${encodeURIComponent(activeQuestion.id)}`
+                        : `${API_BASE_URL}/groups/${groupId}/board/${post.id}/file`
                       : null;
                     const questionImageKey = `${post.id}:${activeQuestion.id}`;
                     const isImageExpanded = !!expandedQuestionImages[questionImageKey];

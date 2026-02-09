@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
 export default function ParentResultsPage() {
@@ -14,7 +15,7 @@ export default function ParentResultsPage() {
             
             try {
                 // Get parent's student data
-                const res = await fetch("http://localhost:3001/parents/me/students", {
+                const res = await fetch(`${API_BASE_URL}/parents/me/students`, {
                     headers: {
                     },
                 });
@@ -43,7 +44,7 @@ export default function ParentResultsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <p className="text-slate-500">Yükleniyor...</p>
+                <p className="text-slate-500">Y�kleniyor...</p>
             </div>
         );
     }
@@ -52,8 +53,8 @@ export default function ParentResultsPage() {
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                    <p className="text-slate-500 text-lg">Kayıtlı öğrenci bulunamadı.</p>
-                    <p className="text-slate-400 text-sm mt-2">Lütfen okul yönetimine başvurun.</p>
+                    <p className="text-slate-500 text-lg">Kay�tl� ��renci bulunamad�.</p>
+                    <p className="text-slate-400 text-sm mt-2">L�tfen okul y�netimine ba�vurun.</p>
                 </div>
             </div>
         );

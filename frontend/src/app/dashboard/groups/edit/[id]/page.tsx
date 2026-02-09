@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Loader2, Settings } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from '@/lib/auth';
 
 interface MentorGroup {
   id: string;
@@ -69,7 +70,7 @@ export default function EditGroupPage() {
   const fetchGroup = async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/groups/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${id}`, {
         headers: {
         },
       });
@@ -101,7 +102,7 @@ export default function EditGroupPage() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await fetch("http://localhost:3001/users?role=TEACHER", {
+      const response = await fetch(`${API_BASE_URL}/users?role=TEACHER`, {
         headers: {
         },
       });
@@ -117,7 +118,7 @@ export default function EditGroupPage() {
 
   const fetchGrades = async (schoolId: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${schoolId}/grades`, {
         headers: {
         },
       });
@@ -164,7 +165,7 @@ export default function EditGroupPage() {
         requestData.teacherId = formData.teacherId;
       }
 
-      const response = await fetch(`http://localhost:3001/groups/${groupId}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

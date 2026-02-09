@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState, Suspense } from "react";
+import { API_BASE_URL } from "@/lib/auth";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,8 +84,8 @@ function ExamDetailContent() {
                 // If studentId is provided, use it (for admin/teacher view)
                 // Otherwise use /me/exams (for student's own view)
                 const endpoint = studentId 
-                    ? `http://localhost:3001/students/${studentId}/exams`
-                    : "http://localhost:3001/students/me/exams";
+                    ? `${API_BASE_URL}/students/${studentId}/exams`
+                    : `${API_BASE_URL}/students/me/exams`;
                 
                 // Fetch all exams to find this specific exam
                 const response = await fetch(endpoint, {
@@ -104,7 +105,7 @@ function ExamDetailContent() {
                 }
 
                 // Fetch exam statistics for comparison
-                const statsResponse = await fetch(`http://localhost:3001/exams/${params.id}/statistics`, {
+                const statsResponse = await fetch(`${API_BASE_URL}/exams/${params.id}/statistics`, {
                 });
                 const statsData = await statsResponse.json();
                 

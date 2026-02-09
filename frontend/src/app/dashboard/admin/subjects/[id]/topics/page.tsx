@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface Topic {
   id: string;
@@ -138,7 +139,7 @@ export default function AdminTopicsPage() {
   const fetchSubject = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3001/subjects/${subjectId}`, {
+      const res = await fetch(`${API_BASE_URL}/subjects/${subjectId}`, {
       });
 
       if (res.ok) {
@@ -153,7 +154,7 @@ export default function AdminTopicsPage() {
   const fetchTopics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3001/subjects/topics/all?subjectId=${subjectId}`, {
+      const res = await fetch(`${API_BASE_URL}/subjects/topics/all?subjectId=${subjectId}`, {
       });
 
       if (res.ok) {
@@ -226,10 +227,10 @@ export default function AdminTopicsPage() {
       let method: string;
 
       if (editingTopic) {
-        url = `http://localhost:3001/subjects/topics/${editingTopic.id}`;
+        url = `${API_BASE_URL}/subjects/topics/${editingTopic.id}`;
         method = 'PATCH';
       } else {
-        url = `http://localhost:3001/subjects/${subjectId}/topics`;
+        url = `${API_BASE_URL}/subjects/${subjectId}/topics`;
         method = 'POST';
       }
 
@@ -279,7 +280,7 @@ export default function AdminTopicsPage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`http://localhost:3001/subjects/topics/${topicToDelete.id}`, {
+      const res = await fetch(`${API_BASE_URL}/subjects/topics/${topicToDelete.id}`, {
         method: 'DELETE',
       });
 

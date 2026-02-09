@@ -37,7 +37,7 @@ export function EditUserModal({ user, open, onOpenChange, onSuccess }: any) {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch(`http://localhost:3001/users/${user.id}`, {
+            const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

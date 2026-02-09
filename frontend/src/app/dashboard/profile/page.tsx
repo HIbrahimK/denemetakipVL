@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,7 @@ export default function ProfilePage() {
             if (!token) return;
 
             try {
-                const res = await fetch("http://localhost:3001/auth/me", {
+                const res = await fetch("${API_BASE_URL}/auth/me", {
                     headers: {
                     },
                 });
@@ -82,12 +83,12 @@ export default function ProfilePage() {
         setError("");
 
         if (newPassword !== confirmPassword) {
-            setError("Yeni şifreler eşleşmiyor!");
+            setError("Yeni �ifreler e�le�miyor!");
             return;
         }
 
         if (newPassword.length < 6) {
-            setError("Şifre en az 6 karakter olmalıdır!");
+            setError("�ifre en az 6 karakter olmal�d�r!");
             return;
         }
 
@@ -95,7 +96,7 @@ export default function ProfilePage() {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch("http://localhost:3001/auth/change-password", {
+            const res = await fetch("${API_BASE_URL}/auth/change-password", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -107,16 +108,16 @@ export default function ProfilePage() {
             });
 
             if (res.ok) {
-                setMessage("Şifreniz başarıyla değiştirildi!");
+                setMessage("�ifreniz ba�ar�yla de�i�tirildi!");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
                 const data = await res.json();
-                setError(data.message || "Şifre değiştirilemedi!");
+                setError(data.message || "�ifre de�i�tirilemedi!");
             }
         } catch (error) {
-            setError("Bir hata oluştu!");
+            setError("Bir hata olu�tu!");
             console.error(error);
         } finally {
             setLoading(false);
@@ -129,7 +130,7 @@ export default function ProfilePage() {
         const avatarSeed = `${selectedStyle}:${selectedSeed}`;
 
         try {
-            const res = await fetch("http://localhost:3001/auth/update-avatar", {
+            const res = await fetch("${API_BASE_URL}/auth/update-avatar", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -143,15 +144,15 @@ export default function ProfilePage() {
                 const updatedUser = { ...user, avatarSeed };
                 localStorage.setItem("user", JSON.stringify(updatedUser));
                 setUser(updatedUser);
-                setAvatarMessage("Profil fotoğrafınız güncellendi!");
+                setAvatarMessage("Profil foto�raf�n�z g�ncellendi!");
                 
                 // Reload page to update sidebar avatar
                 setTimeout(() => window.location.reload(), 1000);
             } else {
-                setAvatarMessage("Profil fotoğrafı güncellenemedi!");
+                setAvatarMessage("Profil foto�raf� g�ncellenemedi!");
             }
         } catch (error) {
-            setAvatarMessage("Bir hata oluştu!");
+            setAvatarMessage("Bir hata olu�tu!");
             console.error(error);
         }
     };
@@ -161,7 +162,7 @@ export default function ProfilePage() {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch(`http://localhost:3001/profile/update`, {
+            const res = await fetch(`${API_BASE_URL}/profile/update`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -175,15 +176,15 @@ export default function ProfilePage() {
                 const updatedUser = { ...user, branch };
                 localStorage.setItem("user", JSON.stringify(updatedUser));
                 setUser(updatedUser);
-                setBranchMessage("Branş bilginiz güncellendi!");
+                setBranchMessage("Bran� bilginiz g�ncellendi!");
                 
                 // Reload page to update sidebar
                 setTimeout(() => window.location.reload(), 1000);
             } else {
-                setBranchMessage("Branş bilgisi güncellenemedi!");
+                setBranchMessage("Bran� bilgisi g�ncellenemedi!");
             }
         } catch (error) {
-            setBranchMessage("Bir hata oluştu!");
+            setBranchMessage("Bir hata olu�tu!");
             console.error(error);
         }
     };
@@ -205,16 +206,16 @@ export default function ProfilePage() {
     const getRoleLabel = () => {
         if (!user) return "";
         
-        // Öğretmen için branş kontrolü
+        // ��retmen i�in bran� kontrol�
         if (user.role === "TEACHER") {
-            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
+            return user.branch ? `${user.branch} ��retmeni` : "��retmen";
         }
         
         const roleLabels: Record<string, string> = {
-            SCHOOL_ADMIN: "Okul Yöneticisi",
-            STUDENT: "Öğrenci",
+            SCHOOL_ADMIN: "Okul Y�neticisi",
+            STUDENT: "��renci",
             PARENT: "Veli",
-            SUPER_ADMIN: "Süper Admin"
+            SUPER_ADMIN: "S�per Admin"
         };
         return roleLabels[user.role] || user.role;
     };
@@ -224,7 +225,7 @@ export default function ProfilePage() {
     if (!user) {
         return (
             <div className="flex items-center justify-center h-full">
-                <p className="text-slate-500">Yükleniyor...</p>
+                <p className="text-slate-500">Y�kleniyor...</p>
             </div>
         );
     }
@@ -237,7 +238,7 @@ export default function ProfilePage() {
                     Profilim
                 </h1>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    Profil bilgilerinizi ve şifrenizi yönetin
+                    Profil bilgilerinizi ve �ifrenizi y�netin
                 </p>
             </div>
 
@@ -246,7 +247,7 @@ export default function ProfilePage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-100">
                         <UserCircle className="h-5 w-5" />
-                        Kullanıcı Bilgileri
+                        Kullan�c� Bilgileri
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -287,7 +288,7 @@ export default function ProfilePage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserCircle className="h-5 w-5" />
-                            Branş Bilgisi
+                            Bran� Bilgisi
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -297,19 +298,19 @@ export default function ProfilePage() {
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="branch">Branşınız</Label>
+                            <Label htmlFor="branch">Bran��n�z</Label>
                             <Input
                                 id="branch"
-                                placeholder="Örn: Matematik, Türkçe, Fizik"
+                                placeholder="�rn: Matematik, T�rk�e, Fizik"
                                 value={branch}
                                 onChange={(e) => setBranch(e.target.value)}
                             />
                             <p className="text-xs text-slate-500 dark:text-slate-400">
-                                Branş bilginiz dashboard'da isminizin altında görüntülenecektir.
+                                Bran� bilginiz dashboard'da isminizin alt�nda g�r�nt�lenecektir.
                             </p>
                         </div>
                         <Button onClick={handleBranchUpdate} className="bg-indigo-600 hover:bg-indigo-700">
-                            Branşı Güncelle
+                            Bran�� G�ncelle
                         </Button>
                     </CardContent>
                 </Card>
@@ -320,7 +321,7 @@ export default function ProfilePage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Image className="h-5 w-5" />
-                        Profil Fotoğrafı
+                        Profil Foto�raf�
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -339,16 +340,16 @@ export default function ProfilePage() {
                             </AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold text-slate-900 dark:text-white">Mevcut Profil Fotoğrafın</p>
+                            <p className="font-semibold text-slate-900 dark:text-white">Mevcut Profil Foto�raf�n</p>
                             <p className="text-sm text-slate-500 dark:text-slate-400">
-                                Aşağıdan yeni bir fotoğraf seçebilirsin
+                                A�a��dan yeni bir foto�raf se�ebilirsin
                             </p>
                         </div>
                     </div>
 
                     {/* Style Selector */}
                     <div className="space-y-3">
-                        <Label>Fotoğraf Stili</Label>
+                        <Label>Foto�raf Stili</Label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {AVATAR_STYLES.map((style) => (
                                 <button
@@ -371,7 +372,7 @@ export default function ProfilePage() {
 
                     {/* Avatar Preview Grid */}
                     <div className="space-y-3">
-                        <Label>Fotoğraf Seç</Label>
+                        <Label>Foto�raf Se�</Label>
                         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
                             {AVATAR_STYLES.find(s => s.id === selectedStyle)?.seeds.map((seed) => (
                                 <button
@@ -397,7 +398,7 @@ export default function ProfilePage() {
                         onClick={handleAvatarUpdate}
                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                     >
-                        Profil Fotoğrafını Güncelle
+                        Profil Foto�raf�n� G�ncelle
                     </Button>
                 </CardContent>
             </Card>
@@ -407,7 +408,7 @@ export default function ProfilePage() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Key className="h-5 w-5" />
-                        Şifre Değiştir
+                        �ifre De�i�tir
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -424,7 +425,7 @@ export default function ProfilePage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="currentPassword">Mevcut Şifre</Label>
+                            <Label htmlFor="currentPassword">Mevcut �ifre</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
@@ -439,7 +440,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="newPassword">Yeni Şifre</Label>
+                            <Label htmlFor="newPassword">Yeni �ifre</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
@@ -455,7 +456,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Yeni Şifre (Tekrar)</Label>
+                            <Label htmlFor="confirmPassword">Yeni �ifre (Tekrar)</Label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
@@ -475,7 +476,7 @@ export default function ProfilePage() {
                             disabled={loading}
                             className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
                         >
-                            {loading ? "Güncelleniyor..." : "Şifreyi Güncelle"}
+                            {loading ? "G�ncelleniyor..." : "�ifreyi G�ncelle"}
                         </Button>
                     </form>
                 </CardContent>

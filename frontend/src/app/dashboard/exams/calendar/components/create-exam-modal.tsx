@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
@@ -73,7 +73,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                 date: formData.scheduledDateTime || new Date().toISOString(),
             };
 
-            const response = await fetch('http://localhost:3001/exams', {
+            const response = await fetch('\/exams', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,8 +83,8 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
 
             if (response.ok) {
                 toast({
-                    title: 'BaÅŸarÄ±lÄ±',
-                    description: 'Deneme oluÅŸturuldu',
+                    title: 'Baþarýlý',
+                    description: 'Deneme oluþturuldu',
                 });
                 onSuccess();
                 onClose();
@@ -94,7 +94,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Deneme oluÅŸturulurken bir hata oluÅŸtu',
+                description: 'Deneme oluþturulurken bir hata oluþtu',
                 variant: 'destructive',
             });
         } finally {
@@ -112,20 +112,20 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <Label htmlFor="title">Deneme AdÄ± *</Label>
+                            <Label htmlFor="title">Deneme Adý *</Label>
                             <Input
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) =>
                                     setFormData({ ...formData, title: e.target.value })
                                 }
-                                placeholder="Ã–rn: Matemito A Denemesi"
+                                placeholder="Örn: Matemito A Denemesi"
                                 required
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="type">Deneme TÃ¼rÃ¼ *</Label>
+                            <Label htmlFor="type">Deneme Türü *</Label>
                             <Select
                                 value={formData.type}
                                 onValueChange={(value) =>
@@ -139,13 +139,13 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                     <SelectItem value="TYT">TYT</SelectItem>
                                     <SelectItem value="AYT">AYT</SelectItem>
                                     <SelectItem value="LGS">LGS</SelectItem>
-                                    <SelectItem value="OZEL">Ã–zel</SelectItem>
+                                    <SelectItem value="OZEL">Özel</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div>
-                            <Label htmlFor="gradeLevel">SÄ±nÄ±f Seviyesi *</Label>
+                            <Label htmlFor="gradeLevel">Sýnýf Seviyesi *</Label>
                             <Select
                                 value={formData.gradeLevel.toString()}
                                 onValueChange={(value) =>
@@ -158,25 +158,25 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 <SelectContent>
                                     {[5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
                                         <SelectItem key={grade} value={grade.toString()}>
-                                            {grade}. SÄ±nÄ±f
+                                            {grade}. Sýnýf
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground mt-1">
-                                BaÅŸka sÄ±nÄ±flara oluÅŸturduktan sonra kopyalayabilirsiniz
+                                Baþka sýnýflara oluþturduktan sonra kopyalayabilirsiniz
                             </p>
                         </div>
 
                         <div>
-                            <Label htmlFor="publisher">YayÄ±n Evi</Label>
+                            <Label htmlFor="publisher">Yayýn Evi</Label>
                             <Input
                                 id="publisher"
                                 value={formData.publisher}
                                 onChange={(e) =>
                                     setFormData({ ...formData, publisher: e.target.value })
                                 }
-                                placeholder="Ã–rn: Matemito"
+                                placeholder="Örn: Matemito"
                             />
                         </div>
 
@@ -210,7 +210,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 }
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                Cevap anahtarÄ±nÄ±n aÃ§Ä±lacaÄŸÄ± tarih
+                                Cevap anahtarýnýn açýlacaðý tarih
                             </p>
                         </div>
 
@@ -222,7 +222,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 onChange={(e) =>
                                     setFormData({ ...formData, broughtBy: e.target.value })
                                 }
-                                placeholder="Getiren kiÅŸi/kurum"
+                                placeholder="Getiren kiþi/kurum"
                             />
                         </div>
 
@@ -235,12 +235,12 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 onChange={(e) =>
                                     setFormData({ ...formData, quantity: e.target.value })
                                 }
-                                placeholder="KaÃ§ adet alÄ±ndÄ±"
+                                placeholder="Kaç adet alýndý"
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="fee">Ãœcret (â‚º)</Label>
+                            <Label htmlFor="fee">Ücret (?)</Label>
                             <Input
                                 id="fee"
                                 type="number"
@@ -276,7 +276,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 }
                             />
                             <Label htmlFor="isPaid" className="font-normal">
-                                Ã–deme yapÄ±ldÄ±
+                                Ödeme yapýldý
                             </Label>
                         </div>
 
@@ -289,7 +289,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 }
                             />
                             <Label htmlFor="isPublished" className="font-normal">
-                                Ã–ÄŸrencilere gÃ¶ster
+                                Öðrencilere göster
                             </Label>
                         </div>
 
@@ -305,17 +305,17 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 }
                             />
                             <Label htmlFor="isPublisherVisible" className="font-normal">
-                                YayÄ±n adÄ±nÄ± Ã¶ÄŸrencilere gÃ¶ster
+                                Yayýn adýný öðrencilere göster
                             </Label>
                         </div>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" onClick={onClose}>
-                            Ä°ptal
+                            Ýptal
                         </Button>
                         <Button type="submit" disabled={loading}>
-                            {loading ? 'OluÅŸturuluyor...' : 'OluÅŸtur'}
+                            {loading ? 'Oluþturuluyor...' : 'Oluþtur'}
                         </Button>
                     </div>
                 </form>

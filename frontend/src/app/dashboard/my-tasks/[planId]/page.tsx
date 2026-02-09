@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,7 +101,7 @@ export default function PlanDetailPage() {
       const token = localStorage.getItem('token');
       
       // Fetch plan details
-      const planResponse = await fetch(`http://localhost:3001/study/plans/${planId}`, {
+      const planResponse = await fetch(`${API_BASE_URL}/study/plans/${planId}`, {
         headers: {
         },
       });
@@ -113,7 +114,7 @@ export default function PlanDetailPage() {
       setPlan(planData);
 
       // Fetch tasks for this plan
-      const tasksResponse = await fetch(`http://localhost:3001/study/tasks?planId=${planId}`, {
+      const tasksResponse = await fetch(`${API_BASE_URL}/study/tasks?planId=${planId}`, {
         headers: {
         },
       });
@@ -157,7 +158,7 @@ export default function PlanDetailPage() {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:3001/study/tasks/${taskId}/complete`, {
+      const response = await fetch(`${API_BASE_URL}/study/tasks/${taskId}/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

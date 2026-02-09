@@ -24,7 +24,7 @@ export function AddStudentModal({ open, onOpenChange, onSuccess }: any) {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch("http://localhost:3001/students", {
+            const res = await fetch(`${API_BASE_URL}/students`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

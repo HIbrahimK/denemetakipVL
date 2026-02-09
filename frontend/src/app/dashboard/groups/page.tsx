@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -53,7 +53,7 @@ export default function GroupsPage() {
   const handleSyncAutoGroups = async () => {
     setSyncingAuto(true);
     try {
-      const response = await fetch('http://localhost:3001/groups/auto/sync', {
+      const response = await fetch('\/groups/auto/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,16 +62,16 @@ export default function GroupsPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Otomatik gruplar oluÅŸturulamadÄ±');
+        throw new Error(errorData.message || 'Otomatik gruplar oluþturulamadý');
       }
 
       toast({
-        title: 'BaÅŸarÄ±lÄ±',
-        description: 'SÄ±nÄ±f ve ÅŸube gruplarÄ± gÃ¼ncellendi',
+        title: 'Baþarýlý',
+        description: 'Sýnýf ve þube gruplarý güncellendi',
       });
       fetchGroups();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Otomatik gruplar oluÅŸturulamadÄ±';
+      const message = error instanceof Error ? error.message : 'Otomatik gruplar oluþturulamadý';
       toast({
         title: 'Hata',
         description: message,
@@ -84,7 +84,7 @@ export default function GroupsPage() {
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch('http://localhost:3001/groups', {
+      const response = await fetch('\/groups', {
         headers: {
         },
       });
@@ -94,7 +94,7 @@ export default function GroupsPage() {
 
         setGroups(data);
 
-        // Ä°statistikleri hesapla
+        // Ýstatistikleri hesapla
         const totalMembers = data.reduce((sum: number, g: MentorGroup) => 
           sum + (g._count?.memberships || 0), 0);
         const totalGoals = data.reduce((sum: number, g: MentorGroup) => 
@@ -126,31 +126,31 @@ export default function GroupsPage() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Mentor GruplarÄ±</h1>
+          <h1 className="text-3xl font-bold">Mentor Gruplarý</h1>
           <p className="text-muted-foreground mt-1">
             {user?.role === 'STUDENT' || user?.role === 'PARENT'
-              ? 'KatÄ±ldÄ±ÄŸÄ±nÄ±z gruplarÄ± gÃ¶rÃ¼ntÃ¼leyin'
-              : 'Ã–ÄŸrencilerinizi gruplandÄ±rÄ±n ve birlikte Ã§alÄ±ÅŸmalarÄ±nÄ± saÄŸlayÄ±n'}
+              ? 'Katýldýðýnýz gruplarý görüntüleyin'
+              : 'Öðrencilerinizi gruplandýrýn ve birlikte çalýþmalarýný saðlayýn'}
           </p>
         </div>
         <div className="flex gap-2">
           {canSyncAutoGroups && (
             <Button variant="outline" onClick={handleSyncAutoGroups} disabled={syncingAuto}>
-              {syncingAuto ? 'OluÅŸturuluyor...' : 'SÄ±nÄ±f GruplarÄ±nÄ± OluÅŸtur'}
+              {syncingAuto ? 'Oluþturuluyor...' : 'Sýnýf Gruplarýný Oluþtur'}
             </Button>
           )}
           {canManageGroups && (
             <Link href="/dashboard/groups/new">
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Yeni Grup OluÅŸtur
+                Yeni Grup Oluþtur
               </Button>
             </Link>
           )}
         </div>
       </div>
 
-      {/* Ä°statistikler */}
+      {/* Ýstatistikler */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -159,21 +159,21 @@ export default function GroupsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.activeGroups}</div>
-            <p className="text-xs text-muted-foreground">Toplam grup sayÄ±sÄ±</p>
+            <p className="text-xs text-muted-foreground">Toplam grup sayýsý</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Toplam Ãœye</CardTitle>
+            <CardTitle className="text-sm font-medium">Toplam Üye</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalMembers}</div>
             <p className="text-xs text-muted-foreground">
               {stats.activeGroups > 0 
-                ? `Ortalama ${Math.round(stats.totalMembers / stats.activeGroups)} kiÅŸi/grup`
-                : 'HenÃ¼z Ã¼ye yok'}
+                ? `Ortalama ${Math.round(stats.totalMembers / stats.activeGroups)} kiþi/grup`
+                : 'Henüz üye yok'}
             </p>
           </CardContent>
         </Card>
@@ -185,18 +185,18 @@ export default function GroupsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalGoals}</div>
-            <p className="text-xs text-muted-foreground">Toplam hedef sayÄ±sÄ±</p>
+            <p className="text-xs text-muted-foreground">Toplam hedef sayýsý</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ortalama BaÅŸarÄ±</CardTitle>
+            <CardTitle className="text-sm font-medium">Ortalama Baþarý</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">%{stats.averageSuccess}</div>
-            <p className="text-xs text-green-600">Grup performansÄ±</p>
+            <p className="text-xs text-green-600">Grup performansý</p>
           </CardContent>
         </Card>
       </div>
@@ -206,17 +206,17 @@ export default function GroupsPage() {
         <Card>
           <CardContent className="text-center py-12">
             <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">HenÃ¼z grup yok</h3>
+            <h3 className="mt-4 text-lg font-semibold">Henüz grup yok</h3>
             <p className="text-muted-foreground mt-2">
               {user?.role === 'STUDENT' || user?.role === 'PARENT'
-                ? 'HenÃ¼z bir gruba katÄ±lmadÄ±nÄ±z.'
-                : 'Ä°lk mentor grubunu oluÅŸturarak baÅŸlayÄ±n.'}
+                ? 'Henüz bir gruba katýlmadýnýz.'
+                : 'Ýlk mentor grubunu oluþturarak baþlayýn.'}
             </p>
             {canManageGroups && (
               <Link href="/dashboard/groups/new">
                 <Button className="mt-4">
                   <Plus className="mr-2 h-4 w-4" />
-                  Ä°lk Grubu OluÅŸtur
+                  Ýlk Grubu Oluþtur
                 </Button>
               </Link>
             )}
@@ -233,7 +233,7 @@ export default function GroupsPage() {
                     Aktif
                   </Badge>
                 </div>
-                <CardDescription>{group._count?.memberships || 0} Ã¶ÄŸrenci</CardDescription>
+                <CardDescription>{group._count?.memberships || 0} öðrenci</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex gap-2">

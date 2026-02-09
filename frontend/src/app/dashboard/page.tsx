@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -61,12 +61,12 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
-                        YÃ¶netim Paneli
+                        Yönetim Paneli
                     </h1>
                     <div className="flex items-center gap-2 mt-2">
                         <span className="bg-red-100 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">CANLI</span>
                         <p className="text-slate-500 dark:text-slate-400 text-sm">
-                            Sistem durumu aktif ve gÃ¼ncel.
+                            Sistem durumu aktif ve güncel.
                         </p>
                     </div>
                 </div>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
                     <Button asChild className="rounded-full bg-slate-900 hover:bg-slate-800 text-white px-6 shadow-lg shadow-slate-900/20">
                         <Link href="/dashboard/exams">
                             <Plus className="mr-2 h-4 w-4" />
-                            Yeni SÄ±nav Ekle
+                            Yeni Sýnav Ekle
                         </Link>
                     </Button>
                 </div>
@@ -92,15 +92,15 @@ export default function DashboardPage() {
                         <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl">
                             <Users className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-sm font-medium bg-white/10 px-3 py-1 rounded-full">Ã–ÄŸrenciler</span>
+                        <span className="text-sm font-medium bg-white/10 px-3 py-1 rounded-full">Öðrenciler</span>
                     </div>
                     <div>
                         <h3 className="text-4xl font-bold mb-1">1,248</h3>
-                        <p className="text-white/80 font-medium">Toplam KayÄ±tlÄ± Ã–ÄŸrenci</p>
+                        <p className="text-white/80 font-medium">Toplam Kayýtlý Öðrenci</p>
                     </div>
                     <div className="mt-6 flex items-center gap-2 text-sm bg-white/10 w-fit px-3 py-1.5 rounded-xl">
                         <TrendingUp className="h-4 w-4" />
-                        <span>GeÃ§en aya gÃ¶re +%12</span>
+                        <span>Geçen aya göre +%12</span>
                     </div>
                 </div>
 
@@ -113,15 +113,15 @@ export default function DashboardPage() {
                         <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl">
                             <BookOpen className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-sm font-medium bg-white/10 px-3 py-1 rounded-full">SÄ±navlar</span>
+                        <span className="text-sm font-medium bg-white/10 px-3 py-1 rounded-full">Sýnavlar</span>
                     </div>
                     <div>
                         <h3 className="text-4xl font-bold mb-1">24</h3>
-                        <p className="text-white/80 font-medium">Bu YÄ±l YapÄ±lan SÄ±nav</p>
+                        <p className="text-white/80 font-medium">Bu Yýl Yapýlan Sýnav</p>
                     </div>
                     <div className="mt-6 flex items-center gap-2 text-sm bg-white/10 w-fit px-3 py-1.5 rounded-xl">
                         <Clock className="h-4 w-4" />
-                        <span>Son sÄ±nav 2 gÃ¼n Ã¶nce</span>
+                        <span>Son sýnav 2 gün önce</span>
                     </div>
                 </div>
 
@@ -134,15 +134,15 @@ export default function DashboardPage() {
                         <div className="bg-white/20 backdrop-blur-sm p-3 rounded-2xl">
                             <TrendingUp className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-sm font-medium bg-white/10 px-3 py-1 rounded-full">BaÅŸarÄ±</span>
+                        <span className="text-sm font-medium bg-white/10 px-3 py-1 rounded-full">Baþarý</span>
                     </div>
                     <div>
                         <h3 className="text-4xl font-bold mb-1">%68.4</h3>
-                        <p className="text-white/80 font-medium">Genel Okul OrtalamasÄ±</p>
+                        <p className="text-white/80 font-medium">Genel Okul Ortalamasý</p>
                     </div>
                     <div className="mt-6 flex items-center gap-2 text-sm bg-white/10 w-fit px-3 py-1.5 rounded-xl">
                         <ArrowUpRight className="h-4 w-4" />
-                        <span>Hedefin %2 Ã¼zerindeyiz</span>
+                        <span>Hedefin %2 üzerindeyiz</span>
                     </div>
                 </div>
             </div>
@@ -155,12 +155,12 @@ export default function DashboardPage() {
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 h-[400px]">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">SÄ±nav PerformansÄ±</h3>
-                                <p className="text-sm text-slate-500">Son 5 sÄ±navÄ±n net ortalamalarÄ±</p>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Sýnav Performansý</h3>
+                                <p className="text-sm text-slate-500">Son 5 sýnavýn net ortalamalarý</p>
                             </div>
                             <select className="bg-slate-50 dark:bg-slate-800 border-none text-sm rounded-lg px-3 py-2 outline-none">
-                                <option>Son 5 SÄ±nav</option>
-                                <option>Son 10 SÄ±nav</option>
+                                <option>Son 5 Sýnav</option>
+                                <option>Son 10 Sýnav</option>
                             </select>
                         </div>
                         <ResponsiveContainer width="100%" height={300} minHeight={220}>
@@ -184,11 +184,11 @@ export default function DashboardPage() {
 
                 {/* Side Widgets */}
                 <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">DaÄŸÄ±lÄ±m</h2>
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">Daðýlým</h2>
 
                     {/* Pie Chart Widget */}
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800">
-                        <h3 className="font-bold text-slate-800 dark:text-white mb-2">SÄ±nav TÃ¼rleri</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-white mb-2">Sýnav Türleri</h3>
                         <div className="h-[200px] w-full relative">
                             <ResponsiveContainer width="100%" height={180} minHeight={160}>
                                 <RePieChart>
@@ -226,7 +226,7 @@ export default function DashboardPage() {
                     {/* Quick Action List */}
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-slate-800 dark:text-white">Son SÄ±navlar</h3>
+                            <h3 className="font-bold text-slate-800 dark:text-white">Son Sýnavlar</h3>
                         </div>
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                                         <FileSpreadsheet className="h-5 w-5" />
                                     </div>
                                     <div className="flex-1">
-                                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">Ã–zdebir TG-{i}</h4>
+                                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">Özdebir TG-{i}</h4>
                                         <p className="text-xs text-slate-500">24 Ocak 2026</p>
                                     </div>
                                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">

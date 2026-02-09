@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
@@ -61,7 +61,7 @@ export function ExamCalendarSettings() {
 
         try {
             const response = await fetch(
-                `http://localhost:3001/exams/calendar/settings?schoolId=${schoolId}`,
+                `${API_BASE_URL}/exams/calendar/settings?schoolId=${schoolId}`,
                 {
                     headers: {
                     },
@@ -84,7 +84,7 @@ export function ExamCalendarSettings() {
         setLoading(true);
         try {
             const response = await fetch(
-                `http://localhost:3001/exams/calendar/settings?schoolId=${schoolId}`,
+                `${API_BASE_URL}/exams/calendar/settings?schoolId=${schoolId}`,
                 {
                     method: 'PATCH',
                     headers: {
@@ -96,15 +96,15 @@ export function ExamCalendarSettings() {
 
             if (response.ok) {
                 toast({
-                    title: 'BaÅŸarÄ±lÄ±',
-                    description: 'Ayarlar gÃ¼ncellendi',
+                    title: 'Baþarýlý',
+                    description: 'Ayarlar güncellendi',
                 });
                 setOpen(false);
             }
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Ayarlar gÃ¼ncellenirken bir hata oluÅŸtu',
+                description: 'Ayarlar güncellenirken bir hata oluþtu',
                 variant: 'destructive',
             });
         } finally {
@@ -121,13 +121,13 @@ export function ExamCalendarSettings() {
             </DialogTrigger>
             <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Deneme Takvimi AyarlarÄ±</DialogTitle>
+                    <DialogTitle>Deneme Takvimi Ayarlarý</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6">
-                    {/* Ã–ÄŸrencilere GÃ¶sterilecek Alanlar */}
+                    {/* Öðrencilere Gösterilecek Alanlar */}
                     <div>
-                        <h3 className="font-semibold mb-3">Ã–ÄŸrencilere GÃ¶sterilecek Bilgiler</h3>
+                        <h3 className="font-semibold mb-3">Öðrencilere Gösterilecek Bilgiler</h3>
                         <div className="space-y-3">
                             <div className="flex items-center space-x-2">
                                 <Checkbox
@@ -138,7 +138,7 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showPublisher" className="font-normal">
-                                    YayÄ±n Evi
+                                    Yayýn Evi
                                 </Label>
                             </div>
 
@@ -151,7 +151,7 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showBroughtBy" className="font-normal">
-                                    Getiren KiÅŸi
+                                    Getiren Kiþi
                                 </Label>
                             </div>
 
@@ -164,7 +164,7 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showFee" className="font-normal">
-                                    Ãœcret Bilgisi
+                                    Ücret Bilgisi
                                 </Label>
                             </div>
 
@@ -180,19 +180,19 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <Label htmlFor="showParticipantCounts" className="font-normal">
-                                    KatÄ±lÄ±m SayÄ±larÄ±
+                                    Katýlým Sayýlarý
                                 </Label>
                             </div>
                         </div>
                     </div>
 
-                    {/* Bildirim AyarlarÄ± */}
+                    {/* Bildirim Ayarlarý */}
                     <div>
-                        <h3 className="font-semibold mb-3">Bildirim AyarlarÄ±</h3>
+                        <h3 className="font-semibold mb-3">Bildirim Ayarlarý</h3>
                         <div className="space-y-3">
                             <div>
                                 <Label htmlFor="notifyDaysBefore">
-                                    SÄ±navdan KaÃ§ GÃ¼n Ã–nce Bildir
+                                    Sýnavdan Kaç Gün Önce Bildir
                                 </Label>
                                 <Input
                                     id="notifyDaysBefore"
@@ -208,13 +208,13 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Ã–ÄŸrencilere otomatik mesaj gÃ¶nderilir
+                                    Öðrencilere otomatik mesaj gönderilir
                                 </p>
                             </div>
 
                             <div>
                                 <Label htmlFor="autoPublishDaysAfter">
-                                    SonuÃ§larÄ± KaÃ§ GÃ¼n Sonra YayÄ±nla
+                                    Sonuçlarý Kaç Gün Sonra Yayýnla
                                 </Label>
                                 <Input
                                     id="autoPublishDaysAfter"
@@ -230,18 +230,18 @@ export function ExamCalendarSettings() {
                                     }
                                 />
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    0 = Manuel yayÄ±nlama
+                                    0 = Manuel yayýnlama
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* GÃ¶rÃ¼nÃ¼m AyarlarÄ± */}
+                    {/* Görünüm Ayarlarý */}
                     <div>
-                        <h3 className="font-semibold mb-3">GÃ¶rÃ¼nÃ¼m AyarlarÄ±</h3>
+                        <h3 className="font-semibold mb-3">Görünüm Ayarlarý</h3>
                         <div className="space-y-3">
                             <div>
-                                <Label htmlFor="defaultView">VarsayÄ±lan GÃ¶rÃ¼nÃ¼m</Label>
+                                <Label htmlFor="defaultView">Varsayýlan Görünüm</Label>
                                 <Select
                                     value={settings.defaultView}
                                     onValueChange={(value) =>
@@ -259,7 +259,7 @@ export function ExamCalendarSettings() {
                             </div>
 
                             <div>
-                                <Label htmlFor="academicYearStart">Akademik YÄ±l BaÅŸlangÄ±cÄ±</Label>
+                                <Label htmlFor="academicYearStart">Akademik Yýl Baþlangýcý</Label>
                                 <Select
                                     value={settings.academicYearStart.toString()}
                                     onValueChange={(value) =>
@@ -275,8 +275,8 @@ export function ExamCalendarSettings() {
                                     <SelectContent>
                                         <SelectItem value="6">Haziran</SelectItem>
                                         <SelectItem value="7">Temmuz</SelectItem>
-                                        <SelectItem value="8">AÄŸustos</SelectItem>
-                                        <SelectItem value="9">EylÃ¼l</SelectItem>
+                                        <SelectItem value="8">Aðustos</SelectItem>
+                                        <SelectItem value="9">Eylül</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -285,7 +285,7 @@ export function ExamCalendarSettings() {
 
                     <div className="flex justify-end gap-3 pt-4">
                         <Button variant="outline" onClick={() => setOpen(false)}>
-                            Ä°ptal
+                            Ýptal
                         </Button>
                         <Button onClick={handleSave} disabled={loading}>
                             {loading ? 'Kaydediliyor...' : 'Kaydet'}

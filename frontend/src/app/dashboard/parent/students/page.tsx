@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import {
     Card,
@@ -38,7 +39,7 @@ export default function ParentStudentsPage() {
             const token = localStorage.getItem("token");
 
             try {
-                const res = await fetch("http://localhost:3001/parents/me/students", {
+                const res = await fetch(`${API_BASE_URL}/parents/me/students`, {
                     headers: {
                     },
                 });
@@ -68,7 +69,7 @@ export default function ParentStudentsPage() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-slate-500">Yükleniyor...</p>
+                    <p className="text-slate-500">Y�kleniyor...</p>
                 </div>
             </div>
         );
@@ -80,9 +81,9 @@ export default function ParentStudentsPage() {
                 <Card className="max-w-md">
                     <CardContent className="pt-6 text-center">
                         <UserCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Kayıtlı Öğrenci Bulunamadı</h3>
+                        <h3 className="text-lg font-semibold mb-2">Kay�tl� ��renci Bulunamad�</h3>
                         <p className="text-slate-500 text-sm">
-                            Hesabınıza bağlı öğrenci kaydı bulunmuyor. Lütfen okul yönetimine başvurun.
+                            Hesab�n�za ba�l� ��renci kayd� bulunmuyor. L�tfen okul y�netimine ba�vurun.
                         </p>
                     </CardContent>
                 </Card>
@@ -95,10 +96,10 @@ export default function ParentStudentsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-                        Öğrencilerim
+                        ��rencilerim
                     </h1>
                     <p className="text-slate-500 mt-1">
-                        {parentData.students.length} öğrenci kaydı bulundu
+                        {parentData.students.length} ��renci kayd� bulundu
                     </p>
                 </div>
             </div>
@@ -149,7 +150,7 @@ export default function ParentStudentsPage() {
                                     }}
                                 >
                                     <TrendingUp className="w-4 h-4 mr-2" />
-                                    Sonuçları Görüntüle
+                                    Sonu�lar� G�r�nt�le
                                 </Button>
                             </div>
                         </CardContent>
@@ -165,12 +166,12 @@ export default function ParentStudentsPage() {
                         </div>
                         <div>
                             <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                                Öğrenci Takibi
+                                ��renci Takibi
                             </h3>
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                                Öğrencilerinizin sınav sonuçlarını, gelişim raporlarını ve mesajlarını bu
-                                panelden takip edebilirsiniz. Her öğrenciye tıklayarak detaylı bilgilere
-                                ulaşabilirsiniz.
+                                ��rencilerinizin s�nav sonu�lar�n�, geli�im raporlar�n� ve mesajlar�n� bu
+                                panelden takip edebilirsiniz. Her ��renciye t�klayarak detayl� bilgilere
+                                ula�abilirsiniz.
                             </p>
                         </div>
                     </div>

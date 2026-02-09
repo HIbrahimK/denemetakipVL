@@ -1,6 +1,7 @@
-ï»¿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 import { format, isBefore, isAfter, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, FileText, CheckCircle, XCircle, Trophy, Table as TableIcon, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -77,7 +78,7 @@ export default function StudentExamCalendarPage() {
 
         try {
             const response = await fetch(
-                `http://localhost:3001/exams/calendar/settings?schoolId=${schoolId}`,
+                `${API_BASE_URL}/exams/calendar/settings?schoolId=${schoolId}`,
                 {
                     headers: {
                     },
@@ -119,7 +120,7 @@ export default function StudentExamCalendarPage() {
                 includeArchived: 'false',
             });
 
-            const response = await fetch(`http://localhost:3001/exams/calendar/view?${params}`, {
+            const response = await fetch(`${API_BASE_URL}/exams/calendar/view?${params}`, {
                 headers: {
                 },
             });
@@ -226,7 +227,7 @@ export default function StudentExamCalendarPage() {
 
                         {settings.showPublisher && exam.isPublisherVisible && exam.publisher && (
                             <p className="text-sm text-muted-foreground mb-2">
-                                YayÄ±n: {exam.publisher}
+                                Yayýn: {exam.publisher}
                             </p>
                         )}
 
@@ -250,12 +251,12 @@ export default function StudentExamCalendarPage() {
                                 )}
                                 {exam.districtParticipantCount !== undefined && (
                                     <span className="text-muted-foreground">
-                                        Ä°lÃ§e: {exam.districtParticipantCount}
+                                        Ýlçe: {exam.districtParticipantCount}
                                     </span>
                                 )}
                                 {exam.cityParticipantCount !== undefined && (
                                     <span className="text-muted-foreground">
-                                        Ä°l: {exam.cityParticipantCount}
+                                        Ýl: {exam.cityParticipantCount}
                                     </span>
                                 )}
                                 {exam.generalParticipantCount !== undefined && (
@@ -275,7 +276,7 @@ export default function StudentExamCalendarPage() {
                             size="sm"
                         >
                             <Trophy className="w-4 h-4 mr-2" />
-                            Sonucumu GÃ¶r
+                            Sonucumu Gör
                         </Button>
                     )}
 
@@ -284,11 +285,11 @@ export default function StudentExamCalendarPage() {
                             variant="outline"
                             size="sm"
                             onClick={() =>
-                                window.open(`http://localhost:3001/exams/${exam.id}/answer-key`, '_blank')
+                                window.open(`${API_BASE_URL}/exams/${exam.id}/answer-key`, '_blank')
                             }
                         >
                             <FileText className="w-4 h-4 mr-2" />
-                            Cevap AnahtarÄ±
+                            Cevap Anahtarý
                         </Button>
                     )}
                 </div>
@@ -300,7 +301,7 @@ export default function StudentExamCalendarPage() {
         return (
             <div className="p-6">
                 <Card className="p-8 text-center">
-                    <p className="text-muted-foreground">YÃ¼kleniyor...</p>
+                    <p className="text-muted-foreground">Yükleniyor...</p>
                 </Card>
             </div>
         );
@@ -311,7 +312,7 @@ export default function StudentExamCalendarPage() {
             <div>
                 <h1 className="text-3xl font-bold">Deneme Takvimi</h1>
                 <p className="text-muted-foreground mt-1">
-                    SÄ±nÄ±f: {user?.student?.class?.grade?.name || '-'}
+                    Sýnýf: {user?.student?.class?.grade?.name || '-'}
                 </p>
             </div>
 
@@ -319,19 +320,19 @@ export default function StudentExamCalendarPage() {
                 <TabsList>
                     <TabsTrigger value="table">
                         <TableIcon className="w-4 h-4 mr-2" />
-                        Tablo GÃ¶rÃ¼nÃ¼mÃ¼
+                        Tablo Görünümü
                     </TabsTrigger>
                     <TabsTrigger value="calendar">
                         <CalendarIcon className="w-4 h-4 mr-2" />
-                        Takvim GÃ¶rÃ¼nÃ¼mÃ¼
+                        Takvim Görünümü
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Tablo GÃ¶rÃ¼nÃ¼mÃ¼ */}
+                {/* Tablo Görünümü */}
                 <TabsContent value="table">
                     {allExams.length === 0 ? (
                         <Card className="p-8 text-center">
-                            <p className="text-muted-foreground">HenÃ¼z deneme bulunmuyor.</p>
+                            <p className="text-muted-foreground">Henüz deneme bulunmuyor.</p>
                         </Card>
                     ) : (
                         <Card>
@@ -344,14 +345,14 @@ export default function StudentExamCalendarPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Deneme AdÄ±</TableHead>
-                                            {settings.showPublisher && <TableHead>YayÄ±n</TableHead>}
-                                            <TableHead>TÃ¼r</TableHead>
+                                            <TableHead>Deneme Adý</TableHead>
+                                            {settings.showPublisher && <TableHead>Yayýn</TableHead>}
+                                            <TableHead>Tür</TableHead>
                                             <TableHead>Tarih</TableHead>
                                             <TableHead>Saat</TableHead>
                                             <TableHead>Durum</TableHead>
-                                            {settings.showParticipantCounts && <TableHead>KatÄ±lÄ±m</TableHead>}
-                                            <TableHead className="text-right">Ä°ÅŸlemler</TableHead>
+                                            {settings.showParticipantCounts && <TableHead>Katýlým</TableHead>}
+                                            <TableHead className="text-right">Ýþlemler</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -419,7 +420,7 @@ export default function StudentExamCalendarPage() {
                                                                 )}
                                                                 {exam.districtParticipantCount !== undefined && (
                                                                     <div className="text-muted-foreground">
-                                                                        Ä°lÃ§e: {exam.districtParticipantCount}
+                                                                        Ýlçe: {exam.districtParticipantCount}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -437,7 +438,7 @@ export default function StudentExamCalendarPage() {
                                                                     size="sm"
                                                                 >
                                                                     <Trophy className="w-4 h-4 mr-2" />
-                                                                    Sonucumu GÃ¶r
+                                                                    Sonucumu Gör
                                                                 </Button>
                                                             )}
                                                             {showAnswerKey && (
@@ -446,13 +447,13 @@ export default function StudentExamCalendarPage() {
                                                                     size="sm"
                                                                     onClick={() =>
                                                                         window.open(
-                                                                            `http://localhost:3001/exams/${exam.id}/answer-key`,
+                                                                            `${API_BASE_URL}/exams/${exam.id}/answer-key`,
                                                                             '_blank'
                                                                         )
                                                                     }
                                                                 >
                                                                     <FileText className="w-4 h-4 mr-2" />
-                                                                    Cevap AnahtarÄ±
+                                                                    Cevap Anahtarý
                                                                 </Button>
                                                             )}
                                                         </div>
@@ -467,7 +468,7 @@ export default function StudentExamCalendarPage() {
                     )}
                 </TabsContent>
 
-                {/* Takvim GÃ¶rÃ¼nÃ¼mÃ¼ */}
+                {/* Takvim Görünümü */}
                 <TabsContent value="calendar">
                     <Card className="p-6">
                         {/* Header */}
@@ -477,7 +478,7 @@ export default function StudentExamCalendarPage() {
                             </h2>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={handleToday}>
-                                    BugÃ¼n
+                                    Bugün
                                 </Button>
                                 <Button variant="outline" size="icon" onClick={handlePrevMonth}>
                                     <ChevronLeft className="w-4 h-4" />
@@ -490,12 +491,12 @@ export default function StudentExamCalendarPage() {
 
                         {loading ? (
                             <div className="text-center py-12">
-                                <p className="text-muted-foreground">YÃ¼kleniyor...</p>
+                                <p className="text-muted-foreground">Yükleniyor...</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-7 gap-2">
-                                {/* GÃ¼n baÅŸlÄ±klarÄ± */}
-                                {['Pzt', 'Sal', 'Ã‡ar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
+                                {/* Gün baþlýklarý */}
+                                {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
                                     <div
                                         key={day}
                                         className="text-center font-semibold text-sm text-muted-foreground py-2"
@@ -504,7 +505,7 @@ export default function StudentExamCalendarPage() {
                                     </div>
                                 ))}
 
-                                {/* BoÅŸ gÃ¼nler (Ã¶nceki aydan) */}
+                                {/* Boþ günler (önceki aydan) */}
                                 {(() => {
                                     const monthStart = startOfMonth(currentMonth);
                                     const startDay = monthStart.getDay();
@@ -517,7 +518,7 @@ export default function StudentExamCalendarPage() {
                                     ));
                                 })()}
 
-                                {/* GÃ¼nler */}
+                                {/* Günler */}
                                 {(() => {
                                     const monthStart = startOfMonth(currentMonth);
                                     const monthEnd = endOfMonth(currentMonth);

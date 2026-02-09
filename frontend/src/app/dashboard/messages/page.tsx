@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,7 @@ export default function MessagesPage() {
           {user?.role === "SCHOOL_ADMIN" && (
             <Button variant="outline" onClick={() => router.push("/dashboard/messages/settings")}>
               <Settings className="h-4 w-4 mr-2" />
-              Mesaj AyarlarÄ±
+              Mesaj Ayarlarý
             </Button>
           )}
           {canSendMessages && (
@@ -58,7 +58,7 @@ export default function MessagesPage() {
           {canSendMessages && (
             <TabsTrigger value="sent">
               <Send className="h-4 w-4 mr-2" />
-              GÃ¶nderilmiÅŸ
+              Gönderilmiþ
             </TabsTrigger>
           )}
         </TabsList>
@@ -89,7 +89,7 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
   const fetchSentMessages = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/messages/sent", {
+      const response = await fetch("`${API_BASE_URL}/messages/sent", {
         headers: {
         },
       });
@@ -125,7 +125,7 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
             <div className="flex-1">
               <h3 className="text-lg font-medium">{message.subject}</h3>
               <p className="text-sm text-gray-600 mt-1">
-                {message._count.recipients} alÄ±cÄ± â€¢{" "}
+                {message._count.recipients} alýcý •{" "}
                 {message.recipients.filter((r: any) => r.isRead).length} okudu
               </p>
               <p className="text-sm text-gray-500 mt-1">
@@ -138,7 +138,7 @@ function SentMessages({ userId, schoolId }: { userId: string; schoolId: string }
       {messages.length === 0 && (
         <Card className="p-8 text-center text-gray-500">
           <Send className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>HenÃ¼z mesaj gÃ¶ndermediniz</p>
+          <p>Henüz mesaj göndermediniz</p>
         </Card>
       )}
     </div>

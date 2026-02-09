@@ -1,6 +1,7 @@
-ï»¿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,7 @@ export default function StudyPlanSettingsPage() {
     const user = JSON.parse(userStr);
 
     try {
-      const response = await fetch(`http://localhost:3001/schools/${user.schoolId}`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
         headers: {
         },
       });
@@ -79,7 +80,7 @@ export default function StudyPlanSettingsPage() {
     if (!token) {
       toast({
         title: 'Hata',
-        description: 'Oturum bilgisi bulunamadÄ±. LÃ¼tfen tekrar giriÅŸ yapÄ±n.',
+        description: 'Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.',
         variant: 'destructive',
       });
       setSaving(false);
@@ -95,7 +96,7 @@ export default function StudyPlanSettingsPage() {
     });
 
     try {
-      const response = await fetch(`http://localhost:3001/schools/${school.id}`, {
+      const response = await fetch(`${API_BASE_URL}/schools/${school.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +110,7 @@ export default function StudyPlanSettingsPage() {
       console.log('Response status:', response.status);
 
       if (!response.ok) {
-        let errorMessage = 'Ayarlar kaydedilirken hata oluÅŸtu';
+        let errorMessage = 'Ayarlar kaydedilirken hata oluştu';
         try {
           const error = await response.json();
           errorMessage = error.message || errorMessage;
@@ -119,9 +120,9 @@ export default function StudyPlanSettingsPage() {
         }
         
         if (response.status === 404) {
-          errorMessage = 'Okul bulunamadÄ±. LÃ¼tfen sayfayÄ± yenileyip tekrar deneyin.';
+          errorMessage = 'Okul bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.';
         } else if (response.status === 401 || response.status === 403) {
-          errorMessage = 'Bu iÅŸlem iÃ§in yetkiniz yok. SCHOOL_ADMIN rolÃ¼ gerekli.';
+          errorMessage = 'Bu işlem için yetkiniz yok. SCHOOL_ADMIN rolü gerekli.';
           // Redirect to login if unauthorized
           setTimeout(() => router.push('/login/school'), 2000);
         }
@@ -130,8 +131,8 @@ export default function StudyPlanSettingsPage() {
       }
 
       toast({
-        title: 'BaÅŸarÄ±lÄ±',
-        description: 'Ayarlar baÅŸarÄ±yla kaydedildi',
+        title: 'Başarılı',
+        description: 'Ayarlar başarıyla kaydedildi',
       });
 
       fetchSchoolSettings();
@@ -139,7 +140,7 @@ export default function StudyPlanSettingsPage() {
       console.error('Save settings error:', error);
       toast({
         title: 'Hata',
-        description: error.message || 'Bir hata oluÅŸtu',
+        description: error.message || 'Bir hata oluştu',
         variant: 'destructive',
       });
     } finally {
@@ -165,9 +166,9 @@ export default function StudyPlanSettingsPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Ã‡alÄ±ÅŸma PlanÄ± AyarlarÄ±</h1>
+          <h1 className="text-3xl font-bold">Çalışma Planı Ayarları</h1>
           <p className="text-muted-foreground mt-1">
-            Otomatik temizleme ve diÄŸer ayarlarÄ± yÃ¶netin
+            Otomatik temizleme ve diğer ayarları yönetin
           </p>
         </div>
       </div>
@@ -177,7 +178,7 @@ export default function StudyPlanSettingsPage() {
         <CardHeader>
           <CardTitle>Otomatik Temizleme</CardTitle>
           <CardDescription>
-            Eski aktif planlarÄ± otomatik olarak temizleyin. Åablonlar hiÃ§bir zaman silinmez.
+            Eski aktif planları otomatik olarak temizleyin. Şablonlar hiçbir zaman silinmez.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -186,7 +187,7 @@ export default function StudyPlanSettingsPage() {
             <div className="space-y-0.5">
               <Label htmlFor="autoCleanup">Otomatik Temizleme</Label>
               <p className="text-sm text-muted-foreground">
-                Her ayÄ±n 1. gÃ¼nÃ¼ eski aktif planlarÄ± otomatik olarak temizle
+                Her ayın 1. günü eski aktif planları otomatik olarak temizle
               </p>
             </div>
             <Switch
@@ -199,9 +200,9 @@ export default function StudyPlanSettingsPage() {
           {/* Months to Keep */}
           {autoCleanupEnabled && (
             <div className="space-y-2">
-              <Label htmlFor="monthsToKeep">Saklama SÃ¼resi (Ay)</Label>
+              <Label htmlFor="monthsToKeep">Saklama Süresi (Ay)</Label>
               <p className="text-sm text-muted-foreground mb-2">
-                Bu sÃ¼re kadar eski olmayan aktif planlar korunacak
+                Bu süre kadar eski olmayan aktif planlar korunacak
               </p>
               <Input
                 id="monthsToKeep"
@@ -213,7 +214,7 @@ export default function StudyPlanSettingsPage() {
                 className="max-w-[200px]"
               />
               <p className="text-xs text-muted-foreground">
-                Ã–rnek: {cleanupMonthsToKeep} ay = Son {cleanupMonthsToKeep} ay iÃ§inde oluÅŸturulan planlar korunur
+                Örnek: {cleanupMonthsToKeep} ay = Son {cleanupMonthsToKeep} ay içinde oluşturulan planlar korunur
               </p>
             </div>
           )}
@@ -233,13 +234,13 @@ export default function StudyPlanSettingsPage() {
 
           {/* Info Box */}
           <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-            <p className="text-sm text-blue-900 font-medium mb-2">â„¹ï¸ Ã–nemli Bilgiler</p>
+            <p className="text-sm text-blue-900 font-medium mb-2">?? Önemli Bilgiler</p>
             <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
               <li>Sadece <strong>aktif planlar</strong> (isTemplate=false) temizlenir</li>
-              <li>Åablonlar hiÃ§bir zaman silinmez</li>
-              <li>Temizleme iÅŸlemi her ayÄ±n 1. gÃ¼nÃ¼ gece yarÄ±sÄ± Ã§alÄ±ÅŸÄ±r</li>
-              <li>Temizlenen planlarÄ±n atamalarÄ± ve gÃ¶revleri de silinir</li>
-              <li>Ã–ÄŸrenci performans verileri korunur</li>
+              <li>Şablonlar hiçbir zaman silinmez</li>
+              <li>Temizleme işlemi her ayın 1. günü gece yarısı çalışır</li>
+              <li>Temizlenen planların atamaları ve görevleri de silinir</li>
+              <li>Öğrenci performans verileri korunur</li>
             </ul>
           </div>
 

@@ -29,6 +29,7 @@ import {
   Clock,
   Trash2
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/auth';
 
 interface GroupMember {
   id: string;
@@ -213,7 +214,7 @@ export default function GroupDetailPage() {
         }
 
         // Fetch group details
-        const groupResponse = await fetch(`http://localhost:3001/groups/${groupId}`, {
+        const groupResponse = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
           headers: {
           },
         });
@@ -226,7 +227,7 @@ export default function GroupDetailPage() {
         setGroup(groupData);
 
         // Fetch group stats
-        const statsResponse = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
+        const statsResponse = await fetch(`${API_BASE_URL}/groups/${groupId}/stats`, {
           headers: {
           },
         });
@@ -281,7 +282,7 @@ export default function GroupDetailPage() {
       const schoolId = user?.schoolId;
       
       // Fetch grades from schools API
-      const gradesResponse = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
+      const gradesResponse = await fetch(`${API_BASE_URL}/schools/${schoolId}/grades`, {
       });
       
       if (gradesResponse.ok) {
@@ -307,7 +308,7 @@ export default function GroupDetailPage() {
     }
 
     try {
-      const classesResponse = await fetch(`http://localhost:3001/groups/grades/${gradeId}/classes`, {
+      const classesResponse = await fetch(`${API_BASE_URL}/groups/grades/${gradeId}/classes`, {
       });
 
       if (classesResponse.ok) {
@@ -331,7 +332,7 @@ export default function GroupDetailPage() {
     try {
       setModalLoading(true);
       const studentsResponse = await fetch(
-        `http://localhost:3001/groups/${groupId}/available-students?classId=${classId}`,
+        `${API_BASE_URL}/groups/${groupId}/available-students?classId=${classId}`,
         {
         }
       );
@@ -356,7 +357,7 @@ export default function GroupDetailPage() {
   };
 
   const refreshGroupData = async () => {
-    const groupResponse = await fetch(`http://localhost:3001/groups/${groupId}`, {
+    const groupResponse = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
     });
 
     if (groupResponse.ok) {
@@ -364,7 +365,7 @@ export default function GroupDetailPage() {
       setGroup(groupData);
     }
 
-    const statsResponse = await fetch(`http://localhost:3001/groups/${groupId}/stats`, {
+    const statsResponse = await fetch(`${API_BASE_URL}/groups/${groupId}/stats`, {
     });
 
     if (statsResponse.ok) {
@@ -379,7 +380,7 @@ export default function GroupDetailPage() {
     setAddingMembers(true);
     try {
       // Use bulk endpoint for better performance
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/members/bulk`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/members/bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -437,7 +438,7 @@ export default function GroupDetailPage() {
       const user = userStr ? JSON.parse(userStr) : null;
       const schoolId = user?.schoolId;
 
-      const gradesResponse = await fetch(`http://localhost:3001/schools/${schoolId}/grades`, {
+      const gradesResponse = await fetch(`${API_BASE_URL}/schools/${schoolId}/grades`, {
       });
 
       if (gradesResponse.ok) {
@@ -463,7 +464,7 @@ export default function GroupDetailPage() {
     }
 
     try {
-      const classesResponse = await fetch(`http://localhost:3001/groups/grades/${gradeId}/classes`, {
+      const classesResponse = await fetch(`${API_BASE_URL}/groups/grades/${gradeId}/classes`, {
       });
 
       if (classesResponse.ok) {
@@ -487,7 +488,7 @@ export default function GroupDetailPage() {
     try {
       setTransferLoading(true);
       const studentsResponse = await fetch(
-        `http://localhost:3001/groups/${groupId}/transfer-candidates?classId=${classId}`,
+        `${API_BASE_URL}/groups/${groupId}/transfer-candidates?classId=${classId}`,
         {
         }
       );
@@ -514,7 +515,7 @@ export default function GroupDetailPage() {
     setTransferring(true);
 
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/transfer`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/transfer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -553,7 +554,7 @@ export default function GroupDetailPage() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/groups/${group.id}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${group.id}`, {
         method: 'DELETE',
         headers: {
         },
@@ -696,8 +697,8 @@ export default function GroupDetailPage() {
       }
 
       const url = editingGoalId
-        ? `http://localhost:3001/groups/${groupId}/goals/${editingGoalId}`
-        : `http://localhost:3001/groups/${groupId}/goals`;
+        ? `${API_BASE_URL}/groups/${groupId}/goals/${editingGoalId}`
+        : `${API_BASE_URL}/groups/${groupId}/goals`;
       const method = editingGoalId ? 'PATCH' : 'POST';
 
       const response = await fetch(url, {
@@ -738,7 +739,7 @@ export default function GroupDetailPage() {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/goals/${goalId}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/goals/${goalId}`, {
         method: 'DELETE',
         headers: {
         },
@@ -765,7 +766,7 @@ export default function GroupDetailPage() {
 
   const toggleGoalCompletion = async (goal: GroupGoal) => {
     try {
-      const response = await fetch(`http://localhost:3001/groups/${groupId}/goals/${goal.id}`, {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/goals/${goal.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

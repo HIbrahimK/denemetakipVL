@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -64,7 +64,7 @@ function SearchPageContent() {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://localhost:3001/students/${studentId}`, {
+            const response = await fetch(`${API_BASE_URL}/students/${studentId}`, {
                 headers: {
                 }
             });
@@ -96,7 +96,7 @@ function SearchPageContent() {
 
         try {
             const response = await fetch(
-                `http://localhost:3001/students?schoolId=${schoolId}&className=${encodeURIComponent(classNameParam)}`,
+                `${API_BASE_URL}/students?schoolId=${schoolId}&className=${encodeURIComponent(classNameParam)}`,
                 {
                     headers: {
                     }
@@ -130,7 +130,7 @@ function SearchPageContent() {
 
         try {
             const response = await fetch(
-                `http://localhost:3001/search?q=${encodeURIComponent(searchQuery)}&schoolId=${schoolId}`,
+                `${API_BASE_URL}/search?q=${encodeURIComponent(searchQuery)}&schoolId=${schoolId}`,
                 {
                     headers: {
                     }
@@ -166,7 +166,7 @@ function SearchPageContent() {
                         Geri
                     </Button>
                     <h1 className="text-2xl font-bold">
-                        {type === 'class' ? `${className} SÄ±nÄ±fÄ±` : 'Ã–ÄŸrenci DetayÄ±'}
+                        {type === 'class' ? `${className} Sýnýfý` : 'Öðrenci Detayý'}
                     </h1>
                 </div>
 
@@ -183,11 +183,11 @@ function SearchPageContent() {
                                             {student.firstName} {student.lastName}
                                         </h3>
                                         <p className="text-sm text-slate-500">
-                                            Okul No: {student.studentNumber} â€¢ SÄ±nÄ±f: {student.className}
+                                            Okul No: {student.studentNumber} • Sýnýf: {student.className}
                                         </p>
                                     </div>
                                     <Button onClick={() => router.push(`/dashboard/student/results?studentId=${student.id}`)}>
-                                        DetaylarÄ± GÃ¶r
+                                        Detaylarý Gör
                                     </Button>
                                 </div>
                             </CardContent>
@@ -210,14 +210,14 @@ function SearchPageContent() {
                         Geri
                     </Button>
                     <h1 className="text-2xl font-bold">
-                        &quot;{query}&quot; iÃ§in arama sonuÃ§larÄ±
+                        &quot;{query}&quot; için arama sonuçlarý
                     </h1>
                 </div>
 
                 {!hasResults && (
                     <Card>
                         <CardContent className="pt-6 text-center text-slate-500">
-                            SonuÃ§ bulunamadÄ±. FarklÄ± bir arama terimi deneyin.
+                            Sonuç bulunamadý. Farklý bir arama terimi deneyin.
                         </CardContent>
                     </Card>
                 )}
@@ -228,7 +228,7 @@ function SearchPageContent() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
-                                Ã–ÄŸrenciler ({results.students.length})
+                                Öðrenciler ({results.students.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -243,7 +243,7 @@ function SearchPageContent() {
                                                 {student.firstName} {student.lastName}
                                             </div>
                                             <div className="text-sm text-slate-500">
-                                                {student.studentNumber} â€¢ {student.className}
+                                                {student.studentNumber} • {student.className}
                                             </div>
                                         </div>
                                         <Button
@@ -266,7 +266,7 @@ function SearchPageContent() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <BookOpen className="h-5 w-5" />
-                                SÄ±navlar ({results.exams.length})
+                                Sýnavlar ({results.exams.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -279,7 +279,7 @@ function SearchPageContent() {
                                         <div>
                                             <div className="font-medium">{exam.title}</div>
                                             <div className="text-sm text-slate-500">
-                                                {exam.type} â€¢ {exam.gradeLevel}. SÄ±nÄ±f
+                                                {exam.type} • {exam.gradeLevel}. Sýnýf
                                             </div>
                                         </div>
                                         <Button
@@ -287,7 +287,7 @@ function SearchPageContent() {
                                             size="sm"
                                             onClick={() => router.push(`/dashboard/exams/${exam.id}/results`)}
                                         >
-                                            SonuÃ§lar
+                                            Sonuçlar
                                         </Button>
                                     </div>
                                 ))}
@@ -302,7 +302,7 @@ function SearchPageContent() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Users className="h-5 w-5" />
-                                SÄ±nÄ±flar ({results.classes.length})
+                                Sýnýflar ({results.classes.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -315,7 +315,7 @@ function SearchPageContent() {
                                         <div>
                                             <div className="font-medium">{cls.className}</div>
                                             <div className="text-sm text-slate-500">
-                                                {cls.studentCount} Ã¶ÄŸrenci
+                                                {cls.studentCount} öðrenci
                                             </div>
                                         </div>
                                         <Button
@@ -323,7 +323,7 @@ function SearchPageContent() {
                                             size="sm"
                                             onClick={() => router.push(`/dashboard/search?type=class&name=${encodeURIComponent(cls.className)}`)}
                                         >
-                                            Ã–ÄŸrenciler
+                                            Öðrenciler
                                         </Button>
                                     </div>
                                 ))}
@@ -337,6 +337,8 @@ function SearchPageContent() {
 
     return null;
 }
+
+import { API_BASE_URL } from '@/lib/auth';
 
 export default function SearchPage() {
     return (

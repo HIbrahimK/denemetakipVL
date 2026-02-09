@@ -22,7 +22,7 @@ export function ImportStudentsModal({ open, onOpenChange, onSuccess }: any) {
         formData.append("file", file);
 
         try {
-            const res = await fetch("http://localhost:3001/students/import", {
+            const res = await fetch(`${API_BASE_URL}/students/import`, {
                 method: "POST",
                 headers: {
                 },

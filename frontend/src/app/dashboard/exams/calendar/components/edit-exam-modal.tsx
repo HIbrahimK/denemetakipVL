@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                     : new Date().toISOString(),
             };
 
-            const response = await fetch(`http://localhost:3001/exams/${exam.id}`, {
+            const response = await fetch(`${API_BASE_URL}/exams/${exam.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -100,8 +100,8 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
 
             if (response.ok) {
                 toast({
-                    title: 'BaÅŸarÄ±lÄ±',
-                    description: 'Deneme gÃ¼ncellendi',
+                    title: 'Baþarýlý',
+                    description: 'Deneme güncellendi',
                 });
                 onSuccess();
                 onClose();
@@ -111,7 +111,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
         } catch (error) {
             toast({
                 title: 'Hata',
-                description: 'Deneme gÃ¼ncellenirken bir hata oluÅŸtu',
+                description: 'Deneme güncellenirken bir hata oluþtu',
                 variant: 'destructive',
             });
         } finally {
@@ -125,26 +125,26 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Denemeyi DÃ¼zenle</DialogTitle>
+                    <DialogTitle>Denemeyi Düzenle</DialogTitle>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <Label htmlFor="title">Deneme AdÄ± *</Label>
+                            <Label htmlFor="title">Deneme Adý *</Label>
                             <Input
                                 id="title"
                                 value={formData.title}
                                 onChange={(e) =>
                                     setFormData({ ...formData, title: e.target.value })
                                 }
-                                placeholder="Ã–rn: Matemito A Denemesi"
+                                placeholder="Örn: Matemito A Denemesi"
                                 required
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="type">Deneme TÃ¼rÃ¼ *</Label>
+                            <Label htmlFor="type">Deneme Türü *</Label>
                             <Select
                                 value={formData.type}
                                 onValueChange={(value) =>
@@ -158,13 +158,13 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                     <SelectItem value="TYT">TYT</SelectItem>
                                     <SelectItem value="AYT">AYT</SelectItem>
                                     <SelectItem value="LGS">LGS</SelectItem>
-                                    <SelectItem value="OZEL">Ã–zel</SelectItem>
+                                    <SelectItem value="OZEL">Özel</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div>
-                            <Label htmlFor="gradeLevel">SÄ±nÄ±f Seviyesi *</Label>
+                            <Label htmlFor="gradeLevel">Sýnýf Seviyesi *</Label>
                             <Select
                                 value={formData.gradeLevel.toString()}
                                 onValueChange={(value) =>
@@ -177,7 +177,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 <SelectContent>
                                     {[5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
                                         <SelectItem key={grade} value={grade.toString()}>
-                                            {grade}. SÄ±nÄ±f
+                                            {grade}. Sýnýf
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -185,14 +185,14 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="publisher">YayÄ±n</Label>
+                            <Label htmlFor="publisher">Yayýn</Label>
                             <Input
                                 id="publisher"
                                 value={formData.publisher}
                                 onChange={(e) =>
                                     setFormData({ ...formData, publisher: e.target.value })
                                 }
-                                placeholder="Ã–rn: Matemito"
+                                placeholder="Örn: Matemito"
                             />
                         </div>
 
@@ -209,7 +209,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="scheduledDateTime">SÄ±nav Tarihi</Label>
+                            <Label htmlFor="scheduledDateTime">Sýnav Tarihi</Label>
                             <Input
                                 id="scheduledDateTime"
                                 type="datetime-local"
@@ -239,14 +239,14 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="broughtBy">Getiren KiÅŸi</Label>
+                            <Label htmlFor="broughtBy">Getiren Kiþi</Label>
                             <Input
                                 id="broughtBy"
                                 value={formData.broughtBy}
                                 onChange={(e) =>
                                     setFormData({ ...formData, broughtBy: e.target.value })
                                 }
-                                placeholder="Ã–rn: Ahmet Hoca"
+                                placeholder="Örn: Ahmet Hoca"
                             />
                         </div>
 
@@ -264,7 +264,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                         </div>
 
                         <div>
-                            <Label htmlFor="fee">Ãœcret (â‚º)</Label>
+                            <Label htmlFor="fee">Ücret (?)</Label>
                             <Input
                                 id="fee"
                                 type="number"
@@ -286,7 +286,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 }
                             />
                             <Label htmlFor="isPaid" className="cursor-pointer">
-                                Ã–dendi
+                                Ödendi
                             </Label>
                         </div>
 
@@ -299,7 +299,7 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 }
                             />
                             <Label htmlFor="isPublished" className="cursor-pointer">
-                                YayÄ±nla (Ã–ÄŸrencilere GÃ¶rÃ¼nsÃ¼n)
+                                Yayýnla (Öðrencilere Görünsün)
                             </Label>
                         </div>
 
@@ -315,17 +315,17 @@ export function EditExamModal({ exam, open, onClose, onSuccess }: EditExamModalP
                                 }
                             />
                             <Label htmlFor="isPublisherVisible" className="cursor-pointer">
-                                YayÄ±n AdÄ± GÃ¶rÃ¼nsÃ¼n
+                                Yayýn Adý Görünsün
                             </Label>
                         </div>
                     </div>
 
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={onClose}>
-                            Ä°ptal
+                            Ýptal
                         </Button>
                         <Button type="submit" disabled={loading}>
-                            {loading ? 'GÃ¼ncelleniyor...' : 'GÃ¼ncelle'}
+                            {loading ? 'Güncelleniyor...' : 'Güncelle'}
                         </Button>
                     </div>
                 </form>

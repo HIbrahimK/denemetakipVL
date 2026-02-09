@@ -35,6 +35,8 @@ import {
 import { formatDistanceToNow, format } from "date-fns";
 import { tr } from "date-fns/locale";
 
+import { API_BASE_URL } from "@/lib/auth";
+
 interface MessageDetailProps {
   messageId: string;
   userId: string;
@@ -64,7 +66,7 @@ export default function MessageDetail({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}`,
+        `${API_BASE_URL}/messages/${messageId}`,
         {
           headers: {
           },
@@ -110,7 +112,7 @@ export default function MessageDetail({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}/replies`,
+        `${API_BASE_URL}/messages/${messageId}/replies`,
         {
           method: "POST",
           headers: {
@@ -149,7 +151,7 @@ export default function MessageDetail({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}`,
+        `${API_BASE_URL}/messages/${messageId}`,
         {
           method: "DELETE",
           headers: {
@@ -186,7 +188,7 @@ export default function MessageDetail({
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}/delivery-report`,
+        `${API_BASE_URL}/messages/${messageId}/delivery-report`,
         {
           headers: {
           },

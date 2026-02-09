@@ -1,4 +1,4 @@
-ï»¿import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,9 +16,9 @@ export default function RecommendationsPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">AI Ã–nerileri</h1>
+        <h1 className="text-3xl font-bold">AI Önerileri</h1>
         <p className="text-muted-foreground mt-1">
-          Performans analizine dayalÄ± kiÅŸiselleÅŸtirilmiÅŸ Ã¶neriler
+          Performans analizine dayalı kişiselleştirilmiş öneriler
         </p>
       </div>
 
@@ -26,27 +26,27 @@ export default function RecommendationsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Genel Performans Analizi</CardTitle>
-          <CardDescription>Son 30 gÃ¼nlÃ¼k performansÄ±n Ã¶zeti</CardDescription>
+          <CardDescription>Son 30 günlük performansın özeti</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="h-5 w-5 text-green-600" />
-                <span className="font-medium">GÃ¼Ã§lÃ¼ Yanlar</span>
+                <span className="font-medium">Güçlü Yanlar</span>
               </div>
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  Matematik performansÄ± yÃ¼kseliyor
+                  Matematik performansı yükseliyor
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  DÃ¼zenli Ã§alÄ±ÅŸma alÄ±ÅŸkanlÄ±ÄŸÄ±
+                  Düzenli çalışma alışkanlığı
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  Hedeflere ulaÅŸma oranÄ± yÃ¼ksek
+                  Hedeflere ulaşma oranı yüksek
                 </li>
               </ul>
             </div>
@@ -54,16 +54,16 @@ export default function RecommendationsPage() {
             <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <AlertCircle className="h-5 w-5 text-orange-600" />
-                <span className="font-medium">GeliÅŸim AlanlarÄ±</span>
+                <span className="font-medium">Gelişim Alanları</span>
               </div>
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-orange-600" />
-                  Fizik konularÄ±na odaklan
+                  Fizik konularına odaklan
                 </li>
                 <li className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-orange-600" />
-                  Ã‡alÄ±ÅŸma sÃ¼resini artÄ±r
+                  Çalışma süresini artır
                 </li>
                 <li className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-orange-600" />
@@ -75,20 +75,20 @@ export default function RecommendationsPage() {
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingDown className="h-5 w-5 text-red-600" />
-                <span className="font-medium">Acil MÃ¼dahale</span>
+                <span className="font-medium">Acil Müdahale</span>
               </div>
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <TrendingDown className="h-4 w-4 text-red-600" />
-                  TÃ¼rkÃ§e netleri dÃ¼ÅŸÃ¼yor
+                  Türkçe netleri düşüyor
                 </li>
                 <li className="flex items-center gap-2">
                   <TrendingDown className="h-4 w-4 text-red-600" />
-                  3 gecikmiÅŸ gÃ¶rev var
+                  3 gecikmiş görev var
                 </li>
                 <li className="flex items-center gap-2">
                   <TrendingDown className="h-4 w-4 text-red-600" />
-                  HaftalÄ±k hedef geride
+                  Haftalık hedef geride
                 </li>
               </ul>
             </div>
@@ -96,9 +96,9 @@ export default function RecommendationsPage() {
         </CardContent>
       </Card>
 
-      {/* DetaylÄ± Ã–neriler */}
+      {/* Detaylı Öneriler */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Matematik Ã–nerisi */}
+        {/* Matematik Önerisi */}
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -107,38 +107,38 @@ export default function RecommendationsPage() {
                 <CardTitle>Matematik - Devam Et!</CardTitle>
               </div>
               <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                Ã–ncelik: Orta
+                Öncelik: Orta
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Son 3 denemenin matematik net ortalamasÄ± <strong>%15 arttÄ±</strong>. Bu harika bir geliÅŸim!
-              Momentum kaybetme, fonksiyonlar ve tÃ¼rev konularÄ±na devam et.
+              Son 3 denemenin matematik net ortalaması <strong>%15 arttı</strong>. Bu harika bir gelişim!
+              Momentum kaybetme, fonksiyonlar ve türev konularına devam et.
             </p>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium">Ã–nerilen Kaynaklar:</div>
+              <div className="text-sm font-medium">Önerilen Kaynaklar:</div>
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
-                  Limit YayÄ±nlarÄ± - Fonksiyonlar Test KitabÄ±
+                  Limit Yayınları - Fonksiyonlar Test Kitabı
                 </li>
                 <li className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />
-                  Endemik YayÄ±nlarÄ± - TÃ¼rev Soru BankasÄ±
+                  Endemik Yayınları - Türev Soru Bankası
                 </li>
               </ul>
             </div>
 
             <Button className="w-full" variant="outline">
               <Target className="mr-2 h-4 w-4" />
-              Matematik Ã‡alÄ±ÅŸma PlanÄ± OluÅŸtur
+              Matematik Çalışma Planı Oluştur
             </Button>
           </CardContent>
         </Card>
 
-        {/* Fizik Ã–nerisi */}
+        {/* Fizik Önerisi */}
         <Card className="border-orange-200 bg-orange-50">
           <CardHeader>
             <div className="flex items-start justify-between">
@@ -147,58 +147,58 @@ export default function RecommendationsPage() {
                 <CardTitle>Fizik - Odaklan</CardTitle>
               </div>
               <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300">
-                Ã–ncelik: YÃ¼ksek
+                Öncelik: Yüksek
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Elektrik konusunda netlerini artÄ±rman gerekiyor. Son 2 denemede <strong>elektrik sorularÄ±nda %40 baÅŸarÄ±</strong> gÃ¶sterdin.
-              Bu konuya gÃ¼nde en az 30 dakika ayÄ±r.
+              Elektrik konusunda netlerini artırman gerekiyor. Son 2 denemede <strong>elektrik sorularında %40 başarı</strong> gösterdin.
+              Bu konuya günde en az 30 dakika ayır.
             </p>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium">Ã–nerilen Ã‡alÄ±ÅŸma PlanÄ±:</div>
+              <div className="text-sm font-medium">Önerilen Çalışma Planı:</div>
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  Elektrik akÄ±mÄ± - Temel kavramlar (2 gÃ¼n)
+                  Elektrik akımı - Temel kavramlar (2 gün)
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  DirenÃ§ ve Ohm Kanunu (3 gÃ¼n)
+                  Direnç ve Ohm Kanunu (3 gün)
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  Karma problemler (2 gÃ¼n)
+                  Karma problemler (2 gün)
                 </li>
               </ul>
             </div>
 
             <Button className="w-full">
               <ArrowRight className="mr-2 h-4 w-4" />
-              Fizik Ã–zel Plan BaÅŸlat
+              Fizik Özel Plan Başlat
             </Button>
           </CardContent>
         </Card>
 
-        {/* TÃ¼rkÃ§e Ã–nerisi */}
+        {/* Türkçe Önerisi */}
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <TrendingDown className="h-5 w-5 text-red-600" />
-                <CardTitle>TÃ¼rkÃ§e - Acil Ä°yileÅŸtir</CardTitle>
+                <CardTitle>Türkçe - Acil İyileştir</CardTitle>
               </div>
               <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">
-                Ã–ncelik: Ã‡ok YÃ¼ksek
+                Öncelik: Çok Yüksek
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Son 3 denemede TÃ¼rkÃ§e netlerin <strong>%20 dÃ¼ÅŸtÃ¼</strong>. Ã–zellikle sÃ¶zcÃ¼kte anlam ve paragraf konularÄ±nda
-              zorluk yaÅŸÄ±yorsun. Bu durumu tersine Ã§evirmeliyiz!
+              Son 3 denemede Türkçe netlerin <strong>%20 düştü</strong>. Özellikle sözcükte anlam ve paragraf konularında
+              zorluk yaşıyorsun. Bu durumu tersine çevirmeliyiz!
             </p>
 
             <div className="space-y-2">
@@ -206,11 +206,11 @@ export default function RecommendationsPage() {
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" />
-                  GÃ¼nde 20 paragraf soru Ã§Ã¶z
+                  Günde 20 paragraf soru çöz
                 </li>
                 <li className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" />
-                  SÃ¶zcÃ¼k Ã§alÄ±ÅŸmasÄ±na her gÃ¼n 15 dakika ayÄ±r
+                  Sözcük çalışmasına her gün 15 dakika ayır
                 </li>
                 <li className="flex items-center gap-2">
                   <AlertCircle className="h-4 w-4" />
@@ -221,51 +221,51 @@ export default function RecommendationsPage() {
 
             <Button className="w-full" variant="destructive">
               <ArrowRight className="mr-2 h-4 w-4" />
-              TÃ¼rkÃ§e YoÄŸunlaÅŸtÄ±rÄ±lmÄ±ÅŸ Program BaÅŸlat
+              Türkçe Yoğunlaştırılmış Program Başlat
             </Button>
           </CardContent>
         </Card>
 
-        {/* Genel Ã‡alÄ±ÅŸma Ã–nerisi */}
+        {/* Genel Çalışma Önerisi */}
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5 text-blue-600" />
-                <CardTitle>Ã‡alÄ±ÅŸma AlÄ±ÅŸkanlÄ±klarÄ±</CardTitle>
+                <CardTitle>Çalışma Alışkanlıkları</CardTitle>
               </div>
               <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
-                Ã–ncelik: Orta
+                Öncelik: Orta
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              7 gÃ¼nlÃ¼k Ã§alÄ±ÅŸma serine sahipsin, harika! Ancak gÃ¼nlÃ¼k ortalama Ã§alÄ±ÅŸma sÃ¼ren <strong>2.5 saat</strong>.
-              Hedefinize ulaÅŸmak iÃ§in <strong>4 saate</strong> Ã§Ä±karman gerekiyor.
+              7 günlük çalışma serine sahipsin, harika! Ancak günlük ortalama çalışma süren <strong>2.5 saat</strong>.
+              Hedefinize ulaşmak için <strong>4 saate</strong> çıkarman gerekiyor.
             </p>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium">Ã–neriler:</div>
+              <div className="text-sm font-medium">Öneriler:</div>
               <ul className="space-y-1 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  Pomodoro tekniÄŸi kullan (25 dk Ã§alÄ±ÅŸ, 5 dk mola)
+                  Pomodoro tekniği kullan (25 dk çalış, 5 dk mola)
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  Sabah 07:00-09:00 arasÄ± verimli olduÄŸunu keÅŸfettik
+                  Sabah 07:00-09:00 arası verimli olduğunu keşfettik
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  Grup Ã§alÄ±ÅŸmasÄ± motivasyonunu artÄ±rÄ±yor
+                  Grup çalışması motivasyonunu artırıyor
                 </li>
               </ul>
             </div>
 
             <Button className="w-full" variant="outline">
               <Target className="mr-2 h-4 w-4" />
-              Ã‡alÄ±ÅŸma Rutini Optimize Et
+              Çalışma Rutini Optimize Et
             </Button>
           </CardContent>
         </Card>

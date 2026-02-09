@@ -18,7 +18,7 @@ export function ChangePasswordModal({ student, open, onOpenChange }: any) {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch(`http://localhost:3001/students/${student.id}/change-password`, {
+            const res = await fetch(`${API_BASE_URL}/students/${student.id}/change-password`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -24,7 +24,7 @@ export function AddUserModal({ open, onOpenChange, onSuccess }: any) {
         const token = localStorage.getItem("token");
 
         try {
-            const res = await fetch("http://localhost:3001/users", {
+            const res = await fetch(`${API_BASE_URL}/users`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

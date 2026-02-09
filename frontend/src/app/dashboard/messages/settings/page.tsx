@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
@@ -22,7 +22,7 @@ export default function MessageSettingsPage() {
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/messages/settings", {
+      const response = await fetch("`${API_BASE_URL}/messages/settings", {
         headers: {
         },
       });
@@ -35,7 +35,7 @@ export default function MessageSettingsPage() {
       console.error("Error fetching settings:", error);
       toast({
         title: "Hata",
-        description: "Ayarlar yÃ¼klenemedi",
+        description: "Ayarlar yüklenemedi",
         variant: "destructive",
       });
     } finally {
@@ -48,7 +48,7 @@ export default function MessageSettingsPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:3001/messages/settings", {
+      const response = await fetch("`${API_BASE_URL}/messages/settings", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export default function MessageSettingsPage() {
 
       if (response.ok) {
         toast({
-          title: "BaÅŸarÄ±lÄ±",
+          title: "Başarılı",
           description: "Ayarlar kaydedildi",
         });
       } else {
@@ -72,7 +72,7 @@ export default function MessageSettingsPage() {
       console.error("Error saving settings:", error);
       toast({
         title: "Hata",
-        description: "Bir hata oluÅŸtu",
+        description: "Bir hata oluştu",
         variant: "destructive",
       });
     } finally {
@@ -92,7 +92,7 @@ export default function MessageSettingsPage() {
     <div className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <SettingsIcon className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Mesaj AyarlarÄ±</h1>
+        <h1 className="text-3xl font-bold">Mesaj Ayarları</h1>
       </div>
 
       <Card className="p-6 max-w-2xl">
@@ -111,12 +111,12 @@ export default function MessageSettingsPage() {
               min={100}
             />
             <p className="text-sm text-gray-500 mt-1">
-              Mesaj baÅŸÄ±na izin verilen maksimum karakter sayÄ±sÄ±
+              Mesaj başına izin verilen maksimum karakter sayısı
             </p>
           </div>
 
           <div>
-            <Label>Otomatik Silme SÃ¼resi (GÃ¼n)</Label>
+            <Label>Otomatik Silme Süresi (Gün)</Label>
             <Input
               type="number"
               value={settings.autoDeleteDays}
@@ -129,12 +129,12 @@ export default function MessageSettingsPage() {
               min={1}
             />
             <p className="text-sm text-gray-500 mt-1">
-              Mesajlar bu sÃ¼re sonunda otomatik olarak silinir
+              Mesajlar bu süre sonunda otomatik olarak silinir
             </p>
           </div>
 
           <div>
-            <Label>HatÄ±rlatma SÃ¼resi (GÃ¼n)</Label>
+            <Label>Hatırlatma Süresi (Gün)</Label>
             <Input
               type="number"
               value={settings.reminderAfterDays}
@@ -147,8 +147,8 @@ export default function MessageSettingsPage() {
               min={0}
             />
             <p className="text-sm text-gray-500 mt-1">
-              OkunmamÄ±ÅŸ mesajlar iÃ§in hatÄ±rlatma gÃ¶nderilecek sÃ¼re (0 =
-              devre dÄ±ÅŸÄ±)
+              Okunmamış mesajlar için hatırlatma gönderilecek süre (0 =
+              devre dışı)
             </p>
           </div>
 
@@ -164,7 +164,7 @@ export default function MessageSettingsPage() {
                 }
               />
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Ã–ÄŸretmen toplu mesajlarÄ± iÃ§in yÃ¶netici onayÄ± gerekli
+                Öğretmen toplu mesajları için yönetici onayı gerekli
               </label>
             </div>
 

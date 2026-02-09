@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,7 +56,7 @@ export default function AchievementsPage() {
   const fetchCompleteUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
         },
       });
@@ -84,7 +84,7 @@ export default function AchievementsPage() {
       const token = localStorage.getItem('token');
       
       // Get student's unlocked and available achievements
-      const response = await fetch(`http://localhost:3001/achievements/student/${studentId}`, {
+      const response = await fetch(`${API_BASE_URL}/achievements/student/${studentId}`, {
         headers: {
         },
       });
@@ -149,11 +149,11 @@ export default function AchievementsPage() {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 0) return 'BugÃ¼n';
-    if (diffDays === 1) return 'DÃ¼n';
-    if (diffDays < 7) return `${diffDays} gÃ¼n Ã¶nce`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta Ã¶nce`;
-    return `${Math.floor(diffDays / 30)} ay Ã¶nce`;
+    if (diffDays === 0) return 'Bugün';
+    if (diffDays === 1) return 'Dün';
+    if (diffDays < 7) return `${diffDays} gün önce`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta önce`;
+    return `${Math.floor(diffDays / 30)} ay önce`;
   };
 
   if (loading) {
@@ -169,13 +169,13 @@ export default function AchievementsPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">BaÅŸarÄ±larÄ±m</h1>
+        <h1 className="text-3xl font-bold">Baþarýlarým</h1>
         <p className="text-muted-foreground mt-1">
-          Ã‡alÄ±ÅŸma hedeflerinize ulaÅŸarak rozetler kazanÄ±n
+          Çalýþma hedeflerinize ulaþarak rozetler kazanýn
         </p>
       </div>
 
-      {/* Ä°statistikler */}
+      {/* Ýstatistikler */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -185,14 +185,14 @@ export default function AchievementsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{unlockedAchievements.length}</div>
             <p className="text-xs text-muted-foreground">
-              {totalAchievements} rozetin {unlockedAchievements.length}'si kazanÄ±ldÄ±
+              {totalAchievements} rozetin {unlockedAchievements.length}'si kazanýldý
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tamamlanma OranÄ±</CardTitle>
+            <CardTitle className="text-sm font-medium">Tamamlanma Oraný</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -219,52 +219,52 @@ export default function AchievementsPage() {
             <div className="text-lg font-bold">
               {unlockedAchievements.length > 0 
                 ? unlockedAchievements[0].achievement.name.substring(0, 15) + (unlockedAchievements[0].achievement.name.length > 15 ? '...' : '')
-                : 'HenÃ¼z yok'}
+                : 'Henüz yok'}
             </div>
             <p className="text-xs text-muted-foreground">
               {unlockedAchievements.length > 0 
                 ? getTimeSince(unlockedAchievements[0].unlockedAt)
-                : 'Ä°lk rozetini kazan!'}
+                : 'Ýlk rozetini kazan!'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SÄ±radaki Hedef</CardTitle>
+            <CardTitle className="text-sm font-medium">Sýradaki Hedef</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold">
               {availableAchievements.length > 0 
                 ? `${availableAchievements.length} rozet`
-                : 'TÃ¼mÃ¼ kazanÄ±ldÄ±!'}
+                : 'Tümü kazanýldý!'}
             </div>
             <p className="text-xs text-muted-foreground">
               {availableAchievements.length > 0 
-                ? 'Kilidi aÃ§'
-                : 'Harika iÅŸ!'}
+                ? 'Kilidi aç'
+                : 'Harika iþ!'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* KazanÄ±lan Rozetler */}
+      {/* Kazanýlan Rozetler */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-yellow-500" />
-            KazanÄ±lan Rozetler
+            Kazanýlan Rozetler
           </CardTitle>
-          <CardDescription>BaÅŸarÄ±yla kilidi aÃ§tÄ±ÄŸÄ±nÄ±z muhteÅŸem rozetler</CardDescription>
+          <CardDescription>Baþarýyla kilidi açtýðýnýz muhteþem rozetler</CardDescription>
         </CardHeader>
         <CardContent>
           {unlockedAchievements.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">HenÃ¼z rozet kazanÄ±lmadÄ±</h3>
+              <h3 className="mt-4 text-lg font-semibold">Henüz rozet kazanýlmadý</h3>
               <p className="text-muted-foreground mt-2">
-                Ã‡alÄ±ÅŸmaya baÅŸlayarak ilk rozetinizi kazanÄ±n!
+                Çalýþmaya baþlayarak ilk rozetinizi kazanýn!
               </p>
             </div>
           ) : (
@@ -319,7 +319,7 @@ export default function AchievementsPage() {
         </CardContent>
       </Card>
 
-      {/* KazanÄ±labilir Rozetler - Accordion */}
+      {/* Kazanýlabilir Rozetler - Accordion */}
       {availableAchievements.length > 0 && (
         <Card>
           <CardContent className="pt-6">
@@ -329,9 +329,9 @@ export default function AchievementsPage() {
                   <div className="flex items-center gap-3">
                     <Lock className="h-5 w-5 text-muted-foreground" />
                     <div className="text-left">
-                      <h3 className="text-lg font-semibold">KazanÄ±labilir Rozetler</h3>
+                      <h3 className="text-lg font-semibold">Kazanýlabilir Rozetler</h3>
                       <p className="text-sm text-muted-foreground">
-                        {availableAchievements.length} rozet kilidi aÃ§Ä±lmayÄ± bekliyor
+                        {availableAchievements.length} rozet kilidi açýlmayý bekliyor
                       </p>
                     </div>
                   </div>

@@ -74,7 +74,7 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
   const [sortBy, setSortBy] = useState<'number' | 'average' | 'best' | 'worst'>('number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const API_URL = API_BASE_URL;
 
   const examTypes = [
     { value: 'ALL', label: 'Tüm Sınavlar' },

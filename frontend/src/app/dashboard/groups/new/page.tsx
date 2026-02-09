@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,7 @@ export default function NewGroupPage() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/users?role=TEACHER', {
+      const response = await fetch('\/users?role=TEACHER', {
         headers: {
         },
       });
@@ -79,7 +79,7 @@ export default function NewGroupPage() {
         requestData.teacherId = formData.teacherId;
       }
       
-      const response = await fetch('http://localhost:3001/groups', {
+      const response = await fetch('\/groups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,14 +95,14 @@ export default function NewGroupPage() {
       }
 
       toast({
-        title: 'BaÅŸarÄ±lÄ±',
-        description: 'Mentor grubu oluÅŸturuldu',
+        title: 'Baþarýlý',
+        description: 'Mentor grubu oluþturuldu',
       });
 
       router.push('/dashboard/groups');
     } catch (error) {
       console.error('Error creating group:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Grup oluÅŸturulurken bir hata oluÅŸtu';
+      const errorMessage = error instanceof Error ? error.message : 'Grup oluþturulurken bir hata oluþtu';
       toast({
         title: 'Hata',
         description: errorMessage,
@@ -119,7 +119,7 @@ export default function NewGroupPage() {
         <Link href="/dashboard/groups">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Gruplara DÃ¶n
+            Gruplara Dön
           </Button>
         </Link>
       </div>
@@ -128,19 +128,19 @@ export default function NewGroupPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Yeni Mentor Grubu OluÅŸtur
+            Yeni Mentor Grubu Oluþtur
           </CardTitle>
           <CardDescription>
-            Ã–ÄŸrencileriniz iÃ§in bir mentor grubu oluÅŸturun
+            Öðrencileriniz için bir mentor grubu oluþturun
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Grup AdÄ± *</Label>
+              <Label htmlFor="name">Grup Adý *</Label>
               <Input
                 id="name"
-                placeholder="Ã–rn: 12. SÄ±nÄ±f TYT Grubu"
+                placeholder="Örn: 12. Sýnýf TYT Grubu"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -148,10 +148,10 @@ export default function NewGroupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">AÃ§Ä±klama</Label>
+              <Label htmlFor="description">Açýklama</Label>
               <Textarea
                 id="description"
-                placeholder="Grup hakkÄ±nda kÄ±sa bir aÃ§Ä±klama..."
+                placeholder="Grup hakkýnda kýsa bir açýklama..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
@@ -160,10 +160,10 @@ export default function NewGroupPage() {
 
             {isAdmin && (
               <div className="space-y-2">
-                <Label>Ã–ÄŸretmen (Opsiyonel)</Label>
+                <Label>Öðretmen (Opsiyonel)</Label>
                 <Select value={formData.teacherId} onValueChange={(value) => setFormData({ ...formData, teacherId: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Ã–ÄŸretmen seÃ§iniz..." />
+                    <SelectValue placeholder="Öðretmen seçiniz..." />
                   </SelectTrigger>
                   <SelectContent>
                     {teachers.map((teacher) => (
@@ -177,12 +177,12 @@ export default function NewGroupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="maxStudents">Maksimum Ã–ÄŸrenci</Label>
+              <Label htmlFor="maxStudents">Maksimum Öðrenci</Label>
               <Input
                 id="maxStudents"
                 type="number"
                 min={1}
-                placeholder="Ã–rn: 25"
+                placeholder="Örn: 25"
                 value={formData.maxStudents}
                 onChange={(e) => setFormData({ ...formData, maxStudents: e.target.value })}
               />
@@ -193,14 +193,14 @@ export default function NewGroupPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    OluÅŸturuluyor...
+                    Oluþturuluyor...
                   </>
                 ) : (
-                  'Grubu OluÅŸtur'
+                  'Grubu Oluþtur'
                 )}
               </Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>
-                Ä°ptal
+                Ýptal
               </Button>
             </div>
           </form>

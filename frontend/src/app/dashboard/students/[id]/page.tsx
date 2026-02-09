@@ -39,7 +39,7 @@ export default function StudentDetailPage({ params }: { params: Promise<{ id: st
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://localhost:3001/students/${resolvedParams.id}`, {
+            const response = await fetch(`${API_BASE_URL}/students/${resolvedParams.id}`, {
                 headers: {
                 }
             });

@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             if (!auth) return;
 
             try {
-                const res = await fetch("http://localhost:3001/auth/me");
+                const res = await fetch("`${API_BASE_URL}/auth/me");
 
                 if (res.ok) {
                     const userData = await res.json();
@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             
             // Set up SSE for real-time notifications
             const eventSource = new EventSource(
-                `http://localhost:3001/messages/stream`,
+                `${API_BASE_URL}/messages/stream`,
                 { withCredentials: true }
             );
 
@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const fetchUnreadCount = async () => {
         try {
             const response = await fetch(
-                "http://localhost:3001/messages/unread-count"
+                "`${API_BASE_URL}/messages/unread-count"
             );
 
             if (response.ok) {
@@ -115,11 +115,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Student menu - only results
         if (role === 'STUDENT') {
             return [
-                { name: "SonuÃ§larÄ±m", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "Sonuçlarým", href: "/dashboard/student/results", icon: BarChart2 },
                 { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
-                { name: "Ã‡alÄ±ÅŸma PlanlarÄ±m", href: "/dashboard/my-tasks", icon: BookOpenCheck },
-                { name: "BaÅŸarÄ±larÄ±m", href: "/dashboard/achievements", icon: Award },
-                { name: "Grup Ã‡alÄ±ÅŸmalarÄ±m", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Çalýþma Planlarým", href: "/dashboard/my-tasks", icon: BookOpenCheck },
+                { name: "Baþarýlarým", href: "/dashboard/achievements", icon: Award },
+                { name: "Grup Çalýþmalarým", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -128,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Parent menu - only child results
         if (role === 'PARENT') {
             return [
-                { name: "Ã‡ocuÄŸumun SonuÃ§larÄ±", href: "/dashboard/parent/results", icon: BarChart2 },
+                { name: "Çocuðumun Sonuçlarý", href: "/dashboard/parent/results", icon: BarChart2 },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -137,13 +137,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Teacher menu - limited access (no users, no settings)
         if (role === 'TEACHER') {
             return [
-                { name: "Genel BakÄ±ÅŸ", href: "/dashboard", icon: LayoutDashboard },
-                { name: "SÄ±navlar", href: "/dashboard/exams", icon: BookOpen },
+                { name: "Genel Bakýþ", href: "/dashboard", icon: LayoutDashboard },
+                { name: "Sýnavlar", href: "/dashboard/exams", icon: BookOpen },
                 { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-                { name: "SonuÃ§lar", href: "/dashboard/results", icon: BarChart2 },
-                { name: "Ã–ÄŸrenciler", href: "/dashboard/students", icon: GraduationCap },
-                { name: "Ã‡alÄ±ÅŸma PlanlarÄ±", href: "/dashboard/study-plans", icon: BookOpenCheck },
-                { name: "Mentor GruplarÄ±", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Sonuçlar", href: "/dashboard/results", icon: BarChart2 },
+                { name: "Öðrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Çalýþma Planlarý", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Mentor Gruplarý", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
@@ -152,17 +152,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         // Admin menu - full access
         return [
-            { name: "Genel BakÄ±ÅŸ", href: "/dashboard", icon: LayoutDashboard },
-            { name: "SÄ±navlar", href: "/dashboard/exams", icon: BookOpen },
+            { name: "Genel Bakýþ", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Sýnavlar", href: "/dashboard/exams", icon: BookOpen },
             { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-            { name: "Ã–ÄŸrenciler", href: "/dashboard/students", icon: GraduationCap },
-            { name: "SÄ±nÄ±flar", href: "/dashboard/classes", icon: School },
-            { name: "Ã‡alÄ±ÅŸma PlanlarÄ±", href: "/dashboard/study-plans", icon: BookOpenCheck },
-            { name: "Mentor GruplarÄ±", href: "/dashboard/groups", icon: UsersRound },
-            { name: "BaÅŸarÄ±lar", href: "/dashboard/admin/achievements", icon: Award },
+            { name: "Öðrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "Sýnýflar", href: "/dashboard/classes", icon: School },
+            { name: "Çalýþma Planlarý", href: "/dashboard/study-plans", icon: BookOpenCheck },
+            { name: "Mentor Gruplarý", href: "/dashboard/groups", icon: UsersRound },
+            { name: "Baþarýlar", href: "/dashboard/admin/achievements", icon: Award },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
-            { name: "KullanÄ±cÄ±lar", href: "/dashboard/users", icon: Users },
+            { name: "Kullanýcýlar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
     };
@@ -172,16 +172,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const getRoleLabel = () => {
         if (!user) return "";
         
-        // Ã–ÄŸretmen iÃ§in branÅŸ kontrolÃ¼
+        // Öðretmen için branþ kontrolü
         if (user.role === "TEACHER") {
-            return user.branch ? `${user.branch} Ã–ÄŸretmeni` : "Ã–ÄŸretmen";
+            return user.branch ? `${user.branch} Öðretmeni` : "Öðretmen";
         }
         
         const roleLabels: Record<string, string> = {
-            SCHOOL_ADMIN: "Okul YÃ¶neticisi",
-            STUDENT: "Ã–ÄŸrenci",
+            SCHOOL_ADMIN: "Okul Yöneticisi",
+            STUDENT: "Öðrenci",
             PARENT: "Veli",
-            SUPER_ADMIN: "SÃ¼per Admin"
+            SUPER_ADMIN: "Süper Admin"
         };
         return roleLabels[user.role] || user.role;
     };
@@ -290,7 +290,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex items-center gap-3 px-4 py-3 w-full rounded-2xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="h-5 w-5" />
-                        Ã‡Ä±kÄ±ÅŸ Yap
+                        Çýkýþ Yap
                     </button>
                 </div>
             </aside>

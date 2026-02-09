@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -70,7 +70,7 @@ export default function AdminSubjectsPage() {
   const fetchSubjects = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3001/subjects', {
+      const res = await fetch('\/subjects', {
       });
 
       if (res.ok) {
@@ -79,7 +79,7 @@ export default function AdminSubjectsPage() {
       } else {
         toast({
           title: 'Hata',
-          description: 'Dersler yÃ¼klenirken bir hata oluÅŸtu',
+          description: 'Dersler yüklenirken bir hata oluþtu',
           variant: 'destructive',
         });
       }
@@ -123,7 +123,7 @@ export default function AdminSubjectsPage() {
     if (!formData.name) {
       toast({
         title: 'Hata',
-        description: 'Ders adÄ± zorunludur',
+        description: 'Ders adý zorunludur',
         variant: 'destructive',
       });
       return;
@@ -134,8 +134,8 @@ export default function AdminSubjectsPage() {
 
     try {
       const url = editingSubject 
-        ? `http://localhost:3001/subjects/${editingSubject.id}`
-        : 'http://localhost:3001/subjects';
+        ? `${API_BASE_URL}/subjects/${editingSubject.id}`
+        : '\/subjects';
       
       const method = editingSubject ? 'PATCH' : 'POST';
 
@@ -149,14 +149,14 @@ export default function AdminSubjectsPage() {
 
       if (res.ok) {
         toast({
-          title: 'BaÅŸarÄ±lÄ±',
-          description: editingSubject ? 'Ders gÃ¼ncellendi' : 'Ders oluÅŸturuldu',
+          title: 'Baþarýlý',
+          description: editingSubject ? 'Ders güncellendi' : 'Ders oluþturuldu',
         });
         setModalOpen(false);
         fetchSubjects();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata oluÅŸtu');
+        throw new Error(error.message || 'Bir hata oluþtu');
       }
     } catch (error: any) {
       toast({
@@ -176,20 +176,20 @@ export default function AdminSubjectsPage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`http://localhost:3001/subjects/${subjectToDelete.id}`, {
+      const res = await fetch(`${API_BASE_URL}/subjects/${subjectToDelete.id}`, {
         method: 'DELETE',
       });
 
       if (res.ok) {
         toast({
-          title: 'BaÅŸarÄ±lÄ±',
+          title: 'Baþarýlý',
           description: 'Ders silindi',
         });
         setDeleteModalOpen(false);
         fetchSubjects();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata oluÅŸtu');
+        throw new Error(error.message || 'Bir hata oluþtu');
       }
     } catch (error: any) {
       toast({
@@ -243,9 +243,9 @@ export default function AdminSubjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Ders YÃ¶netimi</h1>
+          <h1 className="text-3xl font-bold">Ders Yönetimi</h1>
           <p className="text-muted-foreground mt-1">
-            TYT, AYT ve LGS derslerini yÃ¶netin
+            TYT, AYT ve LGS derslerini yönetin
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -271,10 +271,10 @@ export default function AdminSubjectsPage() {
             </div>
             <Select value={examTypeFilter} onValueChange={setExamTypeFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="SÄ±nav Tipi" />
+                <SelectValue placeholder="Sýnav Tipi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">TÃ¼mÃ¼</SelectItem>
+                <SelectItem value="ALL">Tümü</SelectItem>
                 <SelectItem value="TYT">TYT</SelectItem>
                 <SelectItem value="AYT">AYT</SelectItem>
                 <SelectItem value="LGS">LGS</SelectItem>
@@ -306,13 +306,13 @@ export default function AdminSubjectsPage() {
                   <Badge variant="outline">{examSubjects.length} ders</Badge>
                 </div>
                 <CardDescription>
-                  {examType.grades.join(', ')}. sÄ±nÄ±flar
+                  {examType.grades.join(', ')}. sýnýflar
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {examSubjects.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Bu sÄ±nav tipi iÃ§in ders bulunmuyor
+                    Bu sýnav tipi için ders bulunmuyor
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -333,7 +333,7 @@ export default function AdminSubjectsPage() {
                                 <div className="flex gap-1">
                                   {subject.gradeLevels.map(grade => (
                                     <Badge key={grade} variant="secondary" className="text-xs">
-                                      {grade}. SÄ±nÄ±f
+                                      {grade}. Sýnýf
                                     </Badge>
                                   ))}
                                 </div>
@@ -384,7 +384,7 @@ export default function AdminSubjectsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Ders bulunamadÄ±</h3>
+              <h3 className="mt-4 text-lg font-semibold">Ders bulunamadý</h3>
               <p className="text-muted-foreground mt-2">
                 Arama kriterlerinize uygun ders bulunmuyor
               </p>
@@ -398,22 +398,22 @@ export default function AdminSubjectsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingSubject ? 'Ders DÃ¼zenle' : 'Yeni Ders'}
+              {editingSubject ? 'Ders Düzenle' : 'Yeni Ders'}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Ders AdÄ± *</Label>
+              <Label>Ders Adý *</Label>
               <Input
-                placeholder="Ã–rn: Matematik"
+                placeholder="Örn: Matematik"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>SÄ±nav Tipi *</Label>
+              <Label>Sýnav Tipi *</Label>
               <Select 
                 value={formData.examType} 
                 onValueChange={(value: 'TYT' | 'AYT' | 'LGS') => {
@@ -437,7 +437,7 @@ export default function AdminSubjectsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>SÄ±nÄ±f Seviyeleri *</Label>
+              <Label>Sýnýf Seviyeleri *</Label>
               <div className="flex flex-wrap gap-3">
                 {getAvailableGrades().map(grade => (
                   <div key={grade} className="flex items-center space-x-2">
@@ -447,7 +447,7 @@ export default function AdminSubjectsPage() {
                       onCheckedChange={() => toggleGrade(grade)}
                     />
                     <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
-                      {grade}. SÄ±nÄ±f
+                      {grade}. Sýnýf
                     </Label>
                   </div>
                 ))}
@@ -455,7 +455,7 @@ export default function AdminSubjectsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>SÄ±ralama</Label>
+              <Label>Sýralama</Label>
               <Input
                 type="number"
                 min={0}
@@ -478,7 +478,7 @@ export default function AdminSubjectsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Ä°ptal
+              Ýptal
             </Button>
             <Button onClick={handleSubmit} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Kaydet'}
@@ -496,18 +496,18 @@ export default function AdminSubjectsPage() {
           
           <div className="py-4">
             <p>
-              <strong>{subjectToDelete?.name}</strong> dersini silmek istediÄŸinize emin misiniz?
+              <strong>{subjectToDelete?.name}</strong> dersini silmek istediðinize emin misiniz?
             </p>
             {subjectToDelete?._count?.topics && subjectToDelete._count.topics > 0 && (
               <p className="text-sm text-destructive mt-2">
-                Bu dersin {subjectToDelete._count.topics} konusu var. Silmek konularÄ± da silecektir.
+                Bu dersin {subjectToDelete._count.topics} konusu var. Silmek konularý da silecektir.
               </p>
             )}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-              Ä°ptal
+              Ýptal
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sil'}

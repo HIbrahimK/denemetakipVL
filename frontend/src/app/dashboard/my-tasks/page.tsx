@@ -1,6 +1,7 @@
-ï»¿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, BookOpen, ChevronRight, Loader2, CheckCircle2, Clock, Target } from 'lucide-react';
@@ -65,15 +66,15 @@ export default function MyTasksPage() {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch('http://localhost:3001/study/plans', {
+      const response = await fetch('\/study/plans', {
         headers: {
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Ã–ÄŸrenci iÃ§in: atanan planlarÄ± gÃ¶ster (isTemplate true olsa bile)
-        // Backend zaten sadece Ã¶ÄŸrenciye atanan planlarÄ± dÃ¶ndÃ¼rÃ¼yor
+        // Öðrenci için: atanan planlarý göster (isTemplate true olsa bile)
+        // Backend zaten sadece öðrenciye atanan planlarý döndürüyor
         const assignedPlans = data.filter((p: StudyPlan) => 
           p.status === 'ACTIVE' || p.status === 'ASSIGNED'
         );
@@ -81,7 +82,7 @@ export default function MyTasksPage() {
         // Fetch tasks for each plan to calculate completion stats
         const plansWithStats = await Promise.all(
           assignedPlans.map(async (plan: StudyPlan) => {
-            const tasksResponse = await fetch(`http://localhost:3001/study/tasks?planId=${plan.id}`, {
+            const tasksResponse = await fetch(`${API_BASE_URL}/study/tasks?planId=${plan.id}`, {
               headers: {
               },
             });
@@ -129,7 +130,7 @@ export default function MyTasksPage() {
   };
 
   const getDayName = (index: number) => {
-    const days = ['Pzt', 'Sal', 'Ã‡ar', 'Per', 'Cum', 'Cmt', 'Paz'];
+    const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
     return days[index];
   };
 
@@ -146,9 +147,9 @@ export default function MyTasksPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Ã‡alÄ±ÅŸma GÃ¶revlerim</h1>
+          <h1 className="text-3xl font-bold">Çalýþma Görevlerim</h1>
           <p className="text-muted-foreground mt-1">
-            Size atanan Ã§alÄ±ÅŸma planlarÄ±nÄ± gÃ¶rÃ¼ntÃ¼leyin ve gÃ¶revlerinizi tamamlayÄ±n
+            Size atanan çalýþma planlarýný görüntüleyin ve görevlerinizi tamamlayýn
           </p>
         </div>
       </div>
@@ -159,7 +160,7 @@ export default function MyTasksPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground text-center">
-              HenÃ¼z size atanmÄ±ÅŸ bir Ã§alÄ±ÅŸma planÄ± bulunmuyor.
+              Henüz size atanmýþ bir çalýþma planý bulunmuyor.
             </p>
           </CardContent>
         </Card>
@@ -181,7 +182,7 @@ export default function MyTasksPage() {
                   </div>
                   <CardTitle className="text-lg mt-2">{plan.name}</CardTitle>
                   <CardDescription className="line-clamp-2">
-                    {plan.description || 'AÃ§Ä±klama yok'}
+                    {plan.description || 'Açýklama yok'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -189,20 +190,20 @@ export default function MyTasksPage() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Target className="h-4 w-4" />
                     <span>
-                      Ã–ÄŸretmen: {plan.teacher?.firstName} {plan.teacher?.lastName}
+                      Öðretmen: {plan.teacher?.firstName} {plan.teacher?.lastName}
                     </span>
                   </div>
                   
                   {/* Week Start Date */}
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
-                    <span>Hafta BaÅŸlangÄ±cÄ±: {formatDate(plan.weekStartDate)}</span>
+                    <span>Hafta Baþlangýcý: {formatDate(plan.weekStartDate)}</span>
                   </div>
                   
                   {/* Completion Progress */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Tamamlanan GÃ¶revler</span>
+                      <span className="text-muted-foreground">Tamamlanan Görevler</span>
                       <span className="font-medium">
                         {stats.completed} / {stats.total}
                       </span>
@@ -221,12 +222,12 @@ export default function MyTasksPage() {
                       {stats.percentage === 100 ? (
                         <>
                           <CheckCircle2 className="mr-2 h-4 w-4" />
-                          PlanÄ± GÃ¶rÃ¼ntÃ¼le
+                          Planý Görüntüle
                         </>
                       ) : (
                         <>
                           <Clock className="mr-2 h-4 w-4" />
-                          GÃ¶revleri GÃ¶r
+                          Görevleri Gör
                         </>
                       )}
                       <ChevronRight className="ml-auto h-4 w-4" />

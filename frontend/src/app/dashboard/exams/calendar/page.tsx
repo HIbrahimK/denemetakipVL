@@ -1,4 +1,4 @@
-ï»¿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar as CalendarIcon, List, Archive, Filter, Download } from 'lucide-react';
@@ -26,7 +26,7 @@ export default function ExamCalendarPage() {
     const [includeArchived, setIncludeArchived] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Akademik yÄ±l hesaplama (Haziran baÅŸlangÄ±Ã§)
+    // Akademik yýl hesaplama (Haziran baþlangýç)
     const currentMonth = new Date().getMonth() + 1;
     const academicYear = currentMonth >= 6 ? selectedYear : selectedYear - 1;
     const academicYearLabel = `${academicYear}-${academicYear + 1}`;
@@ -42,10 +42,10 @@ export default function ExamCalendarPage() {
                 <div>
                     <h1 className="text-3xl font-bold">Deneme Takvimi</h1>
                     <p className="text-muted-foreground mt-1">
-                        Akademik YÄ±l: {academicYearLabel}
+                        Akademik Yýl: {academicYearLabel}
                     </p>
                     <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                        ðŸ’¡ "SÄ±navlar" sayfasÄ±ndan eklenen tÃ¼m sÄ±navlar ve cevap anahtarlarÄ± burada gÃ¶rÃ¼nÃ¼r
+                        ?? "Sýnavlar" sayfasýndan eklenen tüm sýnavlar ve cevap anahtarlarý burada görünür
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -78,26 +78,26 @@ export default function ExamCalendarPage() {
 
                     <Select value={selectedType} onValueChange={setSelectedType}>
                         <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Deneme TÃ¼rÃ¼" />
+                            <SelectValue placeholder="Deneme Türü" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="ALL">TÃ¼m TÃ¼rler</SelectItem>
+                            <SelectItem value="ALL">Tüm Türler</SelectItem>
                             <SelectItem value="LGS">LGS</SelectItem>
                             <SelectItem value="TYT">TYT</SelectItem>
                             <SelectItem value="AYT">AYT</SelectItem>
-                            <SelectItem value="OZEL">Ã–zel</SelectItem>
+                            <SelectItem value="OZEL">Özel</SelectItem>
                         </SelectContent>
                     </Select>
 
                     <Select value={selectedGrade} onValueChange={setSelectedGrade}>
                         <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="SÄ±nÄ±f Seviyesi" />
+                            <SelectValue placeholder="Sýnýf Seviyesi" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="ALL">TÃ¼m SÄ±nÄ±flar</SelectItem>
+                            <SelectItem value="ALL">Tüm Sýnýflar</SelectItem>
                             {[5, 6, 7, 8, 9, 10, 11, 12].map((grade) => (
                                 <SelectItem key={grade} value={grade.toString()}>
-                                    {grade}. SÄ±nÄ±f
+                                    {grade}. Sýnýf
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -109,7 +109,7 @@ export default function ExamCalendarPage() {
                         onClick={() => setIncludeArchived(!includeArchived)}
                     >
                         <Archive className="w-4 h-4 mr-2" />
-                        ArÅŸiv
+                        Arþiv
                     </Button>
 
                     <div className="ml-auto">
@@ -126,11 +126,11 @@ export default function ExamCalendarPage() {
                 <TabsList>
                     <TabsTrigger value="table">
                         <List className="w-4 h-4 mr-2" />
-                        Tablo GÃ¶rÃ¼nÃ¼mÃ¼
+                        Tablo Görünümü
                     </TabsTrigger>
                     <TabsTrigger value="calendar">
                         <CalendarIcon className="w-4 h-4 mr-2" />
-                        Takvim GÃ¶rÃ¼nÃ¼mÃ¼
+                        Takvim Görünümü
                     </TabsTrigger>
                 </TabsList>
 

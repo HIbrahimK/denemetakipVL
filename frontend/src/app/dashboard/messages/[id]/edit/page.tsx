@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
+import { API_BASE_URL } from '@/lib/auth';
 
 export default function EditMessagePage() {
   const params = useParams();
@@ -28,7 +29,7 @@ export default function EditMessagePage() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}`,
+        `${API_BASE_URL}/messages/${messageId}`,
         {
           headers: {
           },
@@ -73,7 +74,7 @@ export default function EditMessagePage() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:3001/messages/${messageId}`,
+        `${API_BASE_URL}/messages/${messageId}`,
         {
           method: "PATCH",
           headers: {
