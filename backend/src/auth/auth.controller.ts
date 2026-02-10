@@ -71,6 +71,11 @@ export class AuthController {
         return this.authService.updateAvatar(req.user.id, updateAvatarDto.avatarSeed);
     }
 
+    @Post('test-email')
+    async testEmail(@Body() body: { email: string }) {
+        return this.authService.testEmailService(body.email);
+    }
+
     @Post('logout')
     async logout(@Res({ passthrough: true }) res: Response) {
         res.clearCookie('token', { path: '/' });
