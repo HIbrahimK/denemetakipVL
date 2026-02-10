@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, FileSpreadsheet, FileText, Loader2, BarChart3, TrendingUp, Users, LayoutDashboard, Award, Printer, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { FileSpreadsheet, FileText, Loader2, BarChart3, TrendingUp, Users, LayoutDashboard, Award, Printer, X } from 'lucide-react';
 import RankingMatrixReport from '@/components/reports/ranking-matrix-report';
 import {
   BarChart,
@@ -74,7 +73,6 @@ interface SubjectReport {
 }
 
 export default function ReportsPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [examType, setExamType] = useState<string>('TYT');
@@ -130,6 +128,8 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -156,6 +156,8 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -195,6 +197,7 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -263,6 +266,7 @@ export default function ReportsPage() {
 
       const response = await fetch(url, {
         headers: {
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -335,10 +339,10 @@ export default function ReportsPage() {
   const examChartData = useMemo(() => {
     if (!examReports.length) return [];
 
-    return examReports.map(report => {
-      const totalNet = report.lessonAverages.reduce((acc, lesson) => acc + lesson.averageNet, 0);
+    return examReports.map((report: ExamReport) => {
+      const totalNet = report.lessonAverages.reduce((acc: number, lesson: LessonAverage) => acc + lesson.averageNet, 0);
       const avgScore = report.scoreAverages.length > 0
-        ? report.scoreAverages.reduce((acc, score) => acc + score.averageScore, 0) / report.scoreAverages.length
+        ? report.scoreAverages.reduce((acc: number, score: ScoreAverage) => acc + score.averageScore, 0) / report.scoreAverages.length
         : 0;
 
       return {
@@ -356,7 +360,7 @@ export default function ReportsPage() {
   const subjectChartData = useMemo(() => {
     if (!subjectReport) return [];
 
-    return subjectReport.exams.map(exam => ({
+    return subjectReport.exams.map((exam: SubjectExam) => ({
       name: exam.examTitle.length > 20 ? exam.examTitle.substring(0, 20) + '...' : exam.examTitle,
       fullName: exam.examTitle,
       net: Number(exam.averageNet.toFixed(2)),
@@ -451,7 +455,7 @@ export default function ReportsPage() {
                     <SelectValue placeholder="Seçiniz" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableLessons.map((lesson) => (
+                    {availableLessons.map((lesson: string) => (
                       <SelectItem key={lesson} value={lesson}>
                         {lesson}
                       </SelectItem>
