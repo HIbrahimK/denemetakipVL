@@ -291,7 +291,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex items-center gap-3 px-4 py-3 w-full rounded-2xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="h-5 w-5" />
-                        k Yap
+                        Çıkış Yap
                     </button>
                 </div>
             </aside>
