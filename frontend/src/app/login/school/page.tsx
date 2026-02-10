@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,18 @@ export default function SchoolLoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Load saved email on mount
+    useEffect(() => {
+        const savedEmail = localStorage.getItem("rememberedEmail");
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,11 +35,11 @@ export default function SchoolLoginPage() {
         setError("");
 
         try {
-            console.log('Login attempt:', { email });
+            console.log('Login attempt:', { email, rememberMe });
             const res = await fetch(`${API_BASE_URL}/auth/login-school`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({ email, password, rememberMe }),
             });
 
             console.log('Response status:', res.status);
@@ -38,6 +48,13 @@ export default function SchoolLoginPage() {
 
             if (!res.ok) {
                 throw new Error(data.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+            }
+
+            // Save or remove email based on rememberMe
+            if (rememberMe) {
+                localStorage.setItem("rememberedEmail", email);
+            } else {
+                localStorage.removeItem("rememberedEmail");
             }
 
             setUserData(data.user);
@@ -156,12 +173,17 @@ export default function SchoolLoginPage() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                            <Checkbox id="remember" className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600" />
+                            <Checkbox 
+                                id="remember" 
+                                checked={rememberMe}
+                                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                                className="rounded-md border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600" 
+                            />
                             <label
                                 htmlFor="remember"
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500 dark:text-slate-400"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-500 dark:text-slate-400 cursor-pointer"
                             >
-                                Beni hatırla
+                                Beni hatırla (30 gün)
                             </label>
                         </div>
 
