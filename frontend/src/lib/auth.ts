@@ -18,7 +18,10 @@ export function setUserData(user: any) {
  */
 export function clearUserData() {
     if (typeof window !== 'undefined') {
-        fetch(`${API_BASE_URL}/auth/logout`, { method: 'POST' });
+        fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+        });
     }
 
     localStorage.removeItem('user');

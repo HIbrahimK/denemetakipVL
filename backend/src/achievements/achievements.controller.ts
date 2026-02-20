@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -13,17 +14,35 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AchievementsService } from './achievements.service';
 import { AchievementCategory, ExamType } from '@prisma/client';
+import { AchievementSeedBundle } from './achievement-seed-bundles';
 
 @Controller('achievements')
 @UseGuards(JwtAuthGuard)
 export class AchievementsController {
   constructor(private readonly achievementsService: AchievementsService) {}
 
+  private parseBundle(bundle: string): AchievementSeedBundle {
+    const allowed: AchievementSeedBundle[] = ['LGS', 'TYT', 'AYT', 'CONSISTENCY'];
+    if (!allowed.includes(bundle as AchievementSeedBundle)) {
+      throw new BadRequestException('Invalid bundle name');
+    }
+    return bundle as AchievementSeedBundle;
+  }
+
   @Get()
-  async findAll(@Request() req, @Query('includeInactive') includeInactive?: string) {
+  async findAll(
+    @Request() req,
+    @Query('includeInactive') includeInactive?: string,
+    @Query('examType') examType?: string,
+  ) {
+    const normalizedExamType = Object.values(ExamType).includes(examType as ExamType)
+      ? (examType as ExamType)
+      : undefined;
+
     return this.achievementsService.findAll(
       req.user.schoolId,
       includeInactive === 'true',
+      normalizedExamType,
     );
   }
 
@@ -92,7 +111,23 @@ export class AchievementsController {
 
   @Post('seed')
   async seedDefault(@Request() req) {
-    return this.achievementsService.seedDefaultAchievements(req.user.schoolId);
+    return this.achievementsService.seedAllBundles(req.user.schoolId);
+  }
+
+  @Post('seed-bundle')
+  async seedBundle(@Body() data: { bundle: string }, @Request() req) {
+    return this.achievementsService.seedAchievementBundle(
+      req.user.schoolId,
+      this.parseBundle(data.bundle),
+    );
+  }
+
+  @Delete('seed-bundle/:bundle')
+  async deleteBundle(@Param('bundle') bundle: string, @Request() req) {
+    return this.achievementsService.deleteAchievementBundle(
+      req.user.schoolId,
+      this.parseBundle(bundle),
+    );
   }
 
   @Post('check-unlock')

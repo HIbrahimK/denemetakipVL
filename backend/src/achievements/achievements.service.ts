@@ -1,23 +1,54 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AchievementCategory, ExamType } from '@prisma/client';
+import {
+  AchievementSeedBundle,
+  ALL_ACHIEVEMENT_BUNDLES,
+  getBundleAchievements,
+  getAchievementsForBundles,
+} from './achievement-seed-bundles';
 
 @Injectable()
 export class AchievementsService {
   constructor(private prisma: PrismaService) {}
 
   // Get all achievements for a school
-  async findAll(schoolId: string, includeInactive = false) {
-    return this.prisma.achievement.findMany({
+  async findAll(schoolId: string, includeInactive = false, examType?: ExamType) {
+    const achievements = await this.prisma.achievement.findMany({
       where: {
         schoolId,
         ...(includeInactive ? {} : { isActive: true }),
+        ...(examType ? { examType } : {}),
       },
       orderBy: [
         { category: 'asc' },
         { points: 'desc' },
       ],
     });
+
+    if (achievements.length === 0) {
+      return [];
+    }
+
+    const winnerCounts = await this.prisma.studentAchievement.groupBy({
+      by: ['achievementId'],
+      where: {
+        unlockedAt: { not: null },
+        achievementId: { in: achievements.map((achievement) => achievement.id) },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const winnerCountMap = new Map(
+      winnerCounts.map((entry) => [entry.achievementId, entry._count._all]),
+    );
+
+    return achievements.map((achievement) => ({
+      ...achievement,
+      winnerCount: winnerCountMap.get(achievement.id) || 0,
+    }));
   }
 
   // Get student's achievements
@@ -213,6 +244,107 @@ export class AchievementsService {
       where: { id },
       data: { isActive: !achievement.isActive },
     });
+  }
+
+  private async upsertSeedAchievements(
+    schoolId: string,
+    achievements: ReturnType<typeof getBundleAchievements>,
+  ) {
+    let created = 0;
+    let updated = 0;
+
+    for (const achievement of achievements) {
+      const existing = await this.prisma.achievement.findFirst({
+        where: {
+          schoolId,
+          type: achievement.type,
+        },
+      });
+
+      if (existing) {
+        await this.prisma.achievement.update({
+          where: { id: existing.id },
+          data: {
+            name: achievement.name,
+            description: achievement.description,
+            category: achievement.category,
+            requirement: achievement.requirement,
+            iconName: achievement.iconName,
+            colorScheme: achievement.colorScheme,
+            points: achievement.points,
+            examType: achievement.examType,
+            isActive: true,
+          },
+        });
+        updated++;
+      } else {
+        await this.prisma.achievement.create({
+          data: {
+            ...achievement,
+            schoolId,
+          },
+        });
+        created++;
+      }
+    }
+
+    return {
+      created,
+      updated,
+      total: created + updated,
+    };
+  }
+
+  async seedAchievementBundle(schoolId: string, bundle: AchievementSeedBundle) {
+    const achievements = getBundleAchievements(bundle);
+    const result = await this.upsertSeedAchievements(schoolId, achievements);
+
+    return {
+      bundle,
+      ...result,
+    };
+  }
+
+  async seedAllBundles(schoolId: string) {
+    const achievements = getAchievementsForBundles(ALL_ACHIEVEMENT_BUNDLES);
+    const result = await this.upsertSeedAchievements(schoolId, achievements);
+
+    return {
+      bundle: 'ALL',
+      ...result,
+    };
+  }
+
+  async deleteAchievementBundle(schoolId: string, bundle: AchievementSeedBundle) {
+    if (bundle === 'CONSISTENCY') {
+      const consistencyTypes = getBundleAchievements('CONSISTENCY').map(
+        (achievement) => achievement.type,
+      );
+
+      const result = await this.prisma.achievement.deleteMany({
+        where: {
+          schoolId,
+          type: { in: consistencyTypes },
+        },
+      });
+
+      return {
+        bundle,
+        deleted: result.count,
+      };
+    }
+
+    const result = await this.prisma.achievement.deleteMany({
+      where: {
+        schoolId,
+        examType: bundle as ExamType,
+      },
+    });
+
+    return {
+      bundle,
+      deleted: result.count,
+    };
   }
 
   // Check and unlock achievement for student

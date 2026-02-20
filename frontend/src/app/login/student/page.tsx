@@ -22,12 +22,16 @@ export default function StudentLoginPage() {
         e.preventDefault();
         setLoading(true);
         setError("");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
             const res = await fetch(`${API_BASE_URL}/auth/login-student`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentNumber, password }),
+                credentials: 'include',
+                signal: controller.signal,
             });
 
             if (!res.ok) {
@@ -40,8 +44,13 @@ export default function StudentLoginPage() {
             // Redirect student to their results page
             router.push('/dashboard/student/results');
         } catch (err: any) {
-            setError(err.message || 'Bir hata oluştu.');
+            if (err?.name === 'AbortError') {
+                setError('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
+            } else {
+                setError(err.message || 'Bir hata oluştu.');
+            }
         } finally {
+            clearTimeout(timeoutId);
             setLoading(false);
         }
     };

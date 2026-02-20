@@ -33,18 +33,19 @@ export default function SchoolLoginPage() {
         e.preventDefault();
         setLoading(true);
         setError("");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
-            console.log('Login attempt:', { email, rememberMe });
             const res = await fetch(`${API_BASE_URL}/auth/login-school`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, rememberMe }),
+                credentials: 'include',
+                signal: controller.signal,
             });
 
-            console.log('Response status:', res.status);
             const data = await res.json();
-            console.log('Response data:', data);
 
             if (!res.ok) {
                 throw new Error(data.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
@@ -58,15 +59,18 @@ export default function SchoolLoginPage() {
             }
 
             setUserData(data.user);
-            console.log('User data set, redirecting...');
 
             // Force redirect using window.location
             window.location.href = '/dashboard';
 
         } catch (err: any) {
-            console.error('Login error:', err);
-            setError(err.message || 'Bir hata oluştu.');
+            if (err?.name === 'AbortError') {
+                setError('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
+            } else {
+                setError(err.message || 'Bir hata oluştu.');
+            }
         } finally {
+            clearTimeout(timeoutId);
             setLoading(false);
         }
     };
