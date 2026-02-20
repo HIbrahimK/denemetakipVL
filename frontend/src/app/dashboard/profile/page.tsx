@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,10 @@ const AVATAR_STYLES = [
 ];
 
 export default function ProfilePage() {
+    const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(true);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     
@@ -40,13 +43,20 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchUserProfile = async () => {
+            const hasAuth = localStorage.getItem("auth") === "1";
             const token = localStorage.getItem("token");
-            if (!token) return;
+            if (!hasAuth) {
+                setProfileLoading(false);
+                router.push("/");
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_BASE_URL}/auth/me`, {
                     headers: {
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
                     },
+                    credentials: "include",
                 });
 
                 if (res.ok) {
@@ -68,14 +78,19 @@ export default function ProfilePage() {
                         // Default to first name as seed
                         setSelectedSeed(userData.firstName);
                     }
+                } else {
+                    setError("Profil bilgileri alınamadı. Lütfen tekrar giriş yapın.");
                 }
             } catch (error) {
                 console.error("Error fetching user profile:", error);
+                setError("Profil bilgileri alınırken bir hata oluştu.");
+            } finally {
+                setProfileLoading(false);
             }
         };
 
         fetchUserProfile();
-    }, []);
+    }, [router]);
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,7 +115,9 @@ export default function ProfilePage() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     currentPassword,
                     newPassword,
@@ -134,7 +151,9 @@ export default function ProfilePage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
+                credentials: "include",
                 body: JSON.stringify({ avatarSeed }),
             });
 
@@ -166,7 +185,9 @@ export default function ProfilePage() {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
+                credentials: "include",
                 body: JSON.stringify({ branch }),
             });
 
@@ -222,10 +243,18 @@ export default function ProfilePage() {
 
     const shouldShowEmail = Boolean(user?.email) && user?.role !== "STUDENT" && user?.role !== "PARENT";
 
-    if (!user) {
+    if (profileLoading) {
         return (
             <div className="flex items-center justify-center h-full">
                 <p className="text-slate-500">Yükleniyor...</p>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <p className="text-slate-500">Profil bilgisi bulunamadi.</p>
             </div>
         );
     }
