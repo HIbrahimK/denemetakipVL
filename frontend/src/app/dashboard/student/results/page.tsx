@@ -101,14 +101,16 @@ function StudentResultsContent() {
     const studentId = searchParams.get('studentId');
     const [data, setData] = useState<StudentData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedExamType, setSelectedExamType] = useState<ExamType | 'ALL'>('ALL');
     const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
             try {
-                const token = localStorage.getItem("token");
                 // If studentId is provided in URL, use it (for admin/teacher view)
                 // Otherwise use /me/exams (for student's own view)
                 const endpoint = studentId 
@@ -116,24 +118,37 @@ function StudentResultsContent() {
                     : `${API_BASE_URL}/students/me/exams`;
                     
                 const response = await fetch(endpoint, {
-                    headers: {
-                    },
+                    credentials: 'include',
+                    signal: controller.signal,
                 });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        router.push('/login/student');
+                        return;
+                    }
+                    throw new Error('Sonuçlar alınamadı.');
+                }
+
                 const result = await response.json();
-                console.log('Student exam data:', result);
-                if (result.examHistory && result.examHistory.length > 0) {
-                    console.log('First exam sample:', result.examHistory[0]);
+                if (!result?.studentInfo || !Array.isArray(result?.examHistory)) {
+                    throw new Error('Geçersiz yanıt alındı.');
                 }
                 setData(result);
-                setLoading(false);
             } catch (err) {
-                console.error("Error fetching exam history:", err);
+                if ((err as any)?.name === 'AbortError') {
+                    setError('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
+                } else {
+                    setError('Sonuçlar yüklenirken hata oluştu.');
+                }
+            } finally {
+                clearTimeout(timeoutId);
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [studentId]);
+    }, [studentId, router]);
 
     // Determine available exam types based on grade
     const availableExamTypes = useMemo(() => {
@@ -227,6 +242,15 @@ function StudentResultsContent() {
         return (
             <div className="flex items-center justify-center p-10">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center p-10 gap-4">
+                <p className="text-slate-600 dark:text-slate-400">{error}</p>
+                <Button onClick={() => window.location.reload()}>Tekrar Dene</Button>
             </div>
         );
     }

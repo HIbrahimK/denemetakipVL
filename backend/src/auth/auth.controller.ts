@@ -13,21 +13,21 @@ export class AuthController {
     @Post('login-school')
     async loginSchool(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
         const data = await this.authService.loginSchool(loginDto);
-        this.setAuthCookie(res, data.access_token);
+        this.setAuthCookie(res, data.access_token, loginDto.rememberMe);
         return data;
     }
 
     @Post('login-student')
     async loginStudent(@Body() loginDto: StudentLoginDto, @Res({ passthrough: true }) res: Response) {
         const data = await this.authService.loginStudent(loginDto);
-        this.setAuthCookie(res, data.access_token);
+        this.setAuthCookie(res, data.access_token, loginDto.rememberMe);
         return data;
     }
 
     @Post('login-parent')
     async loginParent(@Body() loginDto: StudentLoginDto, @Res({ passthrough: true }) res: Response) {
         const data = await this.authService.loginParent(loginDto);
-        this.setAuthCookie(res, data.access_token);
+        this.setAuthCookie(res, data.access_token, loginDto.rememberMe);
         return data;
     }
 
@@ -71,19 +71,27 @@ export class AuthController {
         return this.authService.updateAvatar(req.user.id, updateAvatarDto.avatarSeed);
     }
 
+    @Post('test-email')
+    async testEmail(@Body() body: { email: string }) {
+        return this.authService.testEmailService(body.email);
+    }
+
     @Post('logout')
     async logout(@Res({ passthrough: true }) res: Response) {
         res.clearCookie('token', { path: '/' });
         return { success: true };
     }
 
-    private setAuthCookie(res: Response, token: string) {
+    private setAuthCookie(res: Response, token: string, rememberMe?: boolean) {
         const isProd = process.env.NODE_ENV === 'production';
+        // rememberMe true ise 30 gün, false/undefined ise 7 gün
+        const maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000;
+        
         res.cookie('token', token, {
             httpOnly: true,
             sameSite: 'lax',
             secure: isProd,
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            maxAge,
             path: '/',
         });
     }

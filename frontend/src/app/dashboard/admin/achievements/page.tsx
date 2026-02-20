@@ -29,6 +29,7 @@ interface Achievement {
   points: number;
   isActive: boolean;
   examType?: string;
+  winnerCount?: number;
   studentAchievements?: Array<{
     id: string;
     unlockedAt: string;
@@ -85,6 +86,19 @@ const EXAM_TYPES = [
   { value: 'AYT', label: 'AYT' },
 ];
 
+type AchievementBundle = 'TYT' | 'AYT' | 'LGS' | 'CONSISTENCY';
+
+const BUNDLE_ACTIONS: Array<{
+  value: AchievementBundle;
+  loadLabel: string;
+  deleteLabel: string;
+}> = [
+  { value: 'TYT', loadLabel: 'TYT Rozetlerini Yukle', deleteLabel: 'TYT Rozetlerini Sil' },
+  { value: 'AYT', loadLabel: 'AYT Rozetlerini Yukle', deleteLabel: 'AYT Rozetlerini Sil' },
+  { value: 'LGS', loadLabel: 'LGS Rozetlerini Yukle', deleteLabel: 'LGS Rozetlerini Sil' },
+  { value: 'CONSISTENCY', loadLabel: 'Kararlilik Rozetlerini Yukle', deleteLabel: 'Kararlilik Rozetlerini Sil' },
+];
+
 export default function AchievementManagementPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
@@ -98,6 +112,9 @@ export default function AchievementManagementPage() {
   const [studentSearch, setStudentSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [bundleLoading, setBundleLoading] = useState<AchievementBundle | null>(null);
+  const [bundleDeleting, setBundleDeleting] = useState<AchievementBundle | null>(null);
+  const [examTypeFilter, setExamTypeFilter] = useState<'ALL' | 'TYT' | 'AYT' | 'LGS'>('ALL');
   const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState<Partial<Achievement>>({
     name: '',
@@ -127,12 +144,11 @@ export default function AchievementManagementPage() {
       return;
     }
 
-    fetchAchievements();
+    fetchAchievements('ALL');
   }, []);
 
   const fetchStudents = async () => {
     try {
-      const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
       if (!userStr) return;
       
@@ -140,6 +156,7 @@ export default function AchievementManagementPage() {
       const schoolId = userData.schoolId;
       
       const response = await fetch(`${API_BASE_URL}/students?schoolId=${schoolId}`, {
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -151,10 +168,20 @@ export default function AchievementManagementPage() {
     }
   };
 
-  const fetchAchievements = async () => {
+  const fetchAchievements = async (
+    filter: 'ALL' | 'TYT' | 'AYT' | 'LGS' = examTypeFilter,
+  ) => {
+    setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/achievements?includeInactive=true`, {
+      const params = new URLSearchParams({
+        includeInactive: 'true',
+      });
+      if (filter !== 'ALL') {
+        params.set('examType', filter);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/achievements?${params.toString()}`, {
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -175,8 +202,8 @@ export default function AchievementManagementPage() {
 
   const viewAchievementDetail = async (achievement: Achievement) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/achievements/${achievement.id}`, {
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -191,14 +218,14 @@ export default function AchievementManagementPage() {
 
   const toggleActive = async (id: string) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/achievements/${id}/toggle`, {
         method: 'POST',
+        credentials: 'include',
       });
 
       if (response.ok) {
         toast({ title: 'Başarılı', description: 'Rozet durumu güncellendi' });
-        fetchAchievements();
+        fetchAchievements(examTypeFilter);
       }
     } catch (error) {
       toast({ title: 'Hata', description: 'İşlem başarısız', variant: 'destructive' });
@@ -215,16 +242,16 @@ export default function AchievementManagementPage() {
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/achievements/${achievementToDelete}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
         toast({ title: 'Başarılı', description: 'Rozet silindi' });
         setShowDeleteModal(false);
         setAchievementToDelete(null);
-        fetchAchievements();
+        fetchAchievements(examTypeFilter);
       } else {
         toast({ title: 'Hata', description: 'Silme işlemi başarısız', variant: 'destructive' });
       }
@@ -261,7 +288,6 @@ export default function AchievementManagementPage() {
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('token');
       
       // Grant achievement to all selected students
       const promises = selectedStudentIds.map(studentId =>
@@ -270,6 +296,7 @@ export default function AchievementManagementPage() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             studentId,
             achievementType: selectedAchievement.type,
@@ -328,7 +355,6 @@ export default function AchievementManagementPage() {
 
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
       const url = formData.id
         ? `${API_BASE_URL}/achievements/${formData.id}`
         : `${API_BASE_URL}/achievements`;
@@ -338,18 +364,95 @@ export default function AchievementManagementPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         toast({ title: 'Başarılı', description: formData.id ? 'Rozet güncellendi' : 'Rozet oluşturuldu' });
         setShowFormModal(false);
-        fetchAchievements();
+        fetchAchievements(examTypeFilter);
       }
     } catch (error) {
       toast({ title: 'Hata', description: 'İşlem başarısız', variant: 'destructive' });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleExamTypeFilterChange = (value: 'ALL' | 'TYT' | 'AYT' | 'LGS') => {
+    setExamTypeFilter(value);
+    fetchAchievements(value);
+  };
+
+  const seedBundle = async (bundle: AchievementBundle) => {
+    try {
+      setBundleLoading(bundle);
+      const response = await fetch(`${API_BASE_URL}/achievements/seed-bundle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ bundle }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || 'Rozet paketi yuklenemedi');
+      }
+
+      toast({
+        title: 'Basarili',
+        description: `${bundle} paketinde ${data.total || 0} rozet isleme alindi`,
+      });
+
+      fetchAchievements(examTypeFilter);
+    } catch (error: any) {
+      toast({
+        title: 'Hata',
+        description: error?.message || 'Rozet paketi yuklenemedi',
+        variant: 'destructive',
+      });
+    } finally {
+      setBundleLoading(null);
+    }
+  };
+
+  const deleteBundle = async (bundle: AchievementBundle) => {
+    const confirmMessage =
+      bundle === 'CONSISTENCY'
+        ? 'Kararlilik/Gelisim paketi rozetleri silinsin mi?'
+        : `${bundle} rozetlerinin tamami silinsin mi?`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      setBundleDeleting(bundle);
+      const response = await fetch(`${API_BASE_URL}/achievements/seed-bundle/${bundle}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || 'Rozet paketi silinemedi');
+      }
+
+      toast({
+        title: 'Basarili',
+        description: `${bundle} paketinden ${data.deleted || 0} rozet silindi`,
+      });
+
+      fetchAchievements(examTypeFilter);
+    } catch (error: any) {
+      toast({
+        title: 'Hata',
+        description: error?.message || 'Rozet paketi silinemedi',
+        variant: 'destructive',
+      });
+    } finally {
+      setBundleDeleting(null);
     }
   };
 
@@ -390,12 +493,91 @@ export default function AchievementManagementPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Hazir Rozet Paketleri ve Filtre</CardTitle>
+          <CardDescription>
+            Ihtiyaciniza gore TYT, AYT, LGS ve Kararlilik paketlerini yukleyip silebilirsiniz.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="w-full md:w-72 space-y-2">
+            <Label>Sinav Turu Filtresi</Label>
+            <Select
+              value={examTypeFilter}
+              onValueChange={(value) =>
+                handleExamTypeFilterChange(value as 'ALL' | 'TYT' | 'AYT' | 'LGS')
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Filtre secin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tum Sinav Turleri</SelectItem>
+                {EXAM_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Rozet Paketlerini Yukle</Label>
+            <div className="flex flex-wrap gap-2">
+              {BUNDLE_ACTIONS.map((bundle) => (
+                <Button
+                  key={`load-${bundle.value}`}
+                  variant="outline"
+                  onClick={() => seedBundle(bundle.value)}
+                  disabled={bundleLoading !== null}
+                >
+                  {bundleLoading === bundle.value && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {bundle.loadLabel}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Rozet Paketlerini Sil</Label>
+            <div className="flex flex-wrap gap-2">
+              {BUNDLE_ACTIONS.map((bundle) => (
+                <Button
+                  key={`delete-${bundle.value}`}
+                  variant="destructive"
+                  onClick={() => deleteBundle(bundle.value)}
+                  disabled={bundleDeleting !== null}
+                >
+                  {bundleDeleting === bundle.value && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {bundle.deleteLabel}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Not: Lise okullari genelde TYT/AYT paketlerini, ortaokullar LGS paketini yukler.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Rozetler</CardTitle>
           <CardDescription>
             Toplam {achievements.length} rozet  {achievements.filter(a => a.isActive).length} aktif
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {achievements.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Secilen filtreye uygun rozet bulunamadi.
+            </p>
+          ) : (
           <Tabs defaultValue={Object.keys(groupedAchievements)[0] || 'MILESTONE'}>
             <TabsList>
               {CATEGORIES.map(cat => (
@@ -441,7 +623,7 @@ export default function AchievementManagementPage() {
                                 onClick={() => viewAchievementDetail(achievement)}
                               >
                                 <Users className="h-3 w-3 mr-1" />
-                                Kazananlar
+                                Kazananlar ({achievement.winnerCount || 0})
                               </Button>
                             </div>
                           </div>
@@ -489,6 +671,7 @@ export default function AchievementManagementPage() {
               )
             ))}
           </Tabs>
+          )}
         </CardContent>
       </Card>
 

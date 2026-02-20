@@ -87,6 +87,8 @@ Sistem; deneme takvimi, raporlama, Excel import, mesajlaşma ve çalışma plan�
 - Ticket sistemi
 - Yardım dokümantasyonu
 - Şablon indirme sayfaları
+- Sonuç txt dosyası ekleme ve cevap anahtarını text dosyası olarak alarak sonuçları karşılaştırma.
+- sınavın kazanımlarını ekleme, kazanım bazlı sınav raporu hazırlama
 
 ---
 

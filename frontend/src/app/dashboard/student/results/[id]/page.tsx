@@ -75,12 +75,13 @@ function ExamDetailContent() {
     const [examDetail, setExamDetail] = useState<ExamDetail | null>(null);
     const [examStats, setExamStats] = useState<ExamStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         const fetchExamDetail = async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
             try {
-                const token = localStorage.getItem("token");
-                
                 // If studentId is provided, use it (for admin/teacher view)
                 // Otherwise use /me/exams (for student's own view)
                 const endpoint = studentId 
@@ -89,24 +90,36 @@ function ExamDetailContent() {
                 
                 // Fetch all exams to find this specific exam
                 const response = await fetch(endpoint, {
+                    credentials: "include",
+                    signal: controller.signal,
                 });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        router.push('/login/student');
+                        return;
+                    }
+                    throw new Error("Deneme bilgisi alinamadi.");
+                }
                 const data = await response.json();
                 
                 if (!data || !data.examHistory) {
-                    console.error("No exam history data received");
-                    setLoading(false);
-                    return;
+                    throw new Error("Gecersiz veri alindi.");
                 }
                 
                 const exam = data.examHistory.find((e: any) => e.examId === params.id);
                 if (exam) {
-                    console.log('Exam detail with participation counts:', exam);
                     setExamDetail(exam);
                 }
 
                 // Fetch exam statistics for comparison
                 const statsResponse = await fetch(`${API_BASE_URL}/exams/${params.id}/statistics`, {
+                    credentials: "include",
+                    signal: controller.signal,
                 });
+                if (!statsResponse.ok) {
+                    throw new Error("Sinav istatistikleri alinamadi.");
+                }
                 const statsData = await statsResponse.json();
                 
                 // Get student's class name to calculate class average
@@ -146,10 +159,14 @@ function ExamDetailContent() {
                     classAverage,
                     lessonAverages,
                 });
-
-                setLoading(false);
             } catch (err) {
-                console.error("Error fetching exam detail:", err);
+                if ((err as any)?.name === "AbortError") {
+                    setError("Istek zaman asimina ugradi. Lutfen tekrar deneyin.");
+                } else {
+                    setError("Deneme detaylari yuklenemedi.");
+                }
+            } finally {
+                clearTimeout(timeoutId);
                 setLoading(false);
             }
         };
@@ -181,6 +198,15 @@ function ExamDetailContent() {
         return (
             <div className="flex items-center justify-center p-10">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center p-10 gap-4">
+                <p className="text-slate-600 dark:text-slate-400">{error}</p>
+                <Button onClick={() => window.location.reload()}>Tekrar Dene</Button>
             </div>
         );
     }

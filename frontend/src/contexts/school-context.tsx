@@ -46,6 +46,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (user.schoolId) {
           const token = localStorage.getItem('token');
           const response = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
+            credentials: 'include',
           });
           
           if (response.ok) {

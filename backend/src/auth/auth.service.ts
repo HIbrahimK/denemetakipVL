@@ -361,4 +361,52 @@ export class AuthService {
             },
         };
     }
+
+    // Test email service
+    async testEmailService(testEmail: string) {
+        try {
+            await this.emailService.sendEmail(
+                testEmail,
+                'Deneme Takip - E-posta Sistemi Test',
+                `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #4F46E5;">✅ E-posta Sistemi Test</h2>
+                    <p>Bu e-posta, Deneme Takip sisteminin SMTP yapılandırmasını test etmek için gönderilmiştir.</p>
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p><strong>Test Zamanı:</strong> ${new Date().toLocaleString('tr-TR')}</p>
+                        <p><strong>Sunucu:</strong> ${process.env.SMTP_HOST || 'Yapılandırılmamış'}</p>
+                        <p><strong>Port:</strong> ${process.env.SMTP_PORT || 'Yapılandırılmamış'}</p>
+                    </div>
+                    <p>Bu e-postayı aldıysanız, SMTP ayarlarınız doğru çalışıyor demektir! 🎉</p>
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                    <p style="color: #6b7280; font-size: 12px;">
+                        Bu bir test e-postasıdır. Herhangi bir işlem yapmanız gerekmemektedir.
+                    </p>
+                </div>
+                `
+            );
+            
+            return { 
+                success: true, 
+                message: 'Test e-postası başarıyla gönderildi',
+                details: {
+                    to: testEmail,
+                    timestamp: new Date().toISOString(),
+                    smtpHost: process.env.SMTP_HOST,
+                    smtpPort: process.env.SMTP_PORT,
+                }
+            };
+        } catch (error) {
+            throw new BadRequestException({
+                success: false,
+                message: 'E-posta gönderimi başarısız',
+                error: error.message,
+                details: {
+                    smtpHost: process.env.SMTP_HOST,
+                    smtpPort: process.env.SMTP_PORT,
+                    errorCode: error.code,
+                }
+            });
+        }
+    }
 }

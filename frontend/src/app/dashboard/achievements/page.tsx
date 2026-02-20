@@ -128,18 +128,56 @@ export default function AchievementsPage() {
   const getColorClasses = (color: string, unlocked: boolean) => {
     if (!unlocked) {
       return {
-        bg: 'bg-gray-100',
-        text: 'text-gray-400',
-        border: 'border-gray-200',
+        bg: 'bg-slate-100',
+        text: 'text-slate-400',
+        border: 'border-slate-200',
+        card: 'from-slate-50 to-slate-100',
+        iconBg: 'bg-slate-100',
+        badge: 'text-slate-500 border-slate-200 bg-slate-100',
       };
     }
 
     const colors: Record<string, any> = {
-      blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-      orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
-      green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
-      purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
-      yellow: { bg: 'bg-yellow-50', text: 'text-yellow-600', border: 'border-yellow-200' },
+      blue: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-700',
+        border: 'border-blue-300',
+        card: 'from-blue-50 via-cyan-50 to-sky-100',
+        iconBg: 'bg-gradient-to-br from-cyan-100 to-blue-100',
+        badge: 'text-blue-700 border-blue-200 bg-blue-100/80',
+      },
+      orange: {
+        bg: 'bg-orange-100',
+        text: 'text-orange-700',
+        border: 'border-orange-300',
+        card: 'from-orange-50 via-amber-50 to-yellow-100',
+        iconBg: 'bg-gradient-to-br from-amber-100 to-orange-100',
+        badge: 'text-orange-700 border-orange-200 bg-orange-100/80',
+      },
+      green: {
+        bg: 'bg-emerald-100',
+        text: 'text-emerald-700',
+        border: 'border-emerald-300',
+        card: 'from-emerald-50 via-lime-50 to-green-100',
+        iconBg: 'bg-gradient-to-br from-lime-100 to-emerald-100',
+        badge: 'text-emerald-700 border-emerald-200 bg-emerald-100/80',
+      },
+      purple: {
+        bg: 'bg-fuchsia-100',
+        text: 'text-fuchsia-700',
+        border: 'border-fuchsia-300',
+        card: 'from-violet-50 via-fuchsia-50 to-pink-100',
+        iconBg: 'bg-gradient-to-br from-violet-100 to-fuchsia-100',
+        badge: 'text-fuchsia-700 border-fuchsia-200 bg-fuchsia-100/80',
+      },
+      yellow: {
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-700',
+        border: 'border-yellow-300',
+        card: 'from-yellow-50 via-amber-50 to-orange-100',
+        iconBg: 'bg-gradient-to-br from-yellow-100 to-amber-100',
+        badge: 'text-yellow-700 border-yellow-200 bg-yellow-100/80',
+      },
     };
     return colors[color] || colors.blue;
   };
@@ -186,14 +224,14 @@ export default function AchievementsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{unlockedAchievements.length}</div>
             <p className="text-xs text-muted-foreground">
-              {totalAchievements} rozetin {unlockedAchievements.length}'si kazanld
+              {totalAchievements} rozetin {unlockedAchievements.length}'si kazanıldı
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tamamlanma Oran</CardTitle>
+            <CardTitle className="text-sm font-medium">Tamamlanma Oranı</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -220,91 +258,88 @@ export default function AchievementsPage() {
             <div className="text-lg font-bold">
               {unlockedAchievements.length > 0 
                 ? unlockedAchievements[0].achievement.name.substring(0, 15) + (unlockedAchievements[0].achievement.name.length > 15 ? '...' : '')
-                : 'Henz yok'}
+                : 'Henüz yok'}
             </div>
             <p className="text-xs text-muted-foreground">
               {unlockedAchievements.length > 0 
                 ? getTimeSince(unlockedAchievements[0].unlockedAt)
-                : 'lk rozetini kazan!'}
+                : 'İlk rozetini kazan!'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sradaki Hedef</CardTitle>
+            <CardTitle className="text-sm font-medium">Sıradaki Hedef</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg font-bold">
               {availableAchievements.length > 0 
                 ? `${availableAchievements.length} rozet`
-                : 'Tm kazanld!'}
+                : 'Tümü kazanıldı!'}
             </div>
             <p className="text-xs text-muted-foreground">
               {availableAchievements.length > 0 
-                ? 'Kilidi a'
-                : 'Harika i!'}
+                ? 'Kilidi aç'
+                : 'Harika iş!'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Kazanlan Rozetler */}
+      {/* Kazanılan Rozetler */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-yellow-500" />
-            Kazanlan Rozetler
+            Kazanılan Rozetler
           </CardTitle>
-          <CardDescription>Baaryla kilidi atnz muhteem rozetler</CardDescription>
+          <CardDescription>Başarıyla kilidi açtığınız muhteşem rozetler</CardDescription>
         </CardHeader>
         <CardContent>
           {unlockedAchievements.length === 0 ? (
             <div className="text-center py-12">
               <Trophy className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Henz rozet kazanlmad</h3>
+              <h3 className="mt-4 text-lg font-semibold">Henüz rozet kazanılmadı</h3>
               <p className="text-muted-foreground mt-2">
-                almaya balayarak ilk rozetinizi kazann!
+                Çalışmaya başlayarak ilk rozetinizi kazanın!
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {unlockedAchievements.map((sa) => {
                 const colors = getColorClasses(sa.achievement.colorScheme, true);
                 return (
                   <Card 
                     key={sa.id} 
-                    className={`relative overflow-hidden ${colors.border} border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}
+                    className={`group relative overflow-hidden border ${colors.border} bg-gradient-to-br ${colors.card} shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5`}
                   >
-                    {/* Gradient Background */}
-                    <div className={`absolute inset-0 ${colors.bg} opacity-20`} />
+                    <div className="absolute inset-0 opacity-60 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.8),_transparent_55%)]" />
                     
-                    {/* Sparkle effect on top right */}
-                    <Sparkles className={`absolute top-2 right-2 h-5 w-5 ${colors.text} animate-pulse`} />
+                    <Sparkles className={`absolute top-2 right-2 h-4 w-4 ${colors.text} opacity-80`} />
                     
-                    <CardContent className="relative p-6">
-                      <div className="flex flex-col items-center text-center gap-4">
-                        {/* Large Icon with glow */}
-                        <div className={`p-6 rounded-full ${colors.bg} ${colors.text} shadow-lg border-4 ${colors.border}`}>
-                          {getIconComponent(sa.achievement.iconName, "h-10 w-10")}
+                    <CardContent className="relative p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`shrink-0 p-3 rounded-2xl ${colors.iconBg} ${colors.text} border ${colors.border} shadow-sm group-hover:scale-105 transition-transform`}>
+                          {getIconComponent(sa.achievement.iconName, "h-7 w-7")}
                         </div>
                         
-                        <div className="space-y-2 w-full">
-                          <h3 className="font-bold text-lg">{sa.achievement.name}</h3>
-                          <p className="text-sm text-muted-foreground">
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          <h3 className="font-bold text-base leading-tight line-clamp-2">{sa.achievement.name}</h3>
+                          <p className="text-xs text-muted-foreground leading-snug line-clamp-2">
                             {sa.achievement.description}
                           </p>
                           
-                          <div className="flex flex-wrap gap-2 justify-center pt-2">
-                            <Badge variant="secondary" className={`${colors.text} font-semibold`}>
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            <Badge variant="secondary" className={`${colors.badge} font-semibold text-[11px]`}>
                               {sa.achievement.points} Puan
                             </Badge>
-                            <Badge variant="outline">
+                            <Badge variant="outline" className="text-[11px] border-slate-300 bg-white/70">
                               {getTimeSince(sa.unlockedAt)}
                             </Badge>
                             {sa.achievement.examType && (
-                              <Badge variant="outline">
+                              <Badge variant="outline" className="text-[11px] border-slate-300 bg-white/70">
                                 {sa.achievement.examType}
                               </Badge>
                             )}
@@ -320,7 +355,7 @@ export default function AchievementsPage() {
         </CardContent>
       </Card>
 
-      {/* Kazanlabilir Rozetler - Accordion */}
+      {/* Kazanılabilir Rozetler - Accordion */}
       {availableAchievements.length > 0 && (
         <Card>
           <CardContent className="pt-6">
@@ -330,39 +365,39 @@ export default function AchievementsPage() {
                   <div className="flex items-center gap-3">
                     <Lock className="h-5 w-5 text-muted-foreground" />
                     <div className="text-left">
-                      <h3 className="text-lg font-semibold">Kazanlabilir Rozetler</h3>
+                      <h3 className="text-lg font-semibold">Kazanılabilir Rozetler</h3>
                       <p className="text-sm text-muted-foreground">
-                        {availableAchievements.length} rozet kilidi almay bekliyor
+                        {availableAchievements.length} rozet kilidi açılmayı bekliyor
                       </p>
                     </div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pt-4">
                     {availableAchievements.map((achievement) => {
                       const colors = getColorClasses(achievement.colorScheme, false);
                       return (
                         <Card 
                           key={achievement.id} 
-                          className={`${colors.border} border-2 opacity-60 hover:opacity-80 transition-opacity`}
+                          className={`${colors.border} border opacity-70 hover:opacity-90 transition-all duration-200 bg-gradient-to-br ${colors.card}`}
                         >
-                          <CardContent className="p-4">
+                          <CardContent className="p-3">
                             <div className="flex items-start gap-3">
-                              <div className={`p-3 rounded-full ${colors.bg} ${colors.text} relative`}>
-                                {getIconComponent(achievement.iconName)}
+                              <div className={`p-2.5 rounded-xl ${colors.bg} ${colors.text} relative border ${colors.border}`}>
+                                {getIconComponent(achievement.iconName, "h-5 w-5")}
                                 <Lock className="absolute -top-1 -right-1 h-4 w-4 text-gray-500 bg-white rounded-full p-0.5" />
                               </div>
                               <div className="flex-1">
-                                <h3 className="font-semibold text-sm">{achievement.name}</h3>
-                                <p className="text-xs text-muted-foreground mt-1">
+                                <h3 className="font-semibold text-sm leading-tight line-clamp-2">{achievement.name}</h3>
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                   {achievement.description}
                                 </p>
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  <Badge variant="secondary" className="text-xs">
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  <Badge variant="secondary" className={`text-[11px] ${colors.badge}`}>
                                     {achievement.points} Puan
                                   </Badge>
                                   {achievement.examType && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge variant="outline" className="text-[11px] border-slate-300 bg-white/80">
                                       {achievement.examType}
                                     </Badge>
                                   )}

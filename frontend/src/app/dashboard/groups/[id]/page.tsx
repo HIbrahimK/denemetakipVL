@@ -208,8 +208,8 @@ export default function GroupDetailPage() {
         if (userStr) {
           setUser(JSON.parse(userStr));
         }
-        if (!localStorage.getItem('token')) {
-          router.push('/login');
+        if (!localStorage.getItem('user')) {
+          router.push('/login/school');
           return;
         }
 
