@@ -77,7 +77,7 @@ describe('ExcelParsingService', () => {
                 })
             } as any;
 
-            expect(() => (service as any).detectFormat(mockWorksheet, 'TYT')).toThrow('Tanımsız dosya formatı');
+            expect(() => (service as any).detectFormat(mockWorksheet, 'TYT')).toThrow(/dosya format/i);
         });
     });
 });

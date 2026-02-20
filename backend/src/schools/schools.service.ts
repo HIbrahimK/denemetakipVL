@@ -11,7 +11,10 @@ export class SchoolsService {
             if (!school) {
                 throw new NotFoundException('No schools found');
             }
-            return school;
+            return {
+                name: school.name,
+                logoUrl: school.logoUrl,
+            };
         }
 
         const school = await this.prisma.school.findUnique({

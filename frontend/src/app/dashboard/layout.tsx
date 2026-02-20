@@ -46,10 +46,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const fetchUserProfile = async () => {
             const auth = localStorage.getItem("auth");
             if (!auth) return;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
 
             try {
                 const res = await fetch(`${API_BASE_URL}/auth/me`, {
                     credentials: 'include',
+                    signal: controller.signal,
                 });
 
                 if (res.ok) {
@@ -58,8 +61,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     // Update localStorage with fresh data
                     localStorage.setItem("user", JSON.stringify(userData));
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching user profile:", error);
+            } finally {
+                clearTimeout(timeoutId);
             }
         };
 

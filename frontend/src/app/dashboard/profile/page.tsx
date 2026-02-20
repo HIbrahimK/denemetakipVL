@@ -45,7 +45,10 @@ export default function ProfilePage() {
         const fetchUserProfile = async () => {
             const hasAuth = localStorage.getItem("auth") === "1";
             const token = localStorage.getItem("token");
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
             if (!hasAuth) {
+                clearTimeout(timeoutId);
                 setProfileLoading(false);
                 router.push("/");
                 return;
@@ -57,6 +60,7 @@ export default function ProfilePage() {
                         ...(token ? { Authorization: `Bearer ${token}` } : {}),
                     },
                     credentials: "include",
+                    signal: controller.signal,
                 });
 
                 if (res.ok) {
@@ -81,10 +85,15 @@ export default function ProfilePage() {
                 } else {
                     setError("Profil bilgileri alınamadı. Lütfen tekrar giriş yapın.");
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching user profile:", error);
-                setError("Profil bilgileri alınırken bir hata oluştu.");
+                if (error?.name === "AbortError") {
+                    setError("Profil bilgileri zaman aşımına uğradı. Lütfen tekrar deneyin.");
+                } else {
+                    setError("Profil bilgileri alınırken bir hata oluştu.");
+                }
             } finally {
+                clearTimeout(timeoutId);
                 setProfileLoading(false);
             }
         };

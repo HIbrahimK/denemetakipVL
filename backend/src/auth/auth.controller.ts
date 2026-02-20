@@ -4,6 +4,8 @@ import { LoginDto, StudentLoginDto, RegisterDto } from './dto/login.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { UpdateAvatarDto } from './dto/update-avatar.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
 import { Response } from 'express';
 
 @Controller('auth')
@@ -31,11 +33,11 @@ export class AuthController {
         return data;
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
     @Post('register')
-    async register(@Body() registerDto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-        const data = await this.authService.register(registerDto);
-        this.setAuthCookie(res, data.access_token);
-        return data;
+    async register(@Request() req, @Body() registerDto: RegisterDto) {
+        return this.authService.register(registerDto, req.user);
     }
 
     @Post('forgot-password')
@@ -71,6 +73,8 @@ export class AuthController {
         return this.authService.updateAvatar(req.user.id, updateAvatarDto.avatarSeed);
     }
 
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
     @Post('test-email')
     async testEmail(@Body() body: { email: string }) {
         return this.authService.testEmailService(body.email);

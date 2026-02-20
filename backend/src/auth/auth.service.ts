@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
@@ -10,6 +10,8 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
+    private readonly logger = new Logger(AuthService.name);
+
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
@@ -105,7 +107,53 @@ export class AuthService {
     }
 
     // Register new user
-    async register(registerDto: RegisterDto) {
+    async register(registerDto: RegisterDto, actor: { role: string; schoolId: string }) {
+        if (!actor) {
+            throw new UnauthorizedException('Yetkisiz erişim');
+        }
+
+        const isSuperAdmin = actor.role === 'SUPER_ADMIN';
+        const isSchoolAdmin = actor.role === 'SCHOOL_ADMIN';
+        if (!isSuperAdmin && !isSchoolAdmin) {
+            throw new ForbiddenException('Bu işlem için yetkiniz yok');
+        }
+
+        if (isSchoolAdmin && registerDto.schoolId !== actor.schoolId) {
+            throw new ForbiddenException('Sadece kendi okulunuz için kullanıcı oluşturabilirsiniz');
+        }
+
+        if (isSchoolAdmin && !['TEACHER', 'STUDENT', 'PARENT'].includes(registerDto.role)) {
+            throw new ForbiddenException('Bu rolü oluşturma yetkiniz yok');
+        }
+
+        if (!isSuperAdmin && registerDto.role === 'SUPER_ADMIN') {
+            throw new ForbiddenException('Bu rolü oluşturma yetkiniz yok');
+        }
+
+        const school = await this.prisma.school.findUnique({
+            where: { id: registerDto.schoolId },
+            select: { id: true },
+        });
+
+        if (!school) {
+            throw new NotFoundException('Okul bulunamadı');
+        }
+
+        if (registerDto.role === 'STUDENT') {
+            if (!registerDto.classId) {
+                throw new BadRequestException('Öğrenci için classId zorunludur');
+            }
+
+            const schoolClass = await this.prisma.class.findFirst({
+                where: { id: registerDto.classId, schoolId: registerDto.schoolId },
+                select: { id: true },
+            });
+
+            if (!schoolClass) {
+                throw new BadRequestException('Sınıf bu okula ait değil');
+            }
+        }
+
         const existingUser = await this.prisma.user.findUnique({
             where: { email: registerDto.email },
         });
@@ -150,7 +198,17 @@ export class AuthService {
             });
         }
 
-        return this.generateToken(user);
+        return {
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role,
+                schoolId: user.schoolId,
+            },
+        };
     }
 
     // Forgot Password - Initiate reset
@@ -250,7 +308,7 @@ export class AuthService {
 
     // Get current user
     async getMe(userId: string) {
-        return this.prisma.user.findUnique({
+        const user = await this.prisma.user.findUnique({
             where: { id: userId },
             include: {
                 school: true,
@@ -275,6 +333,13 @@ export class AuthService {
                 },
             },
         });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        const { password, ...safeUser } = user;
+        return safeUser;
     }
 
     // Hash password
@@ -370,42 +435,31 @@ export class AuthService {
                 'Deneme Takip - E-posta Sistemi Test',
                 `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #4F46E5;">✅ E-posta Sistemi Test</h2>
+                    <h2 style="color: #4F46E5;">E-posta Sistemi Test</h2>
                     <p>Bu e-posta, Deneme Takip sisteminin SMTP yapılandırmasını test etmek için gönderilmiştir.</p>
                     <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
                         <p><strong>Test Zamanı:</strong> ${new Date().toLocaleString('tr-TR')}</p>
                         <p><strong>Sunucu:</strong> ${process.env.SMTP_HOST || 'Yapılandırılmamış'}</p>
                         <p><strong>Port:</strong> ${process.env.SMTP_PORT || 'Yapılandırılmamış'}</p>
                     </div>
-                    <p>Bu e-postayı aldıysanız, SMTP ayarlarınız doğru çalışıyor demektir! 🎉</p>
-                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
-                    <p style="color: #6b7280; font-size: 12px;">
-                        Bu bir test e-postasıdır. Herhangi bir işlem yapmanız gerekmemektedir.
-                    </p>
+                    <p>Bu e-postayı aldıysanız, SMTP ayarlarınız doğru çalışıyor demektir.</p>
                 </div>
                 `
             );
-            
-            return { 
-                success: true, 
+
+            return {
+                success: true,
                 message: 'Test e-postası başarıyla gönderildi',
                 details: {
                     to: testEmail,
                     timestamp: new Date().toISOString(),
-                    smtpHost: process.env.SMTP_HOST,
-                    smtpPort: process.env.SMTP_PORT,
-                }
+                },
             };
-        } catch (error) {
+        } catch (error: any) {
+            this.logger.error('SMTP test başarısız', error?.stack || error?.message);
             throw new BadRequestException({
                 success: false,
                 message: 'E-posta gönderimi başarısız',
-                error: error.message,
-                details: {
-                    smtpHost: process.env.SMTP_HOST,
-                    smtpPort: process.env.SMTP_PORT,
-                    errorCode: error.code,
-                }
             });
         }
     }

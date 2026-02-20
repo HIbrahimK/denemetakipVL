@@ -45,7 +45,7 @@ async function bootstrap() {
       if (!origin || corsOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error('Not allowed by CORS'), false);
+      return callback(null, false);
     },
     credentials: true,
   });
