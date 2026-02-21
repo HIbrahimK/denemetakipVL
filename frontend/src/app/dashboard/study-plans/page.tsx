@@ -658,7 +658,7 @@ export default function StudyPlansPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Çalışma Planları</h1>
           <p className="text-muted-foreground mt-1">
@@ -668,25 +668,25 @@ export default function StudyPlansPage() {
           </p>
         </div>
         {user?.role !== 'STUDENT' && (
-          <div className="flex gap-3">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
             {user?.role === 'SCHOOL_ADMIN' && (
               <>
-                <Link href="/dashboard/admin/subjects">
-                  <Button variant="outline">
+                <Link href="/dashboard/admin/subjects" className="w-full sm:w-auto">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     <GraduationCap className="mr-2 h-4 w-4" />
                     Ders/Konu Yönetimi
                   </Button>
                 </Link>
-                <Link href="/dashboard/study-plans/settings">
-                  <Button variant="outline">
+                <Link href="/dashboard/study-plans/settings" className="w-full sm:w-auto">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     <Settings className="mr-2 h-4 w-4" />
                     Ayarlar
                   </Button>
                 </Link>
               </>
             )}
-            <Link href="/dashboard/study-plans/new">
-              <Button>
+            <Link href="/dashboard/study-plans/new" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Yeni Çalışma Planı Hazırla
               </Button>

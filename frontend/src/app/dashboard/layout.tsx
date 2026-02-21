@@ -126,11 +126,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Student menu - only results
         if (role === 'STUDENT') {
             return [
-                { name: "SonuÃ§larÄ±m", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
                 { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
-                { name: "Ã‡alÄ±ÅŸma PlanlarÄ±m", href: "/dashboard/my-tasks", icon: BookOpenCheck },
-                { name: "BaÅŸarÄ±larÄ±m", href: "/dashboard/achievements", icon: Award },
-                { name: "Grup Ã‡alÄ±ÅŸmalarÄ±m", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Çalışma Planlarım", href: "/dashboard/my-tasks", icon: BookOpenCheck },
+                { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
+                { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -139,7 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Parent menu - only child results
         if (role === 'PARENT') {
             return [
-                { name: "Ã‡ocuÄŸumun SonuÃ§larÄ±", href: "/dashboard/parent/results", icon: BarChart2 },
+                { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -148,12 +148,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Teacher menu - limited access (no users, no settings)
         if (role === 'TEACHER') {
             return [
-                { name: "Genel BakÄ±ÅŸ", href: "/dashboard", icon: LayoutDashboard },
-                { name: "SÄ±navlar", href: "/dashboard/exams", icon: BookOpen },
+                { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+                { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
                 { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-                { name: "Ã–ÄŸrenciler", href: "/dashboard/students", icon: GraduationCap },
-                { name: "Ã‡alÄ±ÅŸma PlanlarÄ±", href: "/dashboard/study-plans", icon: BookOpenCheck },
-                { name: "Mentor GruplarÄ±", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
@@ -162,17 +162,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         // Admin menu - full access
         return [
-            { name: "Genel BakÄ±ÅŸ", href: "/dashboard", icon: LayoutDashboard },
-            { name: "SÄ±navlar", href: "/dashboard/exams", icon: BookOpen },
+            { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
             { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-            { name: "Ã–ÄŸrenciler", href: "/dashboard/students", icon: GraduationCap },
-            { name: "SÄ±nÄ±flar", href: "/dashboard/classes", icon: School },
-            { name: "Ã‡alÄ±ÅŸma PlanlarÄ±", href: "/dashboard/study-plans", icon: BookOpenCheck },
-            { name: "Mentor GruplarÄ±", href: "/dashboard/groups", icon: UsersRound },
-            { name: "BaÅŸarÄ±lar", href: "/dashboard/admin/achievements", icon: Award },
+            { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "Sınıflar", href: "/dashboard/classes", icon: School },
+            { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
+            { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
+            { name: "Başarılar", href: "/dashboard/admin/achievements", icon: Award },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
-            { name: "KullanÄ±cÄ±lar", href: "/dashboard/users", icon: Users },
+            { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
     };
@@ -192,17 +192,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const getRoleLabel = () => {
         if (!user) return "";
-        
-        // Ã–ÄŸretmen iÃ§in branÅŸ kontrolÃ¼
+        // Öğretmen için branş kontrolü
         if (user.role === "TEACHER") {
-            return user.branch ? `${user.branch} Ã–ÄŸretmeni` : "Ã–ÄŸretmen";
+            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
         }
         
         const roleLabels: Record<string, string> = {
-            SCHOOL_ADMIN: "Okul YÃ¶neticisi",
-            STUDENT: "Ã–ÄŸrenci",
+            SCHOOL_ADMIN: "Okul Yöneticisi",
+            STUDENT: "Öğrenci",
             PARENT: "Veli",
-            SUPER_ADMIN: "SÃ¼per Admin"
+            SUPER_ADMIN: "Süper Admin"
         };
         return roleLabels[user.role] || user.role;
     };
@@ -311,7 +310,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex items-center gap-3 px-4 py-3 w-full rounded-2xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="h-5 w-5" />
-                        Ã‡Ä±kÄ±ÅŸ Yap
+                        Çıkış Yap
                     </button>
                 </div>
             </aside>

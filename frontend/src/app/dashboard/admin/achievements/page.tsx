@@ -13,7 +13,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trophy, Star, Target, Clock, BookOpen, Flame, Award, Crown, Medal, Plus, Edit, Trash2, Power, PowerOff, Users, Loader2, Check, Search, X } from 'lucide-react';
+import {
+  type LucideIcon,
+  Trophy,
+  Star,
+  Target,
+  Clock,
+  BookOpen,
+  Flame,
+  Award,
+  Crown,
+  Medal,
+  Shield,
+  Heart,
+  Zap,
+  Sparkles,
+  Rocket,
+  Brain,
+  Gem,
+  GraduationCap,
+  BookCheck,
+  TrendingUp,
+  Lightbulb,
+  CalendarCheck,
+  Dumbbell,
+  Compass,
+  Plus,
+  Edit,
+  Trash2,
+  Power,
+  PowerOff,
+  Users,
+  Loader2,
+  Check,
+  Search,
+  X,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { API_BASE_URL } from '@/lib/auth';
 
@@ -50,7 +85,7 @@ interface Achievement {
   }>;
 }
 
-const ICONS = {
+const ICONS: Record<string, LucideIcon> = {
   trophy: Trophy,
   star: Star,
   target: Target,
@@ -60,7 +95,27 @@ const ICONS = {
   award: Award,
   crown: Crown,
   medal: Medal,
+  shield: Shield,
+  heart: Heart,
+  zap: Zap,
+  sparkles: Sparkles,
+  rocket: Rocket,
+  brain: Brain,
+  gem: Gem,
+  graduationCap: GraduationCap,
+  bookCheck: BookCheck,
+  trendingUp: TrendingUp,
+  lightbulb: Lightbulb,
+  calendarCheck: CalendarCheck,
+  dumbbell: Dumbbell,
+  compass: Compass,
 };
+
+const ICON_OPTIONS = Object.entries(ICONS).map(([value, Icon]) => ({
+  value,
+  label: value,
+  Icon,
+}));
 
 const COLORS = {
   blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
@@ -343,8 +398,14 @@ export default function AchievementManagementPage() {
     setShowFormModal(true);
   };
 
+  const normalizeIconName = (iconName?: string) =>
+    iconName && ICONS[iconName] ? iconName : 'trophy';
+
   const openEditModal = (achievement: Achievement) => {
-    setFormData(achievement);
+    setFormData({
+      ...achievement,
+      iconName: normalizeIconName(achievement.iconName),
+    });
     setShowFormModal(true);
   };
 
@@ -461,6 +522,11 @@ export default function AchievementManagementPage() {
     acc[category].push(achievement);
     return acc;
   }, {} as Record<string, Achievement[]>);
+
+  const selectedIconName = normalizeIconName(formData.iconName);
+  const selectedIconOption =
+    ICON_OPTIONS.find((option) => option.value === selectedIconName) ?? ICON_OPTIONS[0];
+  const SelectedIcon = selectedIconOption.Icon;
 
   if (loading) {
     return (
@@ -952,13 +1018,24 @@ export default function AchievementManagementPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Ikon</Label>
-                <Select value={formData.iconName} onValueChange={(value) => setFormData({ ...formData, iconName: value })}>
+                <Select
+                  value={selectedIconName}
+                  onValueChange={(value) => setFormData({ ...formData, iconName: value })}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <div className="flex items-center gap-2 truncate">
+                      <SelectedIcon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{selectedIconOption.label}</span>
+                    </div>
                   </SelectTrigger>
-                  <SelectContent>
-                    {Object.keys(ICONS).map(icon => (
-                      <SelectItem key={icon} value={icon}>{icon}</SelectItem>
+                  <SelectContent className="max-h-72">
+                    {ICON_OPTIONS.map(({ value, label, Icon }) => (
+                      <SelectItem key={value} value={value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span>{label}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

@@ -351,7 +351,7 @@ function StudentResultsContent() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        Deneme Sonuçlarım <span className="filter-none">??</span>
+                        Deneme Sonuçlarım
                     </h1>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                         {data.studentInfo.firstName} {data.studentInfo.lastName} {data.studentInfo.studentNumber && `(${data.studentInfo.studentNumber})`}
@@ -455,10 +455,10 @@ function StudentResultsContent() {
 
             {/* Lesson Cards */}
             <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span className="filter-none">??</span> Ders Ortalamaları
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                    Ders Ortalamaları
                 </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-3">
                     {lessonAverages.map((lesson, idx) => {
                         const gradients = [
                             'from-blue-500 to-indigo-600',
@@ -475,9 +475,9 @@ function StudentResultsContent() {
                         return (
                             <Card
                                 key={lesson.name}
-                                className={`cursor-pointer transition-all hover:scale-105 hover:shadow-xl transform relative overflow-hidden group ${
+                                className={`cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg transform relative overflow-hidden group ${
                                     selectedLesson === lesson.name
-                                        ? 'ring-4 ring-indigo-500 scale-105 shadow-xl'
+                                        ? 'ring-2 ring-indigo-500 scale-[1.02] shadow-lg'
                                         : ''
                                 }`}
                                 onClick={() => setSelectedLesson(selectedLesson === lesson.name ? null : lesson.name)}
@@ -488,16 +488,16 @@ function StudentResultsContent() {
                                         <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse"></div>
                                     )}
                                 </div>
-                                <CardHeader className="pb-3 pt-4">
-                                    <CardTitle className="text-sm font-semibold text-slate-800 dark:text-slate-200 text-center line-clamp-2 min-h-[2.5rem] flex items-center justify-center">
+                                <CardHeader className="px-3 pb-2 pt-3">
+                                    <CardTitle className="text-sm font-semibold text-slate-800 dark:text-slate-200 text-center line-clamp-2 min-h-[2.2rem] flex items-center justify-center">
                                         {lesson.name}
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent className="pb-4 pt-0">
-                                    <div className={`text-3xl font-bold text-center bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
+                                <CardContent className="px-3 pb-3 pt-0">
+                                    <div className={`text-2xl font-bold text-center bg-gradient-to-r ${gradient} bg-clip-text text-transparent`}>
                                         {lesson.avgNet.toFixed(1)}
                                     </div>
-                                    <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-2">
+                                    <p className="text-[11px] text-center text-slate-500 dark:text-slate-400 mt-1.5">
                                         {lesson.count} deneme
                                     </p>
                                 </CardContent>
@@ -580,7 +580,7 @@ function StudentResultsContent() {
             {/* Exam Cards Grid */}
             <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                    Girdişim Denemeler ({filteredExams.length})
+                    Girdiğim Denemeler ({filteredExams.length})
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredExams.map(exam => {
