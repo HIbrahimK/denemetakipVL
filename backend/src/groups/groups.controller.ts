@@ -29,6 +29,7 @@ import {
   CreateGroupPostResponseDto,
   UpdateGroupPostDto,
   UpdateGroupPostReplyDto,
+  ManageGroupTeachersDto,
 } from './dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -97,8 +98,46 @@ export class GroupsController {
 
   @Delete(':id/members/:studentId')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
-  removeMember(@Param('id') id: string, @Param('studentId') studentId: string, @Request() req) {
-    return this.groupsService.removeMember(id, studentId, req.user.id, req.user.role, req.user.schoolId);
+  removeMember(
+    @Param('id') id: string,
+    @Param('studentId') studentId: string,
+    @Query('removeBoardContent') removeBoardContent: string,
+    @Request() req,
+  ) {
+    return this.groupsService.removeMember(
+      id,
+      studentId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      removeBoardContent === 'true',
+    );
+  }
+
+  @Get(':id/teachers')
+  @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
+  getGroupTeachers(@Param('id') id: string, @Request() req) {
+    return this.groupsService.getGroupTeachers(id, req.user.id, req.user.role, req.user.schoolId);
+  }
+
+  @Post(':id/teachers')
+  @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
+  addGroupTeachers(
+    @Param('id') id: string,
+    @Body() dto: ManageGroupTeachersDto,
+    @Request() req,
+  ) {
+    return this.groupsService.addGroupTeachers(id, dto.teacherIds, req.user.id, req.user.role, req.user.schoolId);
+  }
+
+  @Delete(':id/teachers/:teacherId')
+  @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
+  removeGroupTeacher(
+    @Param('id') id: string,
+    @Param('teacherId') teacherId: string,
+    @Request() req,
+  ) {
+    return this.groupsService.removeGroupTeacher(id, teacherId, req.user.id, req.user.role, req.user.schoolId);
   }
 
   @Post(':id/goals')

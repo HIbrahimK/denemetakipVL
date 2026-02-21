@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -91,7 +91,7 @@ export class ExamsService {
             },
         });
     }
-    async getExamStatistics(id: string) {
+    async getExamStatistics(id: string, user?: any) {
         const exam = await this.prisma.exam.findUnique({
             where: { id },
             include: {
@@ -109,6 +109,34 @@ export class ExamsService {
 
         const attempts = exam.attempts;
         const totalAttempts = attempts.length;
+
+        if (user) {
+            if (user.schoolId !== exam.schoolId) {
+                throw new ForbiddenException('Access denied');
+            }
+
+            if (user.role === 'STUDENT') {
+                const hasAttempt = attempts.some((attempt) => attempt.student.userId === user.id);
+                if (!hasAttempt) {
+                    throw new ForbiddenException('Access denied');
+                }
+            }
+
+            if (user.role === 'PARENT') {
+                const parent = await this.prisma.parent.findUnique({
+                    where: { userId: user.id },
+                    select: { id: true },
+                });
+
+                const hasChildAttempt =
+                    !!parent?.id &&
+                    attempts.some((attempt) => attempt.student.parentId === parent.id);
+
+                if (!hasChildAttempt) {
+                    throw new ForbiddenException('Access denied');
+                }
+            }
+        }
 
         // 1. Overall Averages
         let totalNet = 0;
@@ -188,6 +216,9 @@ export class ExamsService {
             }), {})
         })).sort((a, b) => b.score - a.score);
 
+        const canSeeDetailedStudentList =
+            !user || ['SCHOOL_ADMIN', 'TEACHER', 'SUPER_ADMIN'].includes(user.role);
+
         return {
             examTitle: exam.title,
             examDate: exam.date,
@@ -197,7 +228,7 @@ export class ExamsService {
             averageScore,
             lessonStats: finalLessonStats,
             branchStats: finalBranchStats,
-            students: studentList
+            students: canSeeDetailedStudentList ? studentList : []
         };
     }
 
@@ -310,10 +341,6 @@ export class ExamsService {
             throw new Error('Eri�.Ÿim reddedildi');
         }
 
-        const isStudentOrParent = ['STUDENT', 'PARENT'].includes(user.role);
-        if (isStudentOrParent && !exam.isAnswerKeyPublic) {
-            throw new Error('Cevap anahtar�"± hen�f¼z yay�"±nlanmad�"±');
-        }
 
         const uploadsDir = path.join(process.cwd(), 'uploads', 'private', 'answer-keys');
         const possibleExts = ['.pdf', '.jpg', '.jpeg', '.png', '.xlsx', '.xls'];

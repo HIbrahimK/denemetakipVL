@@ -13,8 +13,88 @@ export class GroupsService {
     return role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN';
   }
 
-  private canManageGroup(group: { teacherId: string | null }, userId: string, role: string) {
-    return this.isAdmin(role) || (!!group.teacherId && group.teacherId === userId);
+  private async isGroupTeacher(groupId: string, userId: string, primaryTeacherId?: string | null) {
+    if (primaryTeacherId && primaryTeacherId === userId) {
+      return true;
+    }
+
+    const assignment = await this.prisma.groupTeacher.findFirst({
+      where: {
+        groupId,
+        teacherId: userId,
+        leftAt: null,
+      },
+      select: { id: true },
+    });
+
+    return !!assignment;
+  }
+
+  private async canManageGroup(group: { id: string; teacherId: string | null }, userId: string, role: string) {
+    if (this.isAdmin(role)) {
+      return true;
+    }
+
+    if (role !== 'TEACHER') {
+      return false;
+    }
+
+    return this.isGroupTeacher(group.id, userId, group.teacherId);
+  }
+
+  private async validateTeacherIds(teacherIds: string[], schoolId: string) {
+    if (!teacherIds.length) {
+      return [];
+    }
+
+    const uniqueTeacherIds = [...new Set(teacherIds)];
+    const teachers = await this.prisma.user.findMany({
+      where: {
+        id: { in: uniqueTeacherIds },
+        role: 'TEACHER',
+        schoolId,
+      },
+      select: { id: true },
+    });
+
+    if (teachers.length !== uniqueTeacherIds.length) {
+      throw new BadRequestException('Öğretmenlerden biri bulunamadı');
+    }
+
+    return uniqueTeacherIds;
+  }
+
+  private async syncGroupTeacherAssignments(
+    groupId: string,
+    schoolId: string,
+    managerUserId: string | null,
+    teacherIds: string[],
+  ) {
+    const uniqueTeacherIds = [...new Set(teacherIds)];
+    await this.prisma.$transaction(async (tx) => {
+      for (const teacherId of uniqueTeacherIds) {
+        await tx.groupTeacher.upsert({
+          where: {
+            groupId_teacherId: {
+              groupId,
+              teacherId,
+            },
+          },
+          update: {
+            schoolId,
+            addedById: managerUserId,
+            leftAt: null,
+          },
+          create: {
+            groupId,
+            teacherId,
+            schoolId,
+            addedById: managerUserId,
+            leftAt: null,
+          },
+        });
+      }
+    });
   }
 
   private async ensureGroupAccess(groupId: string, userId: string, userRole: string, schoolId: string) {
@@ -36,7 +116,7 @@ export class GroupsService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (userRole === 'TEACHER' && group.teacherId !== userId) {
+    if (userRole === 'TEACHER' && !(await this.isGroupTeacher(group.id, userId, group.teacherId))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -73,21 +153,25 @@ export class GroupsService {
     console.log('Creating group with:', { dto, userId, schoolId });
 
     let teacherId: string | null = userId;
+    const requestedTeacherIds = Array.isArray(dto.teacherIds) ? dto.teacherIds : [];
+    const normalizedTeacherIds = [...new Set(requestedTeacherIds.filter(Boolean))];
+
     if (this.isAdmin(userRole)) {
       if (dto.teacherId) {
-        const assignedTeacher = await this.prisma.user.findUnique({
-          where: { id: dto.teacherId },
-          select: { id: true, role: true, schoolId: true },
-        });
-
-        if (!assignedTeacher || assignedTeacher.schoolId !== schoolId || assignedTeacher.role !== 'TEACHER') {
-          throw new BadRequestException('Öğretmen bulunamadı');
-        }
-
-        teacherId = dto.teacherId;
+        const [primaryTeacherId] = await this.validateTeacherIds([dto.teacherId], schoolId);
+        teacherId = primaryTeacherId;
+      } else if (normalizedTeacherIds.length > 0) {
+        const validatedIds = await this.validateTeacherIds(normalizedTeacherIds, schoolId);
+        teacherId = validatedIds[0] ?? null;
       } else {
         teacherId = null;
       }
+    } else if (normalizedTeacherIds.length > 0) {
+      const validatedIds = await this.validateTeacherIds(normalizedTeacherIds, schoolId);
+      if (!validatedIds.includes(userId)) {
+        validatedIds.push(userId);
+      }
+      teacherId = teacherId ?? validatedIds[0] ?? userId;
     }
 
     // Create group
@@ -102,6 +186,17 @@ export class GroupsService {
         isActive: dto.isActive ?? true,
       },
     });
+
+    const teacherIdsToAssign = [...new Set([
+      ...(teacherId ? [teacherId] : []),
+      ...normalizedTeacherIds,
+      ...(userRole === 'TEACHER' ? [userId] : []),
+    ])];
+
+    if (teacherIdsToAssign.length > 0) {
+      const validatedTeacherIds = await this.validateTeacherIds(teacherIdsToAssign, schoolId);
+      await this.syncGroupTeacherAssignments(group.id, schoolId, userId, validatedTeacherIds);
+    }
 
     // Add initial members if provided
     if (dto.studentIds && dto.studentIds.length > 0) {
@@ -151,7 +246,17 @@ export class GroupsService {
     const where: any = { schoolId };
 
     if (userRole === 'TEACHER') {
-      where.teacherId = userId;
+      where.OR = [
+        { teacherId: userId },
+        {
+          teacherAssignments: {
+            some: {
+              teacherId: userId,
+              leftAt: null,
+            },
+          },
+        },
+      ];
     } else if (userRole === 'STUDENT') {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -180,6 +285,18 @@ export class GroupsService {
             lastName: true,
           },
         },
+        teacherAssignments: {
+          where: { leftAt: null },
+          include: {
+            teacher: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             memberships: true,
@@ -201,6 +318,19 @@ export class GroupsService {
             firstName: true,
             lastName: true,
           },
+        },
+        teacherAssignments: {
+          where: { leftAt: null },
+          include: {
+            teacher: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
         },
         memberships: {
           where: { leftAt: null },
@@ -234,7 +364,7 @@ export class GroupsService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (userRole === 'TEACHER' && group.teacherId !== userId) {
+    if (userRole === 'TEACHER' && !(await this.isGroupTeacher(group.id, userId, group.teacherId))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -270,7 +400,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -282,20 +412,14 @@ export class GroupsService {
       isActive: dto.isActive,
     };
 
+    let primaryTeacherId: string | null = group.teacherId;
     if (this.isAdmin(userRole) && dto.teacherId) {
-      const assignedTeacher = await this.prisma.user.findUnique({
-        where: { id: dto.teacherId },
-        select: { id: true, role: true, schoolId: true },
-      });
-
-      if (!assignedTeacher || assignedTeacher.schoolId !== schoolId || assignedTeacher.role !== 'TEACHER') {
-        throw new BadRequestException('Öğretmen bulunamadı');
-      }
-
-      updateData.teacherId = dto.teacherId;
+      const [validatedTeacherId] = await this.validateTeacherIds([dto.teacherId], schoolId);
+      updateData.teacherId = validatedTeacherId;
+      primaryTeacherId = validatedTeacherId;
     }
 
-    return this.prisma.mentorGroup.update({
+    const updatedGroup = await this.prisma.mentorGroup.update({
       where: { id },
       data: updateData,
       include: {
@@ -313,6 +437,19 @@ export class GroupsService {
         },
       },
     });
+
+    if (Array.isArray(dto.teacherIds)) {
+      const validatedTeacherIds = await this.validateTeacherIds(dto.teacherIds, schoolId);
+      const teacherIdsToSync = [...new Set([
+        ...(primaryTeacherId ? [primaryTeacherId] : []),
+        ...validatedTeacherIds,
+      ])];
+      await this.syncGroupTeacherAssignments(id, schoolId, userId, teacherIdsToSync);
+    } else if (primaryTeacherId) {
+      await this.syncGroupTeacherAssignments(id, schoolId, userId, [primaryTeacherId]);
+    }
+
+    return updatedGroup;
   }
 
   async remove(id: string, userId: string, userRole: string, schoolId: string) {
@@ -324,7 +461,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -344,7 +481,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -406,7 +543,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -458,7 +595,14 @@ export class GroupsService {
     });
   }
 
-  async removeMember(groupId: string, studentId: string, userId: string, userRole: string, schoolId: string) {
+  async removeMember(
+    groupId: string,
+    studentId: string,
+    userId: string,
+    userRole: string,
+    schoolId: string,
+    removeBoardContent: boolean = false,
+  ) {
     const group = await this.prisma.mentorGroup.findUnique({
       where: { id: groupId },
     });
@@ -467,7 +611,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -483,14 +627,187 @@ export class GroupsService {
       throw new NotFoundException('Membership not found');
     }
 
-    await this.prisma.groupMembership.update({
-      where: { id: membership.id },
-      data: {
-        leftAt: new Date(),
-      },
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      select: { id: true, userId: true },
     });
 
-    return { message: 'Member removed successfully' };
+    await this.prisma.$transaction(async (tx) => {
+      if (removeBoardContent && student?.userId) {
+        await tx.groupPostResponse.deleteMany({
+          where: {
+            studentId,
+            post: { groupId },
+          },
+        });
+
+        await tx.groupPostReply.deleteMany({
+          where: {
+            authorId: student.userId,
+            post: { groupId },
+          },
+        });
+
+        await tx.groupPost.deleteMany({
+          where: {
+            groupId,
+            authorId: student.userId,
+          },
+        });
+      }
+
+      await tx.groupMembership.update({
+        where: { id: membership.id },
+        data: {
+          leftAt: new Date(),
+        },
+      });
+    });
+
+    return {
+      message: 'Member removed successfully',
+      removedBoardContent: removeBoardContent,
+    };
+  }
+
+  async getGroupTeachers(groupId: string, userId: string, userRole: string, schoolId: string) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+      select: { id: true, schoolId: true, teacherId: true },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const assignments = await this.prisma.groupTeacher.findMany({
+      where: {
+        groupId,
+        leftAt: null,
+      },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return assignments.map((assignment) => ({
+      id: assignment.id,
+      teacherId: assignment.teacherId,
+      isPrimary: assignment.teacherId === group.teacherId,
+      createdAt: assignment.createdAt,
+      teacher: assignment.teacher,
+    }));
+  }
+
+  async addGroupTeachers(
+    groupId: string,
+    teacherIds: string[],
+    userId: string,
+    userRole: string,
+    schoolId: string,
+  ) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+      select: { id: true, schoolId: true, teacherId: true },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const normalizedTeacherIds = [...new Set((teacherIds || []).filter(Boolean))];
+    if (normalizedTeacherIds.length === 0) {
+      throw new BadRequestException('En az bir öğretmen seçilmelidir');
+    }
+
+    const validatedTeacherIds = await this.validateTeacherIds(normalizedTeacherIds, schoolId);
+    await this.syncGroupTeacherAssignments(groupId, schoolId, userId, validatedTeacherIds);
+
+    if (!group.teacherId) {
+      await this.prisma.mentorGroup.update({
+        where: { id: groupId },
+        data: { teacherId: validatedTeacherIds[0] },
+      });
+    }
+
+    return this.getGroupTeachers(groupId, userId, userRole, schoolId);
+  }
+
+  async removeGroupTeacher(
+    groupId: string,
+    teacherId: string,
+    userId: string,
+    userRole: string,
+    schoolId: string,
+  ) {
+    const group = await this.prisma.mentorGroup.findUnique({
+      where: { id: groupId },
+      select: { id: true, schoolId: true, teacherId: true },
+    });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const activeAssignments = await this.prisma.groupTeacher.findMany({
+      where: { groupId, leftAt: null },
+      select: { id: true, teacherId: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const assignment = activeAssignments.find((item) => item.teacherId === teacherId) ?? null;
+
+    if (!assignment && group.teacherId !== teacherId) {
+      throw new NotFoundException('Öğretmen bu grupta yetkili değil');
+    }
+
+    const remainingTeacherIds = activeAssignments
+      .filter((item) => item.teacherId !== teacherId)
+      .map((item) => item.teacherId);
+
+    if (remainingTeacherIds.length === 0) {
+      throw new BadRequestException('Grupta en az bir yetkili öğretmen kalmalıdır');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (assignment) {
+        await tx.groupTeacher.update({
+          where: { id: assignment.id },
+          data: { leftAt: new Date() },
+        });
+      }
+
+      if (group.teacherId === teacherId) {
+        await tx.mentorGroup.update({
+          where: { id: groupId },
+          data: { teacherId: remainingTeacherIds[0] ?? null },
+        });
+      }
+    });
+
+    return {
+      message: 'Öğretmen yetkisi kaldırıldı',
+      primaryTeacherId: group.teacherId === teacherId ? remainingTeacherIds[0] : group.teacherId,
+    };
   }
 
   async createGroupGoal(groupId: string, dto: CreateGroupGoalDto, userId: string, userRole: string, schoolId: string) {
@@ -502,7 +819,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -540,7 +857,7 @@ export class GroupsService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (userRole === 'TEACHER' && group.teacherId !== userId) {
+    if (userRole === 'TEACHER' && !(await this.isGroupTeacher(group.id, userId, group.teacherId))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -617,7 +934,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -677,7 +994,7 @@ export class GroupsService {
   ) {
     const group = await this.ensureGroupAccess(groupId, userId, userRole, schoolId);
 
-    if (!this.canManageGroup(group, userId, userRole)) {
+    if (!(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -834,7 +1151,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -924,7 +1241,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -997,7 +1314,7 @@ export class GroupsService {
       throw new NotFoundException('Group not found');
     }
 
-    if (group.schoolId !== schoolId || !this.canManageGroup(group, userId, userRole)) {
+    if (group.schoolId !== schoolId || !(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -1275,7 +1592,7 @@ export class GroupsService {
   ) {
     const group = await this.ensureGroupAccess(groupId, userId, userRole, schoolId);
 
-    if (!this.canManageGroup(group, userId, userRole)) {
+    if (!(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -1422,7 +1739,7 @@ export class GroupsService {
     schoolId: string,
   ) {
     const group = await this.ensureGroupAccess(groupId, userId, userRole, schoolId);
-    if (!this.canManageGroup(group, userId, userRole)) {
+    if (!(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -1588,7 +1905,7 @@ export class GroupsService {
     schoolId: string,
   ) {
     const group = await this.ensureGroupAccess(groupId, userId, userRole, schoolId);
-    if (!this.canManageGroup(group, userId, userRole)) {
+    if (!(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -1661,7 +1978,7 @@ export class GroupsService {
     schoolId: string,
   ) {
     const group = await this.ensureGroupAccess(groupId, userId, userRole, schoolId);
-    if (!this.canManageGroup(group, userId, userRole)) {
+    if (!(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -1709,7 +2026,7 @@ export class GroupsService {
     schoolId: string,
   ) {
     const group = await this.ensureGroupAccess(groupId, userId, userRole, schoolId);
-    if (!this.canManageGroup(group, userId, userRole)) {
+    if (!(await this.canManageGroup(group, userId, userRole))) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -1983,3 +2300,4 @@ export class GroupsService {
   }
 
 }
+

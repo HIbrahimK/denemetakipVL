@@ -52,22 +52,25 @@ function TopicItem({
   onDelete: (topic: Topic) => void;
   onAddChild: (parentId: string) => void;
 }) {
+  const indent = Math.min(level, 4) * 16;
+
   return (
     <div>
       <div 
-        className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 group"
-        style={{ marginLeft: `${level * 24}px` }}
+        className="group flex flex-col gap-2 p-3 border rounded-lg hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
+        style={{ marginLeft: `${indent}px` }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex w-full min-w-0 items-center gap-3">
           <div className="text-muted-foreground text-sm w-6">
             {topic.order + 1}
           </div>
-          <span className="font-medium">{topic.name}</span>
+          <span className="font-medium break-words">{topic.name}</span>
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex w-full flex-wrap items-center gap-1 sm:w-auto sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="sm"
+            className="h-9 w-full sm:w-auto"
             onClick={() => onAddChild(topic.id)}
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -76,6 +79,7 @@ function TopicItem({
           <Button
             variant="ghost"
             size="icon"
+            className="h-9 w-9 shrink-0"
             onClick={() => onEdit(topic)}
           >
             <Edit2 className="h-4 w-4" />
@@ -83,8 +87,8 @@ function TopicItem({
           <Button
             variant="ghost"
             size="icon"
+            className="h-9 w-9 shrink-0 text-destructive hover:text-destructive"
             onClick={() => onDelete(topic)}
-            className="text-destructive hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

@@ -8,3 +8,4 @@ export * from './create-group-post-reply.dto';
 export * from './create-group-post-response.dto';
 export * from './update-group-post.dto';
 export * from './update-group-post-reply.dto';
+export * from './manage-group-teachers.dto';

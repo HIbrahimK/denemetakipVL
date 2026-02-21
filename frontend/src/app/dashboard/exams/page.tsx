@@ -168,7 +168,9 @@ export default function ExamsPage() {
                             Deneme Takvimi
                         </Link>
                     </Button>
-                    {userRole === 'SCHOOL_ADMIN' && <CreateExamModal onSuccess={fetchExams} />}
+                    {(userRole === 'SCHOOL_ADMIN' || userRole === 'TEACHER') && (
+                        <CreateExamModal onSuccess={fetchExams} />
+                    )}
                 </div>
             </div>
 

@@ -24,6 +24,11 @@ export class CreateMentorGroupDto {
   teacherId?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  teacherIds?: string[];
+
+  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 

@@ -81,7 +81,8 @@ interface MentorGroup {
 
 interface Grade {
   id: string;
-  level: number;
+  name: string;
+  level?: number;
   schoolId: string;
 }
 
@@ -90,7 +91,8 @@ interface Class {
   name: string;
   gradeId: string;
   grade?: {
-    level: number;
+    name?: string;
+    level?: number;
   };
   _count?: {
     students: number;
@@ -1282,7 +1284,7 @@ export default function StudyPlansPage() {
                     <SelectContent>
                       {grades.map(grade => (
                         <SelectItem key={grade.id} value={grade.id.toString()}>
-                          {grade.level}. Sınıf
+                          {grade.name || grade.level}. Sınıf
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1363,7 +1365,7 @@ export default function StudyPlansPage() {
                           >
                             {(() => {
                               const selectedGrade = grades.find(g => g.id.toString() === selectedGradeId);
-                              const gradeLevel = selectedGrade?.level || '';
+                              const gradeLevel = selectedGrade?.name || selectedGrade?.level || '';
                               const gradeClasses = classes.filter(cls => cls.gradeId?.toString() === selectedGradeId);
                               const allSelected = gradeClasses.every(cls => selectedTargets.includes(cls.id));
                               return allSelected
@@ -1381,7 +1383,7 @@ export default function StudyPlansPage() {
                             />
                             <Label htmlFor={`class-${cls.id}`} className="flex-1 cursor-pointer">
                               <div className="font-medium text-foreground">{cls.name}</div>
-                              <div className="text-xs text-muted-foreground">{cls.grade?.level}. Sınıf - {cls._count?.students || 0} Öğrenci</div>
+                              <div className="text-xs text-muted-foreground">{cls.grade?.name || cls.grade?.level}. Sınıf - {cls._count?.students || 0} Öğrenci</div>
                             </Label>
                           </div>
                         ))}

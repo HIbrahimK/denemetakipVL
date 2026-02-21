@@ -1,8 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -40,6 +43,7 @@ interface Task {
 
 export default function PendingApprovalPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -92,11 +96,19 @@ export default function PendingApprovalPage() {
         setSelectedTask(null);
         fetchPendingTasks();
       } else {
-        alert('Onaylama başarısız oldu');
+        toast({
+          title: 'Hata',
+          description: 'Onaylama başarısız oldu',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error approving task:', error);
-      alert('Bir hata oluştu');
+      toast({
+        title: 'Hata',
+        description: 'Bir hata oluştu',
+        variant: 'destructive',
+      });
     } finally {
       setProcessing(false);
     }
@@ -104,7 +116,11 @@ export default function PendingApprovalPage() {
 
   const handleReject = async () => {
     if (!selectedTask || !rejectComment.trim()) {
-      alert('Lütfen reddetme sebebini yazın');
+      toast({
+        title: 'Uyarı',
+        description: 'Lütfen reddetme sebebini yazın',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -125,11 +141,19 @@ export default function PendingApprovalPage() {
         setSelectedTask(null);
         fetchPendingTasks();
       } else {
-        alert('Reddetme başarısız oldu');
+        toast({
+          title: 'Hata',
+          description: 'Reddetme başarısız oldu',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error rejecting task:', error);
-      alert('Bir hata oluştu');
+      toast({
+        title: 'Hata',
+        description: 'Bir hata oluştu',
+        variant: 'destructive',
+      });
     } finally {
       setProcessing(false);
     }
@@ -146,6 +170,10 @@ export default function PendingApprovalPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-2">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Geri Dön
+        </Button>
         <h1 className="text-3xl font-bold text-gray-900">Onay Bekleyen Görevler</h1>
         <p className="text-gray-600 mt-2">
           Öğrenciler tarafından tamamlanmış ve onayınızı bekleyen görevler
@@ -246,7 +274,7 @@ export default function PendingApprovalPage() {
                         ✗ {task.wrongCount} Yanlış
                       </span>
                       <span className="text-gray-600">
-                        0 {task.blankCount} Boş
+                        {task.blankCount} Boş
                       </span>
                     </div>
                   </div>

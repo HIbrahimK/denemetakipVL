@@ -17,7 +17,8 @@ import {
   Loader2,
   ChevronRight,
   Layers,
-  Search
+  Search,
+  ArrowLeft
 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -80,7 +81,7 @@ export default function AdminSubjectsPage() {
       } else {
         toast({
           title: 'Hata',
-          description: 'Dersler yklenirken bir hata olutu',
+          description: 'Dersler yüklenirken bir hata oluştu',
           variant: 'destructive',
         });
       }
@@ -124,7 +125,7 @@ export default function AdminSubjectsPage() {
     if (!formData.name) {
       toast({
         title: 'Hata',
-        description: 'Ders ad zorunludur',
+        description: 'Ders adı zorunludur',
         variant: 'destructive',
       });
       return;
@@ -136,7 +137,7 @@ export default function AdminSubjectsPage() {
     try {
       const url = editingSubject 
         ? `${API_BASE_URL}/subjects/${editingSubject.id}`
-        : '\/subjects';
+        : `${API_BASE_URL}/subjects`;
       
       const method = editingSubject ? 'PATCH' : 'POST';
 
@@ -150,14 +151,14 @@ export default function AdminSubjectsPage() {
 
       if (res.ok) {
         toast({
-          title: 'Baarl',
-          description: editingSubject ? 'Ders gncellendi' : 'Ders oluturuldu',
+          title: 'Başarılı',
+          description: editingSubject ? 'Ders güncellendi' : 'Ders oluşturuldu',
         });
         setModalOpen(false);
         fetchSubjects();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata olutu');
+        throw new Error(error.message || 'Bir hata oluştu');
       }
     } catch (error: any) {
       toast({
@@ -183,14 +184,14 @@ export default function AdminSubjectsPage() {
 
       if (res.ok) {
         toast({
-          title: 'Baarl',
+          title: 'Başarılı',
           description: 'Ders silindi',
         });
         setDeleteModalOpen(false);
         fetchSubjects();
       } else {
         const error = await res.json();
-        throw new Error(error.message || 'Bir hata olutu');
+        throw new Error(error.message || 'Bir hata oluştu');
       }
     } catch (error: any) {
       toast({
@@ -244,9 +245,15 @@ export default function AdminSubjectsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Ders Ynetimi</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Geri Dön
+            </Button>
+          </div>
+          <h1 className="text-3xl font-bold">Ders Yönetimi</h1>
           <p className="text-muted-foreground mt-1">
-            TYT, AYT ve LGS derslerini ynetin
+            TYT, AYT ve LGS derslerini yönetin
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -272,10 +279,10 @@ export default function AdminSubjectsPage() {
             </div>
             <Select value={examTypeFilter} onValueChange={setExamTypeFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Snav Tipi" />
+                <SelectValue placeholder="Sınav Tipi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tm</SelectItem>
+                <SelectItem value="ALL">Tümü</SelectItem>
                 <SelectItem value="TYT">TYT</SelectItem>
                 <SelectItem value="AYT">AYT</SelectItem>
                 <SelectItem value="LGS">LGS</SelectItem>
@@ -307,13 +314,13 @@ export default function AdminSubjectsPage() {
                   <Badge variant="outline">{examSubjects.length} ders</Badge>
                 </div>
                 <CardDescription>
-                  {examType.grades.join(', ')}. snflar
+                  {examType.grades.join(', ')}. sınıflar
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {examSubjects.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Bu snav tipi iin ders bulunmuyor
+                    Bu sınav tipi için ders bulunmuyor
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -322,19 +329,19 @@ export default function AdminSubjectsPage() {
                       .map(subject => (
                         <div
                           key={subject.id}
-                          className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 group"
+                          className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-accent/50 group sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex w-full min-w-0 items-center gap-4">
                             <div className="text-muted-foreground text-sm w-8">
                               {subject.order + 1}
                             </div>
-                            <div>
-                              <h3 className="font-medium">{subject.name}</h3>
+                            <div className="min-w-0">
+                              <h3 className="font-medium break-words">{subject.name}</h3>
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="flex gap-1">
                                   {subject.gradeLevels.map(grade => (
                                     <Badge key={grade} variant="secondary" className="text-xs">
-                                      {grade}. Snf
+                                      {grade}. Sınıf
                                     </Badge>
                                   ))}
                                 </div>
@@ -347,10 +354,11 @@ export default function AdminSubjectsPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="h-9 w-full sm:w-auto"
                               onClick={() => router.push(`/dashboard/admin/subjects/${subject.id}/topics`)}
                             >
                               Konular
@@ -359,6 +367,7 @@ export default function AdminSubjectsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-9 w-9 shrink-0"
                               onClick={() => openEditModal(subject)}
                             >
                               <Edit2 className="h-4 w-4" />
@@ -367,7 +376,7 @@ export default function AdminSubjectsPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => openDeleteModal(subject)}
-                              className="text-destructive hover:text-destructive"
+                              className="h-9 w-9 shrink-0 text-destructive hover:text-destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -385,7 +394,7 @@ export default function AdminSubjectsPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">Ders bulunamad</h3>
+              <h3 className="mt-4 text-lg font-semibold">Ders bulunamadı</h3>
               <p className="text-muted-foreground mt-2">
                 Arama kriterlerinize uygun ders bulunmuyor
               </p>
@@ -399,7 +408,7 @@ export default function AdminSubjectsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingSubject ? 'Ders Dzenle' : 'Yeni Ders'}
+              {editingSubject ? 'Ders Düzenle' : 'Yeni Ders'}
             </DialogTitle>
           </DialogHeader>
           
@@ -407,14 +416,14 @@ export default function AdminSubjectsPage() {
             <div className="space-y-2">
               <Label>Ders Ad *</Label>
               <Input
-                placeholder="rn: Matematik"
+                placeholder="Örn: Matematik"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Snav Tipi *</Label>
+              <Label>Sınav Tipi *</Label>
               <Select 
                 value={formData.examType} 
                 onValueChange={(value: 'TYT' | 'AYT' | 'LGS') => {
@@ -438,7 +447,7 @@ export default function AdminSubjectsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Snf Seviyeleri *</Label>
+              <Label>Sınıf Seviyeleri *</Label>
               <div className="flex flex-wrap gap-3">
                 {getAvailableGrades().map(grade => (
                   <div key={grade} className="flex items-center space-x-2">
@@ -448,7 +457,7 @@ export default function AdminSubjectsPage() {
                       onCheckedChange={() => toggleGrade(grade)}
                     />
                     <Label htmlFor={`grade-${grade}`} className="cursor-pointer">
-                      {grade}. Snf
+                      {grade}. Sınıf
                     </Label>
                   </div>
                 ))}
@@ -456,7 +465,7 @@ export default function AdminSubjectsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Sralama</Label>
+              <Label>Sıralama</Label>
               <Input
                 type="number"
                 min={0}
@@ -479,7 +488,7 @@ export default function AdminSubjectsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>
-              ptal
+              İptal
             </Button>
             <Button onClick={handleSubmit} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Kaydet'}
@@ -497,18 +506,18 @@ export default function AdminSubjectsPage() {
           
           <div className="py-4">
             <p>
-              <strong>{subjectToDelete?.name}</strong> dersini silmek istediinize emin misiniz?
+              <strong>{subjectToDelete?.name}</strong> dersini silmek istediğinize emin misiniz?
             </p>
             {subjectToDelete?._count?.topics && subjectToDelete._count.topics > 0 && (
               <p className="text-sm text-destructive mt-2">
-                Bu dersin {subjectToDelete._count.topics} konusu var. Silmek konular da silecektir.
+                Bu dersin {subjectToDelete._count.topics} konusu var. Silmek konuları da silecektir.
               </p>
             )}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-              ptal
+              İptal
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sil'}
@@ -519,3 +528,4 @@ export default function AdminSubjectsPage() {
     </div>
   );
 }
+

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Megaphone, FileText, Target, BookOpen, Upload, Loader2, Trophy, BarChart3, PlayCircle, HelpCircle, Pin, Pencil, Trash2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { API_BASE_URL } from '@/lib/auth';
@@ -248,6 +248,14 @@ interface MentorGroup {
     firstName: string;
     lastName: string;
   } | null;
+  teacherAssignments?: Array<{
+    teacherId: string;
+    teacher: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
+  }>;
   goals: Array<{
     id: string;
     goalType: string;
@@ -355,6 +363,8 @@ export default function GroupBoardPage() {
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [editingReplyBody, setEditingReplyBody] = useState("");
   const [savingReply, setSavingReply] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [replyToDelete, setReplyToDelete] = useState<{ postId: string; replyId: string } | null>(null);
   const [goalForm, setGoalForm] = useState<GoalFormState>({
     goalType: "TASK",
     title: "",
@@ -382,7 +392,11 @@ export default function GroupBoardPage() {
   }, [activeQuestionIndex, questionDrafts.length]);
 
   const isAdmin = user?.role === "SCHOOL_ADMIN" || user?.role === "SUPER_ADMIN";
-  const isGroupTeacher = user?.role === "TEACHER" && user?.id === group?.teacher?.id;
+  const isAssignedTeacher =
+    user?.role === "TEACHER" &&
+    (group?.teacherAssignments ?? []).some((assignment) => assignment.teacher?.id === user?.id);
+  const isGroupTeacher =
+    user?.role === "TEACHER" && (user?.id === group?.teacher?.id || isAssignedTeacher);
   const canManage = isAdmin || isGroupTeacher;
   const isStudent = user?.role === "STUDENT";
 
@@ -786,8 +800,6 @@ export default function GroupBoardPage() {
   };
 
   const handleDeletePost = async (postId: string) => {
-    const confirmed = window.confirm("Bu paylaşımı silmek istediğinize emin misiniz?");
-    if (!confirmed) return;
     try {
       const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}`, {
         method: "DELETE",
@@ -872,8 +884,6 @@ export default function GroupBoardPage() {
   };
 
   const handleDeleteReply = async (postId: string, replyId: string) => {
-    const confirmed = window.confirm("Bu yanıtı silmek istediğinize emin misiniz?");
-    if (!confirmed) return;
     try {
       const response = await fetch(`${API_BASE_URL}/groups/${groupId}/board/${postId}/replies/${replyId}`, {
         method: "DELETE",
@@ -1914,7 +1924,7 @@ export default function GroupBoardPage() {
                             type="button"
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeletePost(post.id)}
+                            onClick={() => setPostToDelete(post.id)}
                             title="Sil"
                           >
                             <Trash2 className="h-4 w-4 text-rose-500" />
@@ -2473,7 +2483,7 @@ export default function GroupBoardPage() {
                                           type="button"
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => handleDeleteReply(post.id, reply.id)}
+                                          onClick={() => setReplyToDelete({ postId: post.id, replyId: reply.id })}
                                         >
                                           Sil
                                         </Button>
@@ -2599,6 +2609,60 @@ export default function GroupBoardPage() {
             </Button>
             <Button type="button" onClick={handleSavePostEdit} disabled={savingEdit}>
               {savingEdit ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!postToDelete} onOpenChange={(open) => !open && setPostToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Paylaşımı Sil</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Bu paylaşımı silmek istediğinize emin misiniz?
+          </DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPostToDelete(null)}>
+              Vazgeç
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!postToDelete) return;
+                const deletingPostId = postToDelete;
+                setPostToDelete(null);
+                await handleDeletePost(deletingPostId);
+              }}
+            >
+              Sil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!replyToDelete} onOpenChange={(open) => !open && setReplyToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Yanıtı Sil</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Bu yanıtı silmek istediğinize emin misiniz?
+          </DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReplyToDelete(null)}>
+              Vazgeç
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!replyToDelete) return;
+                const deletingReply = replyToDelete;
+                setReplyToDelete(null);
+                await handleDeleteReply(deletingReply.postId, deletingReply.replyId);
+              }}
+            >
+              Sil
             </Button>
           </DialogFooter>
         </DialogContent>

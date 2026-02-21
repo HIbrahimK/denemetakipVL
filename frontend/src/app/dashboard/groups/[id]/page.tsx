@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,6 +89,20 @@ interface GroupStats {
   avgStudyHoursPerMember: number;
 }
 
+interface TeacherSummary {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface GroupTeacherAssignment {
+  id: string;
+  teacherId: string;
+  isPrimary: boolean;
+  createdAt: string;
+  teacher: TeacherSummary;
+}
+
 interface GoalFormState {
   goalType: string;
   title: string;
@@ -149,6 +163,7 @@ interface MentorGroup {
     firstName: string;
     lastName: string;
   } | null;
+  teacherAssignments?: GroupTeacherAssignment[];
   memberships: GroupMember[];
   goals: GroupGoal[];
 }
@@ -164,6 +179,12 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [teacherOptions, setTeacherOptions] = useState<TeacherSummary[]>([]);
+  const [selectedTeacherToAdd, setSelectedTeacherToAdd] = useState<string>('');
+  const [addingTeacher, setAddingTeacher] = useState(false);
+  const [teacherToRemove, setTeacherToRemove] = useState<GroupTeacherAssignment | null>(null);
+  const [showRemoveTeacherModal, setShowRemoveTeacherModal] = useState(false);
+  const [removingTeacher, setRemovingTeacher] = useState(false);
   
   // Modal states
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
@@ -185,6 +206,13 @@ export default function GroupDetailPage() {
   const [transferStudentId, setTransferStudentId] = useState<string>('');
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  const [showTransferConfirmModal, setShowTransferConfirmModal] = useState(false);
+  const [showDeleteGroupModal, setShowDeleteGroupModal] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<GroupMember | null>(null);
+  const [showRemoveMemberModal, setShowRemoveMemberModal] = useState(false);
+  const [removeMemberBoardContent, setRemoveMemberBoardContent] = useState(false);
+  const [removingMember, setRemovingMember] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [goalForm, setGoalForm] = useState<GoalFormState>({
     goalType: 'CUSTOM',
@@ -200,17 +228,34 @@ export default function GroupDetailPage() {
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [savingGoal, setSavingGoal] = useState(false);
 
+  const fetchTeacherOptions = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users?role=TEACHER`);
+      if (response.ok) {
+        const data = await response.json();
+        setTeacherOptions(Array.isArray(data) ? data : []);
+      }
+    } catch (fetchError) {
+      console.error('Error fetching teachers:', fetchError);
+    }
+  };
+
   useEffect(() => {
     const fetchGroupData = async () => {
       try {
         setLoading(true);
         const userStr = localStorage.getItem('user');
+        const localUser = userStr ? JSON.parse(userStr) : null;
         if (userStr) {
-          setUser(JSON.parse(userStr));
+          setUser(localUser);
         }
         if (!localStorage.getItem('user')) {
           router.push('/login/school');
           return;
+        }
+
+        if (localUser && ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'].includes(localUser.role)) {
+          await fetchTeacherOptions();
         }
 
         // Fetch group details
@@ -256,9 +301,45 @@ export default function GroupDetailPage() {
   }, [user, groupId, router]);
 
   const isAdmin = user?.role === 'SCHOOL_ADMIN' || user?.role === 'SUPER_ADMIN';
-  const isGroupTeacher = user?.role === 'TEACHER' && user?.id === group?.teacher?.id;
+  const isAssignedTeacher =
+    user?.role === 'TEACHER' &&
+    (group?.teacherAssignments ?? []).some((assignment) => assignment.teacher?.id === user?.id);
+  const isGroupTeacher =
+    user?.role === 'TEACHER' && (user?.id === group?.teacher?.id || isAssignedTeacher);
   const canManageGroup = isAdmin || isGroupTeacher;
   const teacherLabel = group?.teacher ? `${group.teacher.firstName} ${group.teacher.lastName}` : 'Atanmamış';
+
+  const authorizedTeachers = useMemo(() => {
+    if (!group) {
+      return [] as GroupTeacherAssignment[];
+    }
+
+    const map = new Map<string, GroupTeacherAssignment>();
+
+    if (group.teacher) {
+      map.set(group.teacher.id, {
+        id: `primary-${group.teacher.id}`,
+        teacherId: group.teacher.id,
+        isPrimary: true,
+        createdAt: group.createdAt,
+        teacher: group.teacher,
+      });
+    }
+
+    for (const assignment of group.teacherAssignments ?? []) {
+      const existing = map.get(assignment.teacherId);
+      map.set(assignment.teacherId, {
+        ...assignment,
+        isPrimary: existing?.isPrimary || assignment.teacherId === group.teacher?.id,
+      });
+    }
+
+    return Array.from(map.values());
+  }, [group]);
+
+  const availableTeacherOptions = teacherOptions.filter(
+    (option) => !authorizedTeachers.some((assignment) => assignment.teacherId === option.id),
+  );
 
   const getGradeLabel = (gradeIds: number[]) => {
     if (!gradeIds || gradeIds.length === 0) return 'Tüm Sınıflar';
@@ -371,6 +452,79 @@ export default function GroupDetailPage() {
     if (statsResponse.ok) {
       const statsData = await statsResponse.json();
       setStats(statsData);
+    }
+  };
+
+  const addGroupTeacher = async () => {
+    if (!selectedTeacherToAdd) return;
+
+    setAddingTeacher(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/groups/${groupId}/teachers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teacherIds: [selectedTeacherToAdd] }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Öğretmen eklenemedi');
+      }
+
+      toast({
+        title: 'Başarılı',
+        description: 'Öğretmen yetkili olarak eklendi',
+      });
+      setSelectedTeacherToAdd('');
+      await refreshGroupData();
+    } catch (addTeacherError) {
+      const message = addTeacherError instanceof Error ? addTeacherError.message : 'Öğretmen eklenemedi';
+      toast({
+        title: 'Hata',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setAddingTeacher(false);
+    }
+  };
+
+  const removeGroupTeacher = async () => {
+    if (!teacherToRemove) return;
+
+    setRemovingTeacher(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/groups/${groupId}/teachers/${teacherToRemove.teacherId}`,
+        { method: 'DELETE' },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Öğretmen yetkisi kaldırılamadı');
+      }
+
+      toast({
+        title: 'Başarılı',
+        description: 'Öğretmen yetkisi kaldırıldı',
+      });
+      setShowRemoveTeacherModal(false);
+      setTeacherToRemove(null);
+      await refreshGroupData();
+    } catch (removeTeacherError) {
+      const message =
+        removeTeacherError instanceof Error
+          ? removeTeacherError.message
+          : 'Öğretmen yetkisi kaldırılamadı';
+      toast({
+        title: 'Hata',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setRemovingTeacher(false);
     }
   };
 
@@ -506,12 +660,6 @@ export default function GroupDetailPage() {
 
   const handleTransferMember = async () => {
     if (!transferStudentId) return;
-    const selectedStudent = transferStudents.find((student) => student.id === transferStudentId);
-    const currentGroupName = selectedStudent?.currentGroup?.name || 'Grupsuz';
-    const confirmed = window.confirm(
-      `Öğrenci mevcut grubu: ${currentGroupName}. Bu gruba aktarılsın mı?`
-    );
-    if (!confirmed) return;
     setTransferring(true);
 
     try {
@@ -548,10 +696,13 @@ export default function GroupDetailPage() {
     }
   };
 
+  const openTransferConfirmModal = () => {
+    if (!transferStudentId) return;
+    setShowTransferConfirmModal(true);
+  };
+
   const handleDeleteGroup = async () => {
     if (!group) return;
-    const confirmed = window.confirm('Bu grubu silmek istediğinize emin misiniz?');
-    if (!confirmed) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/groups/${group.id}`, {
@@ -735,9 +886,6 @@ export default function GroupDetailPage() {
   };
 
   const deleteGoal = async (goalId: string) => {
-    const confirmed = window.confirm('Bu hedefi silmek istediğinize emin misiniz?');
-    if (!confirmed) return;
-
     try {
       const response = await fetch(`${API_BASE_URL}/groups/${groupId}/goals/${goalId}`, {
         method: 'DELETE',
@@ -761,6 +909,51 @@ export default function GroupDetailPage() {
         description: 'Hedef silinirken bir hata oluştu',
         variant: 'destructive',
       });
+    }
+  };
+
+  const openRemoveMemberModal = (member: GroupMember) => {
+    setMemberToRemove(member);
+    setRemoveMemberBoardContent(false);
+    setShowRemoveMemberModal(true);
+  };
+
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return;
+
+    setRemovingMember(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/groups/${groupId}/members/${memberToRemove.studentId}?removeBoardContent=${removeMemberBoardContent}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.message || 'Üye silinemedi');
+      }
+
+      toast({
+        title: 'Başarılı',
+        description: removeMemberBoardContent
+          ? 'Öğrenci gruptan çıkarıldı ve pano içerikleri temizlendi'
+          : 'Öğrenci gruptan çıkarıldı',
+      });
+
+      setShowRemoveMemberModal(false);
+      setMemberToRemove(null);
+      await refreshGroupData();
+    } catch (error) {
+      console.error('Error removing member:', error);
+      toast({
+        title: 'Hata',
+        description: error instanceof Error ? error.message : 'Üye çıkarılırken hata oluştu',
+        variant: 'destructive',
+      });
+    } finally {
+      setRemovingMember(false);
     }
   };
 
@@ -888,7 +1081,7 @@ export default function GroupDetailPage() {
               <Button variant="outline" onClick={openTransferModal}>
                 Aktar
               </Button>
-              <Button variant="destructive" onClick={handleDeleteGroup}>
+              <Button variant="destructive" onClick={() => setShowDeleteGroupModal(true)}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Sil
               </Button>
@@ -1014,13 +1207,23 @@ export default function GroupDetailPage() {
                           {new Date(member.joinedAt).toLocaleDateString('tr-TR')}
                         </Badge>
                         {canManageGroup && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/dashboard/students/${member.student.id}`)}
-                          >
-                            Detay
-                          </Button>
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/dashboard/students/${member.student.id}`)}
+                            >
+                              Detay
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => openRemoveMemberModal(member)}
+                            >
+                              Sil
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -1120,7 +1323,7 @@ export default function GroupDetailPage() {
                             <Button variant="ghost" size="sm" onClick={() => openEditGoalModal(goal)}>
                               Düzenle
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => deleteGoal(goal.id)}>
+                            <Button variant="ghost" size="sm" onClick={() => setGoalToDelete(goal.id)}>
                               Sil
                             </Button>
                           </>
@@ -1165,6 +1368,87 @@ export default function GroupDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {canManageGroup && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Yetkili Öğretmenler</CardTitle>
+                <CardDescription>
+                  Bu listedeki öğretmenler grubu ve panoyu yönetebilir.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  {authorizedTeachers.length === 0 ? (
+                    <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                      Henüz yetkili öğretmen yok
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {authorizedTeachers.map((assignment) => (
+                        <div
+                          key={`${assignment.teacherId}-${assignment.id}`}
+                          className="flex items-center justify-between rounded-md border p-3"
+                        >
+                          <div>
+                            <div className="font-medium">
+                              {assignment.teacher.firstName} {assignment.teacher.lastName}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {assignment.isPrimary ? 'Ana mentor' : 'Yetkili öğretmen'}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {assignment.isPrimary && (
+                              <Badge variant="secondary">Ana Mentor</Badge>
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setTeacherToRemove(assignment);
+                                setShowRemoveTeacherModal(true);
+                              }}
+                              disabled={removingTeacher || authorizedTeachers.length <= 1}
+                            >
+                              Sil
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Öğretmen Ekle</Label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Select value={selectedTeacherToAdd} onValueChange={setSelectedTeacherToAdd}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Öğretmen seçiniz..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableTeacherOptions.map((teacher) => (
+                          <SelectItem key={teacher.id} value={teacher.id}>
+                            {teacher.firstName} {teacher.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      className="sm:w-auto"
+                      onClick={addGroupTeacher}
+                      disabled={!selectedTeacherToAdd || addingTeacher}
+                    >
+                      {addingTeacher ? 'Ekleniyor...' : 'Ekle'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -1422,7 +1706,7 @@ export default function GroupDetailPage() {
                   İptal
                 </Button>
                 <Button
-                  onClick={handleTransferMember}
+                  onClick={openTransferConfirmModal}
                   disabled={!transferStudentId || transferring}
                 >
                   {transferring ? 'Aktarılıyor...' : 'Aktar'}
@@ -1556,6 +1840,171 @@ export default function GroupDetailPage() {
                 </div>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {canManageGroup && (
+        <Dialog open={showTransferConfirmModal} onOpenChange={setShowTransferConfirmModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Öğrenciyi Aktar</DialogTitle>
+            </DialogHeader>
+            <div className="text-sm text-muted-foreground">
+              {(() => {
+                const selectedStudent = transferStudents.find((student) => student.id === transferStudentId);
+                const currentGroupName = selectedStudent?.currentGroup?.name || 'Grupsuz';
+                return `Öğrenci mevcut grubu: ${currentGroupName}. Bu gruba aktarılsın mı?`;
+              })()}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowTransferConfirmModal(false)} disabled={transferring}>
+                Vazgeç
+              </Button>
+              <Button
+                onClick={async () => {
+                  setShowTransferConfirmModal(false);
+                  await handleTransferMember();
+                }}
+                disabled={transferring}
+              >
+                Onayla
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {canManageGroup && (
+        <Dialog open={showDeleteGroupModal} onOpenChange={setShowDeleteGroupModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Grubu Sil</DialogTitle>
+            </DialogHeader>
+            <div className="text-sm text-muted-foreground">
+              Bu grubu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteGroupModal(false)}>
+                Vazgeç
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  setShowDeleteGroupModal(false);
+                  await handleDeleteGroup();
+                }}
+              >
+                Grubu Sil
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {canManageGroup && (
+        <Dialog open={!!goalToDelete} onOpenChange={(open) => !open && setGoalToDelete(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Hedefi Sil</DialogTitle>
+            </DialogHeader>
+            <div className="text-sm text-muted-foreground">
+              Bu hedefi silmek istediğinize emin misiniz?
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGoalToDelete(null)}>
+                Vazgeç
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  if (!goalToDelete) return;
+                  const deletingGoalId = goalToDelete;
+                  setGoalToDelete(null);
+                  await deleteGoal(deletingGoalId);
+                }}
+              >
+                Hedefi Sil
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {canManageGroup && (
+        <Dialog
+          open={showRemoveTeacherModal}
+          onOpenChange={(open) => {
+            setShowRemoveTeacherModal(open);
+            if (!open) {
+              setTeacherToRemove(null);
+            }
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Öğretmen Yetkisini Kaldır</DialogTitle>
+            </DialogHeader>
+            <div className="text-sm text-muted-foreground">
+              {teacherToRemove
+                ? `${teacherToRemove.teacher.firstName} ${teacherToRemove.teacher.lastName} öğretmeninin grup yetkisi kaldırılsın mı?`
+                : 'Öğretmen yetkisi kaldırılsın mı?'}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRemoveTeacherModal(false);
+                  setTeacherToRemove(null);
+                }}
+                disabled={removingTeacher}
+              >
+                Vazgeç
+              </Button>
+              <Button variant="destructive" onClick={removeGroupTeacher} disabled={removingTeacher}>
+                {removingTeacher ? 'Kaldırılıyor...' : 'Yetkiyi Kaldır'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {canManageGroup && (
+        <Dialog open={showRemoveMemberModal} onOpenChange={setShowRemoveMemberModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Öğrenciyi Gruptan Çıkar</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                {memberToRemove
+                  ? `${memberToRemove.student.user.firstName} ${memberToRemove.student.user.lastName} öğrencisi gruptan çıkarılsın mı?`
+                  : 'Öğrenci gruptan çıkarılsın mı?'}
+              </div>
+
+              <label className="flex items-start gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={removeMemberBoardContent}
+                  onCheckedChange={(checked) => setRemoveMemberBoardContent(checked === true)}
+                />
+                <div>
+                  <div className="font-medium">Pano içeriklerini de sil</div>
+                  <div className="text-xs text-muted-foreground">
+                    Bu öğrencinin bu gruptaki paylaşımları, yanıtları ve soru cevapları da temizlenir.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowRemoveMemberModal(false)} disabled={removingMember}>
+                Vazgeç
+              </Button>
+              <Button variant="destructive" onClick={handleRemoveMember} disabled={removingMember}>
+                {removingMember ? 'Çıkarılıyor...' : 'Öğrenciyi Çıkar'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}

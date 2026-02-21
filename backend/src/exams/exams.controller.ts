@@ -21,7 +21,7 @@ export class ExamsController {
     ) { }
 
     @Post()
-    @Roles('SCHOOL_ADMIN')
+    @Roles('SCHOOL_ADMIN', 'TEACHER')
     create(@Body() createExamDto: CreateExamDto) {
         return this.examsService.create(createExamDto);
     }
@@ -50,9 +50,9 @@ export class ExamsController {
         return this.examsService.updateParticipantCounts(id);
     }
     @Get(':id/statistics')
-    @Roles('SCHOOL_ADMIN', 'TEACHER')
-    getStatistics(@Param('id') id: string) {
-        return this.examsService.getExamStatistics(id);
+    @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'SUPER_ADMIN')
+    getStatistics(@Param('id') id: string, @Req() req: any) {
+        return this.examsService.getExamStatistics(id, req.user);
     }
 
     @Delete(':id')

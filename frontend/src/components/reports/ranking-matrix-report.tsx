@@ -68,6 +68,7 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
   const [data, setData] = useState<RankingMatrixData | null>(null);
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedClassId, setSelectedClassId] = useState<string>(initialClassId || '');
   const [selectedGradeId, setSelectedGradeId] = useState<string>('');
   const [selectionType, setSelectionType] = useState<'class' | 'grade'>('class');
@@ -124,6 +125,7 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
     if (!selectedClassId && !selectedGradeId) return;
     
     setLoading(true);
+    setErrorMessage('');
     try {
       const token = localStorage.getItem('token');
       let url: URL;
@@ -145,9 +147,13 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
         const result = await response.json();
         setData(result);
       } else {
+        setData(null);
+        setErrorMessage('Sıralama matrisi raporu getirilemedi.');
         console.error('Failed to fetch ranking matrix');
       }
     } catch (error) {
+      setData(null);
+      setErrorMessage('Sıralama matrisi raporu alınırken bir hata oluştu.');
       console.error('Error fetching ranking matrix:', error);
     } finally {
       setLoading(false);
@@ -158,7 +164,7 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
     if (selectedClassId || selectedGradeId) {
       fetchData();
     }
-  }, [selectedClassId, selectedGradeId, examType]);
+  }, [selectionType, selectedClassId, selectedGradeId, examType]);
 
   const sortedStudents = useMemo(() => {
     if (!data) return [];
@@ -168,7 +174,13 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
       
       switch (sortBy) {
         case 'number':
-          comparison = parseInt(a.studentNumber) - parseInt(b.studentNumber);
+          const numberA = Number(a.studentNumber);
+          const numberB = Number(b.studentNumber);
+          if (Number.isFinite(numberA) && Number.isFinite(numberB)) {
+            comparison = numberA - numberB;
+          } else {
+            comparison = a.studentNumber.localeCompare(b.studentNumber, 'tr');
+          }
           break;
         case 'average':
           comparison = a.averageRank - b.averageRank;
@@ -352,10 +364,8 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
               Lütfen bir sınıf seviyesi seçin
             </p>
           )}
-          {selectionType === 'grade' && !selectedGradeId && (
-            <p className="text-muted-foreground text-sm">
-              Lütfen bir sınıf seviyesi seçin
-            </p>
+          {errorMessage && (
+            <p className="text-sm text-destructive">{errorMessage}</p>
           )}
         </CardContent>
       </Card>
@@ -430,18 +440,51 @@ export const RankingMatrixReport: React.FC<RankingMatrixReportProps> = ({ classI
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4">
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Sınıf Seçin" />
+            <Select
+              value={selectionType}
+              onValueChange={(value: 'class' | 'grade') => {
+                setSelectionType(value);
+                setSelectedClassId('');
+                setSelectedGradeId('');
+                setData(null);
+              }}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    {cls.grade?.name} - {cls.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="class">Tek Sınıf</SelectItem>
+                <SelectItem value="grade">Tüm Sınıf Seviyesi</SelectItem>
               </SelectContent>
             </Select>
+
+            {selectionType === 'class' ? (
+              <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Sınıf Seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.grade?.name} - {cls.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select value={selectedGradeId} onValueChange={setSelectedGradeId}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Sınıf Seviyesi Seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {grades.map((grade) => (
+                    <SelectItem key={grade.id} value={grade.id}>
+                      Tüm {grade.name}. Sınıflar
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Select value={examType} onValueChange={setExamType}>
               <SelectTrigger className="w-48">

@@ -133,17 +133,9 @@ export class ImportService {
                             include: { user: true }
                         });
                     } else {
-                        // Update Student Info
-                        await tx.user.update({
-                            where: { id: student.userId },
-                            data: {
-                                firstName: firstName !== 'Öğrenci' ? firstName : undefined,
-                                lastName: lastName || undefined
-                            }
-                        });
-
-                        // Update Student Record
-                        // Do not reassign existing student's class during import
+                        // Existing students are matched by student number.
+                        // Do not overwrite name/surname from import rows.
+                        // Do not reassign class during exam import
                         await tx.student.update({
                             where: { id: student.id },
                             data: {
@@ -350,3 +342,4 @@ export class ImportService {
         };
     }
 }
+

@@ -65,6 +65,13 @@ export function ImportStudentsModal({ open, onOpenChange, onSuccess }: any) {
                             <p className="text-xs text-amber-700 dark:text-amber-500 leading-normal">
                                 Lütfen size verilen şablonu kullanın. Sütunların sırası: Adı, Soyadı, Okul No, Sınıf, Şube, Şifre şeklinde olmalıdır.
                             </p>
+                            <a
+                                href="/dosyalar/OgrenciSablon.xlsx"
+                                download
+                                className="inline-flex mt-3 text-xs font-semibold text-amber-900 dark:text-amber-300 underline underline-offset-2"
+                            >
+                                Öğrenci Şablonunu İndir
+                            </a>
                         </div>
 
                         <div className="space-y-4">

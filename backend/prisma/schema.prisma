@@ -345,6 +345,7 @@ model MentorGroup {
   goals           GroupGoal[]
   posts           GroupPost[]
   memberships     GroupMembership[]
+  teacherAssignments GroupTeacher[]
   groupPlans      GroupStudyPlan[]
   school          School            @relation(fields: [schoolId], references: [id])
   teacher         User?             @relation(fields: [teacherId], references: [id], onDelete: SetNull)
@@ -355,6 +356,25 @@ model MentorGroup {
   @@index([isActive])
   @@index([teacherId, schoolId])
   @@index([schoolId, groupType])
+}
+
+model GroupTeacher {
+  id        String      @id @default(uuid())
+  groupId   String
+  teacherId String
+  schoolId  String
+  addedById String?
+  createdAt DateTime    @default(now())
+  leftAt    DateTime?
+  group     MentorGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teacher   User        @relation("GroupTeacherTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  school    School      @relation(fields: [schoolId], references: [id])
+  addedBy   User?       @relation("GroupTeacherAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, teacherId])
+  @@index([groupId, leftAt])
+  @@index([teacherId, schoolId, leftAt])
+  @@index([schoolId, leftAt])
 }
 
 model Message {
@@ -550,6 +570,7 @@ model School {
   grades                    Grade[]
   groupGoals                GroupGoal[]
   groupMemberships          GroupMembership[]
+  groupTeachers             GroupTeacher[]
   lessons                   Lesson[]
   mentorGroups              MentorGroup[]
   messages                  Message[]
@@ -882,6 +903,8 @@ model User {
   avatarSeed           String?
   branch               String?
   mentorGroups         MentorGroup[]
+  groupTeacherAssignments GroupTeacher[] @relation("GroupTeacherTeacher")
+  addedGroupTeacherAssignments GroupTeacher[] @relation("GroupTeacherAddedBy")
   messages             Message[]
   messageDrafts        MessageDraft[]
   messageRecipients    MessageRecipient[]

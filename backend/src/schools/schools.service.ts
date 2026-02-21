@@ -486,6 +486,7 @@ export class SchoolsService {
                         where: { schoolId: id },
                         include: {
                             memberships: true,
+                            teacherAssignments: true,
                             goals: true,
                             posts: {
                                 include: {
@@ -508,6 +509,9 @@ export class SchoolsService {
                             replies: true,
                             responses: true,
                         },
+                    }),
+                    this.prisma.groupTeacher.findMany({
+                        where: { schoolId: id },
                     }),
                 ]),
 
@@ -588,6 +592,7 @@ export class SchoolsService {
                     groupMemberships: groupData[1],
                     groupGoals: groupData[2],
                     groupPosts: groupData[3],
+                    groupTeachers: groupData[4],
                     groupPostReplies: groupData[3].flatMap((p) => p.replies || []),
                     groupPostResponses: groupData[3].flatMap((p) => p.responses || []),
 
@@ -1389,6 +1394,22 @@ export class SchoolsService {
                                     joinedAt: membership.joinedAt,
                                     leftAt: membership.leftAt,
                                     schoolId: membership.schoolId,
+                                },
+                            });
+                        }
+                    }
+
+                    if (data.groupTeachers?.length) {
+                        for (const assignment of data.groupTeachers) {
+                            await tx.groupTeacher.create({
+                                data: {
+                                    id: assignment.id,
+                                    groupId: assignment.groupId,
+                                    teacherId: assignment.teacherId,
+                                    schoolId: assignment.schoolId,
+                                    addedById: assignment.addedById,
+                                    createdAt: assignment.createdAt,
+                                    leftAt: assignment.leftAt,
                                 },
                             });
                         }

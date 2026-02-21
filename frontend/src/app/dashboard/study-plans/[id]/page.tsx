@@ -25,12 +25,14 @@ import {
   Target,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Printer
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Types
 interface StudyTask {
@@ -134,6 +136,7 @@ export default function StudyPlanDetailPage() {
   const [assignmentSummary, setAssignmentSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [assignmentToCancel, setAssignmentToCancel] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -245,8 +248,6 @@ export default function StudyPlanDetailPage() {
   };
 
   const handleCancelAssignment = async (assignmentId: string) => {
-    if (!confirm('Bu atamayı iptal etmek istediğinize emin misiniz?')) return;
-
     setProcessing(true);
     const token = localStorage.getItem('token');
     try {
@@ -292,11 +293,14 @@ export default function StudyPlanDetailPage() {
   }
 
   const statusBadge = getStatusBadge(plan.status);
+  const printRowCount = plan.planData?.rows?.length ?? 0;
+  const printDensityClass =
+    printRowCount > 9 ? 'print-density-compact' : printRowCount > 6 ? 'print-density-tight' : 'print-density-normal';
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto py-6 space-y-6 study-plan-page">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between study-plan-actions">
         <div>
           <Button variant="ghost" onClick={() => router.push('/dashboard/study-plans')}>
             <ChevronLeft className="mr-2 h-4 w-4" />
@@ -329,10 +333,16 @@ export default function StudyPlanDetailPage() {
             Planı Düzenle
           </Button>
         )}
+        {(user?.role === 'TEACHER' || user?.role === 'STUDENT') && (
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" />
+            Yazdır
+          </Button>
+        )}
       </div>
 
       {/* Info Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 study-plan-meta-cards">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hedef</CardTitle>
@@ -384,7 +394,7 @@ export default function StudyPlanDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="table" className="space-y-4">
+      <Tabs defaultValue="table" className="space-y-4 study-plan-tabs">
         <TabsList>
           <TabsTrigger value="table">Tablo Görünümü</TabsTrigger>
           {plan.isTemplate && <TabsTrigger value="assignments">Aktif Atamalar ({plan.assignments?.filter(a => a.status !== 'CANCELLED').length || 0})</TabsTrigger>}
@@ -431,7 +441,7 @@ export default function StudyPlanDetailPage() {
                                 {assignment.assignedBy?.firstName} {assignment.assignedBy?.lastName}
                               </td>
                               <td className="p-3 text-right">
-                                <Button variant="ghost" size="sm" onClick={() => handleCancelAssignment(assignment.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+                                <Button variant="ghost" size="sm" onClick={() => setAssignmentToCancel(assignment.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
                                   <XCircle className="h-4 w-4 mr-1" /> İptal Et
                                 </Button>
                               </td>
@@ -675,6 +685,290 @@ export default function StudyPlanDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <section className={`study-plan-print ${printDensityClass}`}>
+        <div className="study-plan-print-header">
+          <h1>{plan.name}</h1>
+          <p>
+            {plan.examType} • {plan.gradeLevels.map((g) => `${g}. Sınıf`).join(', ')} •{' '}
+            {format(new Date(plan.weekStartDate), 'dd MMM yyyy', { locale: tr })} -{' '}
+            {format(addDays(new Date(plan.weekStartDate), 6), 'dd MMM yyyy', { locale: tr })}
+          </p>
+        </div>
+
+        <table className="study-plan-print-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              {DAYS.map((day, index) => (
+                <th key={`print-${day}`}>
+                  <div>{day}</div>
+                  <div className="print-date">
+                    {format(addDays(new Date(plan.weekStartDate), index), 'dd.MM', { locale: tr })}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {plan.planData?.rows?.map((row, rowIndex) => (
+              <tr key={`print-row-${row.id}`}>
+                <td>{rowIndex + 1}</td>
+                {row.cells.map((cell, dayIndex) => (
+                  <td key={`print-cell-${row.id}-${dayIndex}`}>
+                    {cell ? (
+                      <div className="print-cell">
+                        {cell.subjectName && <div className="print-subject">{cell.subjectName}</div>}
+                        {cell.topicName && <div className="print-topic">{cell.topicName}</div>}
+                        {(cell.targetQuestionCount || cell.targetDuration || cell.targetResource) && (
+                          <div className="print-targets">
+                            {cell.targetQuestionCount ? `${cell.targetQuestionCount} soru` : ''}
+                            {cell.targetQuestionCount && cell.targetDuration ? ' • ' : ''}
+                            {cell.targetDuration ? `${cell.targetDuration} dk` : ''}
+                            {cell.targetResource ? ` • ${cell.targetResource}` : ''}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="print-empty">-</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <style jsx global>{`
+        @media screen {
+          .study-plan-print {
+            display: none;
+          }
+        }
+
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 6mm;
+          }
+
+          html,
+          body {
+            width: 297mm;
+            height: 210mm;
+            overflow: hidden;
+          }
+
+          body {
+            margin: 0 !important;
+            background: #fff !important;
+            color: #111827 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .study-plan-page > :not(.study-plan-print):not(style),
+          [role='dialog'],
+          [data-sonner-toaster] {
+            display: none !important;
+          }
+
+          .study-plan-page {
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          .study-plan-print {
+            display: block !important;
+            width: 100%;
+            page-break-inside: avoid;
+          }
+
+          .study-plan-print-header {
+            margin-bottom: 6px;
+          }
+
+          .study-plan-print-header h1 {
+            font-size: 14px;
+            line-height: 1.2;
+            margin: 0 0 2px;
+          }
+
+          .study-plan-print-header p {
+            font-size: 10px;
+            margin: 0;
+            color: #374151;
+          }
+
+          .study-plan-print-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 9.5px;
+            line-height: 1.15;
+            page-break-inside: avoid;
+          }
+
+          .study-plan-print-table th,
+          .study-plan-print-table td {
+            border: 1px solid #9ca3af;
+            padding: 3px;
+            vertical-align: top;
+            overflow: hidden;
+            word-break: break-word;
+          }
+
+          .study-plan-print-table th {
+            background: #f3f4f6 !important;
+            font-weight: 700;
+            text-align: left;
+          }
+
+          .study-plan-print-table th:first-child,
+          .study-plan-print-table td:first-child {
+            width: 20px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 2px;
+            font-weight: 700;
+          }
+
+          .study-plan-print-table tbody tr {
+            height: 38px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          .study-plan-print-table .print-date {
+            font-weight: 500;
+            font-size: 8px;
+            margin-top: 1px;
+          }
+
+          .study-plan-print-table .print-cell {
+            line-height: 1.1;
+            max-height: 34px;
+            overflow: hidden;
+          }
+
+          .study-plan-print-table .print-subject {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .study-plan-print-table .print-topic {
+            color: #374151;
+            max-height: 2.2em;
+            overflow: hidden;
+          }
+
+          .study-plan-print-table .print-targets {
+            color: #1f2937;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .study-plan-print-table .print-empty {
+            color: #9ca3af;
+          }
+
+          .study-plan-print.print-density-tight {
+            transform: scale(0.92);
+            transform-origin: top left;
+            width: 108.7%;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-header h1 {
+            font-size: 13px;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-header p {
+            font-size: 9px;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-table {
+            font-size: 8.5px;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-table th,
+          .study-plan-print.print-density-tight .study-plan-print-table td {
+            padding: 2px;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-table tbody tr {
+            height: 32px;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-table .print-cell {
+            max-height: 28px;
+          }
+
+          .study-plan-print.print-density-compact {
+            transform: scale(0.84);
+            transform-origin: top left;
+            width: 119%;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-header h1 {
+            font-size: 12px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-header p {
+            font-size: 8px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-table {
+            font-size: 8px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-table th,
+          .study-plan-print.print-density-compact .study-plan-print-table td {
+            padding: 1.5px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-table tbody tr {
+            height: 26px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-table .print-cell {
+            max-height: 22px;
+          }
+        }
+      `}</style>
+
+      <Dialog open={!!assignmentToCancel} onOpenChange={(open) => !open && setAssignmentToCancel(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Atamayı İptal Et</DialogTitle>
+            <DialogDescription>
+              Bu atamayı iptal etmek istediğinize emin misiniz?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignmentToCancel(null)} disabled={processing}>
+              Vazgeç
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!assignmentToCancel) return;
+                const cancelId = assignmentToCancel;
+                setAssignmentToCancel(null);
+                await handleCancelAssignment(cancelId);
+              }}
+              disabled={processing}
+            >
+              {processing ? 'İptal Ediliyor...' : 'Atamayı İptal Et'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

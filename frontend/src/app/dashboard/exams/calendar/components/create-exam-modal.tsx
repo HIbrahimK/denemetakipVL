@@ -1,14 +1,8 @@
-'use client';
+﻿'use client';
 
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -26,9 +20,15 @@ interface CreateExamModalProps {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    initialDate?: Date | null;
 }
 
-export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalProps) {
+const toDateTimeLocal = (date: Date) => {
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+export function CreateExamModal({ open, onClose, onSuccess, initialDate }: CreateExamModalProps) {
     const [formData, setFormData] = useState({
         title: '',
         type: 'TYT',
@@ -47,10 +47,24 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
 
+    useEffect(() => {
+        if (!open) return;
+
+        if (initialDate) {
+            const prefill = new Date(initialDate);
+            prefill.setHours(9, 0, 0, 0);
+            setFormData((prev) => ({
+                ...prev,
+                scheduledDateTime: toDateTimeLocal(prefill),
+            }));
+        }
+    }, [open, initialDate]);
+
     const getSchoolId = () => {
         if (typeof window === 'undefined') return null;
         const userStr = localStorage.getItem('user');
         if (!userStr) return null;
+
         try {
             const user = JSON.parse(userStr);
             return user.schoolId;
@@ -69,7 +83,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
             const payload = {
                 ...formData,
                 schoolId,
-                quantity: formData.quantity ? parseInt(formData.quantity) : undefined,
+                quantity: formData.quantity ? parseInt(formData.quantity, 10) : undefined,
                 fee: formData.fee ? parseFloat(formData.fee) : undefined,
                 date: formData.scheduledDateTime || new Date().toISOString(),
             };
@@ -82,16 +96,16 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                 body: JSON.stringify(payload),
             });
 
-            if (response.ok) {
-                toast({
-                    title: 'Başarılı',
-                    description: 'Deneme oluşturuldu',
-                });
-                onSuccess();
-                onClose();
-            } else {
+            if (!response.ok) {
                 throw new Error('Failed to create exam');
             }
+
+            toast({
+                title: 'Başarılı',
+                description: 'Deneme oluşturuldu',
+            });
+            onSuccess();
+            onClose();
         } catch (error) {
             toast({
                 title: 'Hata',
@@ -117,9 +131,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Input
                                 id="title"
                                 value={formData.title}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, title: e.target.value })
-                                }
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 placeholder="Örn: Matemito A Denemesi"
                                 required
                             />
@@ -129,9 +141,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Label htmlFor="type">Deneme Türü *</Label>
                             <Select
                                 value={formData.type}
-                                onValueChange={(value) =>
-                                    setFormData({ ...formData, type: value })
-                                }
+                                onValueChange={(value) => setFormData({ ...formData, type: value })}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -149,9 +159,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Label htmlFor="gradeLevel">Sınıf Seviyesi *</Label>
                             <Select
                                 value={formData.gradeLevel.toString()}
-                                onValueChange={(value) =>
-                                    setFormData({ ...formData, gradeLevel: parseInt(value) })
-                                }
+                                onValueChange={(value) => setFormData({ ...formData, gradeLevel: parseInt(value, 10) })}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -165,7 +173,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 </SelectContent>
                             </Select>
                             <p className="text-xs text-muted-foreground mt-1">
-                                Baçka sınıflara oluşturduktan sonra kopyalayabilirsiniz
+                                Başka sınıflara oluşturduktan sonra kopyalayabilirsiniz
                             </p>
                         </div>
 
@@ -174,9 +182,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Input
                                 id="publisher"
                                 value={formData.publisher}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, publisher: e.target.value })
-                                }
+                                onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
                                 placeholder="Örn: Matemito"
                             />
                         </div>
@@ -187,12 +193,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 id="scheduledDateTime"
                                 type="datetime-local"
                                 value={formData.scheduledDateTime}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        scheduledDateTime: e.target.value,
-                                    })
-                                }
+                                onChange={(e) => setFormData({ ...formData, scheduledDateTime: e.target.value })}
                                 required
                             />
                         </div>
@@ -203,16 +204,9 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 id="applicationDateTime"
                                 type="datetime-local"
                                 value={formData.applicationDateTime}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        applicationDateTime: e.target.value,
-                                    })
-                                }
+                                onChange={(e) => setFormData({ ...formData, applicationDateTime: e.target.value })}
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Cevap anahtarının açılacağı tarih
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">Cevap anahtarının açılacağı tarih</p>
                         </div>
 
                         <div>
@@ -220,9 +214,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Input
                                 id="broughtBy"
                                 value={formData.broughtBy}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, broughtBy: e.target.value })
-                                }
+                                onChange={(e) => setFormData({ ...formData, broughtBy: e.target.value })}
                                 placeholder="Getiren kişi/kurum"
                             />
                         </div>
@@ -233,23 +225,19 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 id="quantity"
                                 type="number"
                                 value={formData.quantity}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, quantity: e.target.value })
-                                }
+                                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                                 placeholder="Kaç adet alındı"
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="fee">Ücret (?)</Label>
+                            <Label htmlFor="fee">Ücret (₺)</Label>
                             <Input
                                 id="fee"
                                 type="number"
                                 step="0.01"
                                 value={formData.fee}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, fee: e.target.value })
-                                }
+                                onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
                                 placeholder="0.00"
                             />
                         </div>
@@ -260,9 +248,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 id="color"
                                 type="color"
                                 value={formData.color}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, color: e.target.value })
-                                }
+                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                             />
                         </div>
                     </div>
@@ -272,9 +258,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Checkbox
                                 id="isPaid"
                                 checked={formData.isPaid}
-                                onCheckedChange={(checked) =>
-                                    setFormData({ ...formData, isPaid: checked as boolean })
-                                }
+                                onCheckedChange={(checked) => setFormData({ ...formData, isPaid: checked as boolean })}
                             />
                             <Label htmlFor="isPaid" className="font-normal">
                                 Ödeme yapıldı
@@ -285,9 +269,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                             <Checkbox
                                 id="isPublished"
                                 checked={formData.isPublished}
-                                onCheckedChange={(checked) =>
-                                    setFormData({ ...formData, isPublished: checked as boolean })
-                                }
+                                onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked as boolean })}
                             />
                             <Label htmlFor="isPublished" className="font-normal">
                                 Öğrencilere göster
@@ -299,10 +281,7 @@ export function CreateExamModal({ open, onClose, onSuccess }: CreateExamModalPro
                                 id="isPublisherVisible"
                                 checked={formData.isPublisherVisible}
                                 onCheckedChange={(checked) =>
-                                    setFormData({
-                                        ...formData,
-                                        isPublisherVisible: checked as boolean,
-                                    })
+                                    setFormData({ ...formData, isPublisherVisible: checked as boolean })
                                 }
                             />
                             <Label htmlFor="isPublisherVisible" className="font-normal">

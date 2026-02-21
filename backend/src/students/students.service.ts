@@ -635,7 +635,7 @@ export class StudentsService {
             return `/exams/${exam.id}/answer-key`;
         }
 
-        if (isStudentOrParent && exam.isAnswerKeyPublic) {
+        if (isStudentOrParent) {
             return `/exams/${exam.id}/answer-key`;
         }
 

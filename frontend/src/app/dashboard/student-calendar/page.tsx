@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
-import { format, isBefore, isAfter, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
+import { format, isAfter, isBefore, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { Calendar as CalendarIcon, Clock, FileText, CheckCircle, XCircle, Trophy, Table as TableIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -172,9 +172,7 @@ export default function StudentExamCalendarPage() {
     };
 
     const canViewAnswerKey = (exam: Exam) => {
-        if (!exam.isAnswerKeyPublic || !exam.answerKeyUrl) return false;
-        if (!exam.applicationDateTime) return true;
-        return isAfter(new Date(), new Date(exam.applicationDateTime));
+        return !!exam.answerKeyUrl;
     };
 
     const getExamsForDay = (day: Date) => {

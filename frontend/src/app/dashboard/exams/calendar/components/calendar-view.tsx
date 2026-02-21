@@ -1,14 +1,13 @@
-'use client';
+﻿'use client';
 
-import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
 import { API_BASE_URL } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 interface CalendarViewProps {
     year: number;
@@ -17,6 +16,7 @@ interface CalendarViewProps {
     includeArchived: boolean;
     refreshTrigger: number;
     onRefresh: () => void;
+    onDayClick?: (day: Date) => void;
 }
 
 interface Exam {
@@ -37,6 +37,7 @@ export function CalendarView({
     gradeLevel,
     includeArchived,
     refreshTrigger,
+    onDayClick,
 }: CalendarViewProps) {
     const [currentMonth, setCurrentMonth] = useState(new Date(year, new Date().getMonth()));
     const [exams, setExams] = useState<Exam[]>([]);
@@ -44,9 +45,9 @@ export function CalendarView({
     const router = useRouter();
 
     const getSchoolId = () => {
-        if (typeof window === 'undefined') return null;
         const userStr = localStorage.getItem('user');
         if (!userStr) return null;
+
         try {
             const user = JSON.parse(userStr);
             return user.schoolId;
@@ -75,11 +76,7 @@ export function CalendarView({
             if (type) params.append('type', type);
             if (gradeLevel) params.append('gradeLevel', gradeLevel.toString());
 
-            const response = await fetch(`${API_BASE_URL}/exams/calendar/view?${params}`, {
-                headers: {
-                },
-            });
-
+            const response = await fetch(`${API_BASE_URL}/exams/calendar/view?${params}`);
             if (response.ok) {
                 const data = await response.json();
                 setExams(data);
@@ -95,9 +92,9 @@ export function CalendarView({
     const monthEnd = endOfMonth(currentMonth);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    // Ayın başladığı günü bul (0 = Pazar, 1 = Pazartesi, ...)
+    // Ayın başladığı gün (0 = Pazar). Takvimi pazartesi başlatıyoruz.
     const startDay = monthStart.getDay();
-    const paddingDays = startDay === 0 ? 6 : startDay - 1; // Pazartesi başlat
+    const paddingDays = startDay === 0 ? 6 : startDay - 1;
 
     const getExamsForDay = (day: Date) => {
         return exams.filter((exam) => {
@@ -122,9 +119,7 @@ export function CalendarView({
         <Card className="p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">
-                    {format(currentMonth, 'MMMM yyyy', { locale: tr })}
-                </h2>
+                <h2 className="text-2xl font-bold">{format(currentMonth, 'MMMM yyyy', { locale: tr })}</h2>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={handleToday}>
                         Bugün
@@ -146,10 +141,7 @@ export function CalendarView({
                 <div className="grid grid-cols-7 gap-2">
                     {/* Gün başlıkları */}
                     {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map((day) => (
-                        <div
-                            key={day}
-                            className="text-center font-semibold text-sm text-muted-foreground py-2"
-                        >
+                        <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
                             {day}
                         </div>
                     ))}
@@ -167,15 +159,14 @@ export function CalendarView({
                         return (
                             <div
                                 key={day.toString()}
-                                className={`min-h-[120px] border rounded-lg p-2 ${
+                                onClick={() => onDayClick?.(day)}
+                                className={`min-h-[120px] border rounded-lg p-2 cursor-pointer ${
                                     isCurrentDay ? 'border-blue-500 bg-blue-50/50' : 'border-border'
                                 } hover:shadow-md transition-shadow`}
                             >
                                 <div
                                     className={`text-sm font-medium mb-2 ${
-                                        isCurrentDay
-                                            ? 'text-blue-600 font-bold'
-                                            : 'text-muted-foreground'
+                                        isCurrentDay ? 'text-blue-600 font-bold' : 'text-muted-foreground'
                                     }`}
                                 >
                                     {format(day, 'd')}
@@ -185,9 +176,10 @@ export function CalendarView({
                                     {dayExams.slice(0, 3).map((exam) => (
                                         <button
                                             key={exam.id}
-                                            onClick={() =>
-                                                router.push(`/dashboard/exams/${exam.id}/results`)
-                                            }
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                router.push(`/dashboard/exams/${exam.id}/results`);
+                                            }}
                                             className="w-full text-left"
                                         >
                                             <div
@@ -203,6 +195,7 @@ export function CalendarView({
                                             </div>
                                         </button>
                                     ))}
+
                                     {dayExams.length > 3 && (
                                         <div className="text-xs text-center text-muted-foreground">
                                             +{dayExams.length - 3} daha
