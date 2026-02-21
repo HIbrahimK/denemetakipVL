@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEnum, MaxLength, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  MaxLength,
+  IsBoolean,
+} from 'class-validator';
 import { MessageCategory } from '@prisma/client';
 
 export class SaveDraftDto {

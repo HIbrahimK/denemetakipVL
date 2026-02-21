@@ -4,9 +4,7 @@ import { Queue } from 'bullmq';
 
 @Injectable()
 export class MessageSchedulerService implements OnModuleInit {
-  constructor(
-    @InjectQueue('messages') private messagesQueue: Queue,
-  ) {}
+  constructor(@InjectQueue('messages') private messagesQueue: Queue) {}
 
   async onModuleInit() {
     // Schedule auto-delete job to run daily at 2 AM
@@ -33,6 +31,8 @@ export class MessageSchedulerService implements OnModuleInit {
       },
     );
 
-    console.log('Message scheduler initialized: Auto-delete and reminder jobs scheduled');
+    console.log(
+      'Message scheduler initialized: Auto-delete and reminder jobs scheduled',
+    );
   }
 }

@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { ExamType } from '@prisma/client';
-import { ReportsService, ExamReportSummary, ExamReportDetailed, SubjectReportSummary } from './reports.service';
+import {
+  ReportsService,
+  ExamReportSummary,
+  ExamReportDetailed,
+  SubjectReportSummary,
+} from './reports.service';
 
 @Injectable()
 export class ExportService {
@@ -24,14 +29,15 @@ export class ExportService {
   ): Promise<Buffer> {
     try {
       console.log('Generating Excel with reports count:', reports?.length);
-      
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Deneme Özet Bilgileri');
 
       // Başlık
-      const lessonNames = reports[0]?.lessonAverages?.map(l => l.lessonName) || [];
+      const lessonNames =
+        reports[0]?.lessonAverages?.map((l) => l.lessonName) || [];
       const totalColumns = 2 + lessonNames.length + 2 + 1; // Sınav Adı, Tarih, Dersler, Toplam Net, Puan Ort, Katılım
-      
+
       worksheet.mergeCells(1, 1, 1, totalColumns);
       const titleCell = worksheet.getCell(1, 1);
       titleCell.value = title;
@@ -40,7 +46,7 @@ export class ExportService {
       titleCell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FFE0E0E0' }
+        fgColor: { argb: 'FFE0E0E0' },
       };
 
       // Boş satır
@@ -55,7 +61,7 @@ export class ExportService {
 
       // Tablo başlıkları
       const headers = ['Sınav Adı', 'Sınav Tarihi'];
-      lessonNames.forEach(lesson => {
+      lessonNames.forEach((lesson) => {
         headers.push(lesson);
       });
       headers.push('Toplam Net', 'Puan Ortalaması', 'Katılım');
@@ -67,13 +73,13 @@ export class ExportService {
         cell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FFD3D3D3' }
+          fgColor: { argb: 'FFD3D3D3' },
         };
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          right: { style: 'thin' },
         };
       });
 
@@ -82,12 +88,14 @@ export class ExportService {
         try {
           const rowData: any[] = [
             report.examTitle || 'İsimsiz Sınav',
-            new Date(report.examDate).toLocaleDateString('tr-TR')
+            new Date(report.examDate).toLocaleDateString('tr-TR'),
           ];
 
           // Her ders için net ortalamasını ekle
-          lessonNames.forEach(lessonName => {
-            const lesson = (report.lessonAverages || []).find(l => l.lessonName === lessonName);
+          lessonNames.forEach((lessonName) => {
+            const lesson = (report.lessonAverages || []).find(
+              (l) => l.lessonName === lessonName,
+            );
             rowData.push(lesson ? this.safeToFixed(lesson.averageNet) : '0.00');
           });
 
@@ -99,10 +107,13 @@ export class ExportService {
           rowData.push(this.safeToFixed(totalNet));
 
           // Puan ortalaması
-          const avgScore = (report.scoreAverages || []).length > 0
-            ? (report.scoreAverages || []).reduce((sum, s) => sum + (Number(s.averageScore) || 0), 0) /
-            report.scoreAverages.length
-            : 0;
+          const avgScore =
+            (report.scoreAverages || []).length > 0
+              ? (report.scoreAverages || []).reduce(
+                  (sum, s) => sum + (Number(s.averageScore) || 0),
+                  0,
+                ) / report.scoreAverages.length
+              : 0;
           rowData.push(this.safeToFixed(avgScore));
 
           // Katılım
@@ -115,7 +126,7 @@ export class ExportService {
               top: { style: 'thin' },
               left: { style: 'thin' },
               bottom: { style: 'thin' },
-              right: { style: 'thin' }
+              right: { style: 'thin' },
             };
             // İlk iki sütun sola hizalı
             if (colNumber <= 2) {
@@ -153,8 +164,8 @@ export class ExportService {
       worksheet.getColumn(2 + lessonNames.length + 3).width = 10; // Katılım
 
       // Excel dosyasını buffer olarak döndür
-    const buffer = await workbook.xlsx.writeBuffer();
-    return Buffer.from(buffer);
+      const buffer = await workbook.xlsx.writeBuffer();
+      return Buffer.from(buffer);
     } catch (error) {
       console.error('Error in generateExamSummaryExcel:', error);
       throw new Error(`Excel dosyası oluşturulamadı: ${error.message}`);
@@ -169,8 +180,11 @@ export class ExportService {
     title: string,
   ): Promise<Buffer> {
     try {
-      console.log('Generating Detailed Excel with reports count:', reports?.length);
-      
+      console.log(
+        'Generating Detailed Excel with reports count:',
+        reports?.length,
+      );
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Deneme Ayrıntılı Bilgileri');
 
@@ -182,11 +196,12 @@ export class ExportService {
       }
 
       // Ders adlarını al
-      const lessonNames = reports[0]?.lessonAverages?.map(l => l.lessonName) || [];
-      
+      const lessonNames =
+        reports[0]?.lessonAverages?.map((l) => l.lessonName) || [];
+
       // Toplam sütun sayısı: Sınav Adı, Tarih + (Her ders için 3 sütun: D,Y,N) + Toplam D, Toplam Y, Toplam Net + Puan Ort + Katılım
-      const totalColumns = 2 + (lessonNames.length * 3) + 3 + 2;
-      
+      const totalColumns = 2 + lessonNames.length * 3 + 3 + 2;
+
       // Başlık
       worksheet.mergeCells(1, 1, 1, totalColumns);
       const titleCell = worksheet.getCell(1, 1);
@@ -196,7 +211,7 @@ export class ExportService {
       titleCell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FFE0E0E0' }
+        fgColor: { argb: 'FFE0E0E0' },
       };
 
       // Boş satır
@@ -204,15 +219,15 @@ export class ExportService {
 
       // Tablo başlıkları - İlk satır (Ders adları)
       const headerRow1: any[] = ['Sınav Adı', 'Sınav Tarihi'];
-      lessonNames.forEach(lesson => {
+      lessonNames.forEach((lesson) => {
         headerRow1.push(lesson, '', ''); // Üç sütun için ders adı
       });
       headerRow1.push('Toplam', '', '', 'Puan', 'Katılım');
-      
+
       const row1 = worksheet.addRow(headerRow1);
       row1.font = { bold: true, size: 11 };
       row1.alignment = { horizontal: 'center', vertical: 'middle' };
-      
+
       // Birleştirmeler - İlk satırda ders isimlerini ve toplamı 3 kolon boyunca merge et
       let colIndex = 3;
       lessonNames.forEach(() => {
@@ -228,30 +243,40 @@ export class ExportService {
         headerRow2.push('D', 'Y', 'N');
       });
       headerRow2.push('D', 'Y', 'N', 'Ort.', '');
-      
+
       const row2 = worksheet.addRow(headerRow2);
       row2.font = { bold: true, size: 10 };
       row2.alignment = { horizontal: 'center', vertical: 'middle' };
-      
+
       // Birleştirme: Sınav Adı, Tarihi, Puan ve Katılım (dikey birleştirme iki satır için)
       worksheet.mergeCells(row1.number, 1, row2.number, 1); // Sınav Adı
       worksheet.mergeCells(row1.number, 2, row2.number, 2); // Tarih
-      worksheet.mergeCells(row1.number, totalColumns - 1, row2.number, totalColumns - 1); // Puan Ort
-      worksheet.mergeCells(row1.number, totalColumns, row2.number, totalColumns); // Katılım
+      worksheet.mergeCells(
+        row1.number,
+        totalColumns - 1,
+        row2.number,
+        totalColumns - 1,
+      ); // Puan Ort
+      worksheet.mergeCells(
+        row1.number,
+        totalColumns,
+        row2.number,
+        totalColumns,
+      ); // Katılım
 
       // Tüm başlık hücrelerine stil ver
-      [row1, row2].forEach(row => {
+      [row1, row2].forEach((row) => {
         row.eachCell((cell) => {
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFD3D3D3' }
+            fgColor: { argb: 'FFD3D3D3' },
           };
           cell.border = {
             top: { style: 'thin' },
             left: { style: 'thin' },
             bottom: { style: 'thin' },
-            right: { style: 'thin' }
+            right: { style: 'thin' },
           };
         });
       });
@@ -261,7 +286,7 @@ export class ExportService {
         try {
           const rowData: any[] = [
             report.examTitle || 'İsimsiz Sınav',
-            new Date(report.examDate).toLocaleDateString('tr-TR')
+            new Date(report.examDate).toLocaleDateString('tr-TR'),
           ];
 
           let totalCorrect = 0;
@@ -269,16 +294,18 @@ export class ExportService {
           let totalNet = 0;
 
           // Her ders için D, Y, N değerlerini ekle
-          lessonNames.forEach(lessonName => {
-            const lesson = (report.lessonAverages || []).find(l => l.lessonName === lessonName);
+          lessonNames.forEach((lessonName) => {
+            const lesson = (report.lessonAverages || []).find(
+              (l) => l.lessonName === lessonName,
+            );
             const correct = lesson?.averageCorrect || 0;
             const incorrect = lesson?.averageIncorrect || 0;
             const net = lesson?.averageNet || 0;
-            
+
             rowData.push(
               this.safeToFixed(correct),
               this.safeToFixed(incorrect),
-              this.safeToFixed(net)
+              this.safeToFixed(net),
             );
 
             totalCorrect += correct;
@@ -290,14 +317,17 @@ export class ExportService {
           rowData.push(
             this.safeToFixed(totalCorrect),
             this.safeToFixed(totalIncorrect),
-            this.safeToFixed(totalNet)
+            this.safeToFixed(totalNet),
           );
 
           // Puan ortalaması
-          const avgScore = (report.scoreAverages || []).length > 0
-            ? (report.scoreAverages || []).reduce((sum, s) => sum + (Number(s.averageScore) || 0), 0) /
-            report.scoreAverages.length
-            : 0;
+          const avgScore =
+            (report.scoreAverages || []).length > 0
+              ? (report.scoreAverages || []).reduce(
+                  (sum, s) => sum + (Number(s.averageScore) || 0),
+                  0,
+                ) / report.scoreAverages.length
+              : 0;
           rowData.push(this.safeToFixed(avgScore));
 
           // Katılım
@@ -305,33 +335,42 @@ export class ExportService {
 
           const row = worksheet.addRow(rowData);
           row.alignment = { horizontal: 'center', vertical: 'middle' };
-          
+
           row.eachCell((cell, colNum) => {
             cell.border = {
               top: { style: 'thin' },
               left: { style: 'thin' },
               bottom: { style: 'thin' },
-              right: { style: 'thin' }
+              right: { style: 'thin' },
             };
-            
+
             // İlk iki sütun sola hizalı
             if (colNum <= 2) {
               cell.alignment = { horizontal: 'left', vertical: 'middle' };
             }
-            
+
             // Renk kodlaması
             const value = parseFloat(cell.value as string);
             if (!isNaN(value) && colNum > 2) {
               // D sütunları yeşil
-              if ((colNum - 3) % 3 === 0 || colNum === 2 + (lessonNames.length * 3) + 1) {
+              if (
+                (colNum - 3) % 3 === 0 ||
+                colNum === 2 + lessonNames.length * 3 + 1
+              ) {
                 cell.font = { color: { argb: 'FF00AA00' } };
               }
               // Y sütunları kırmızı
-              else if ((colNum - 3) % 3 === 1 || colNum === 2 + (lessonNames.length * 3) + 2) {
+              else if (
+                (colNum - 3) % 3 === 1 ||
+                colNum === 2 + lessonNames.length * 3 + 2
+              ) {
                 cell.font = { color: { argb: 'FFCC0000' } };
               }
               // Toplam Net ve Puan mavi/kalın
-              else if (colNum === 2 + (lessonNames.length * 3) + 3 || colNum === 2 + (lessonNames.length * 3) + 4) {
+              else if (
+                colNum === 2 + lessonNames.length * 3 + 3 ||
+                colNum === 2 + lessonNames.length * 3 + 4
+              ) {
                 cell.font = { bold: true, color: { argb: 'FF0066CC' } };
               }
             }
@@ -345,7 +384,7 @@ export class ExportService {
       // Sütun genişlikleri
       worksheet.getColumn(1).width = 30; // Sınav Adı
       worksheet.getColumn(2).width = 15; // Tarih
-      
+
       let col = 3;
       lessonNames.forEach(() => {
         worksheet.getColumn(col++).width = 10; // D
@@ -363,7 +402,9 @@ export class ExportService {
       return Buffer.from(buffer);
     } catch (error) {
       console.error('Error in generateExamDetailedExcel:', error);
-      throw new Error(`Ayrıntılı Excel dosyası oluşturulamadı: ${error.message}`);
+      throw new Error(
+        `Ayrıntılı Excel dosyası oluşturulamadı: ${error.message}`,
+      );
     }
   }
 
@@ -456,16 +497,23 @@ export class ExportService {
 
           doc.fontSize(14).font('Helvetica-Bold').text(report.examTitle);
           doc.fontSize(10).font('Helvetica');
-          doc.text(`Tarih: ${new Date(report.examDate).toLocaleDateString('tr-TR')}`);
+          doc.text(
+            `Tarih: ${new Date(report.examDate).toLocaleDateString('tr-TR')}`,
+          );
           doc.text(`Katılım: ${report.participantCount} öğrenci`);
           doc.moveDown();
 
-          doc.fontSize(12).font('Helvetica-Bold').text('Ders Net Ortalamaları:');
+          doc
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text('Ders Net Ortalamaları:');
           doc.fontSize(10).font('Helvetica');
 
           if (report.lessonAverages) {
             report.lessonAverages.forEach((lesson) => {
-              doc.text(`${lesson.lessonName}: ${this.safeToFixed(lesson.averageNet)}`);
+              doc.text(
+                `${lesson.lessonName}: ${this.safeToFixed(lesson.averageNet)}`,
+              );
             });
           }
           doc.moveDown();
@@ -475,7 +523,9 @@ export class ExportService {
 
           if (report.scoreAverages) {
             report.scoreAverages.forEach((score) => {
-              doc.text(`${score.type}: ${this.safeToFixed(score.averageScore)}`);
+              doc.text(
+                `${score.type}: ${this.safeToFixed(score.averageScore)}`,
+              );
             });
           }
         } catch (err) {
@@ -515,7 +565,9 @@ export class ExportService {
 
           doc.fontSize(14).font('Helvetica-Bold').text(report.examTitle);
           doc.fontSize(10).font('Helvetica');
-          doc.text(`Tarih: ${new Date(report.examDate).toLocaleDateString('tr-TR')}`);
+          doc.text(
+            `Tarih: ${new Date(report.examDate).toLocaleDateString('tr-TR')}`,
+          );
           doc.text(`Katılım: ${report.participantCount} öğrenci`);
           doc.moveDown();
 
@@ -576,7 +628,10 @@ export class ExportService {
       doc.on('error', reject);
 
       // Başlık
-      doc.fontSize(16).font('Helvetica-Bold').text(`${title} - ${report.lessonName}`, { align: 'center' });
+      doc
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text(`${title} - ${report.lessonName}`, { align: 'center' });
       doc.moveDown(2);
 
       // Tablo başlığı
@@ -605,7 +660,11 @@ export class ExportService {
         report.exams.forEach((exam) => {
           const y = doc.y;
           doc.text(exam.examTitle, col1X, y, { width: 140 });
-          doc.text(new Date(exam.examDate).toLocaleDateString('tr-TR'), col2X, y);
+          doc.text(
+            new Date(exam.examDate).toLocaleDateString('tr-TR'),
+            col2X,
+            y,
+          );
           doc.text(exam.participantCount.toString(), col3X, y);
           doc.text(this.safeToFixed(exam.averageCorrect), col4X, y);
           doc.text(this.safeToFixed(exam.averageIncorrect), col5X, y);
@@ -652,7 +711,7 @@ export class ExportService {
         'Toplam Net',
         stats.examType === 'TYT' ? 'TYT Puan' : 'Puan',
         'Sıralama',
-        'Yüzdelik Dilim'
+        'Yüzdelik Dilim',
       ]);
       headerRow.font = { bold: true };
       headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -660,22 +719,27 @@ export class ExportService {
         cell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FFE0E0E0' }
+          fgColor: { argb: 'FFE0E0E0' },
         };
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          right: { style: 'thin' },
         };
       });
 
       // Öğrenci verileri
       if (stats.students && Array.isArray(stats.students)) {
         stats.students.forEach((student: any, index: number) => {
-          const primaryScore = stats.examType === 'AYT' 
-            ? (student.scores?.find((s: any) => ['SAY', 'EA', 'SÖZ'].includes(s.type))?.score || student.scores?.[0]?.score || 0)
-            : (student.scores?.[0]?.score || student.score || 0);
+          const primaryScore =
+            stats.examType === 'AYT'
+              ? student.scores?.find((s: any) =>
+                  ['SAY', 'EA', 'SÖZ'].includes(s.type),
+                )?.score ||
+                student.scores?.[0]?.score ||
+                0
+              : student.scores?.[0]?.score || student.score || 0;
 
           const row = worksheet.addRow([
             index + 1,
@@ -685,7 +749,9 @@ export class ExportService {
             this.safeToFixed(student.net || 0),
             this.safeToFixed(primaryScore),
             student.rank || '-',
-            student.percentile ? `%${this.safeToFixed(student.percentile, 1)}` : '-'
+            student.percentile
+              ? `%${this.safeToFixed(student.percentile, 1)}`
+              : '-',
           ]);
 
           row.eachCell((cell) => {
@@ -693,7 +759,7 @@ export class ExportService {
               top: { style: 'thin' },
               left: { style: 'thin' },
               bottom: { style: 'thin' },
-              right: { style: 'thin' }
+              right: { style: 'thin' },
             };
           });
         });
@@ -723,7 +789,11 @@ export class ExportService {
   async generateSingleExamPDF(stats: any): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
-        const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
+        const doc = new PDFDocument({
+          margin: 50,
+          size: 'A4',
+          layout: 'landscape',
+        });
         const chunks: Buffer[] = [];
 
         doc.on('data', (chunk) => chunks.push(chunk));
@@ -731,9 +801,17 @@ export class ExportService {
         doc.on('error', reject);
 
         // Başlık
-        doc.fontSize(16).font('Helvetica-Bold').text(`${stats.examTitle} - Sonuçlar`, { align: 'center' });
-        doc.fontSize(11).font('Helvetica')
-          .text(`Tarih: ${new Date(stats.examDate).toLocaleDateString('tr-TR')} | Katılım: ${stats.participantCount}`, { align: 'center' });
+        doc
+          .fontSize(16)
+          .font('Helvetica-Bold')
+          .text(`${stats.examTitle} - Sonuçlar`, { align: 'center' });
+        doc
+          .fontSize(11)
+          .font('Helvetica')
+          .text(
+            `Tarih: ${new Date(stats.examDate).toLocaleDateString('tr-TR')} | Katılım: ${stats.participantCount}`,
+            { align: 'center' },
+          );
         doc.moveDown(2);
 
         // Tablo başlıkları
@@ -763,12 +841,17 @@ export class ExportService {
         // Öğrenci verileri
         if (stats.students && Array.isArray(stats.students)) {
           stats.students.forEach((student: any, index: number) => {
-            const primaryScore = stats.examType === 'AYT' 
-              ? (student.scores?.find((s: any) => ['SAY', 'EA', 'SÖZ'].includes(s.type))?.score || student.scores?.[0]?.score || 0)
-              : (student.scores?.[0]?.score || student.score || 0);
+            const primaryScore =
+              stats.examType === 'AYT'
+                ? student.scores?.find((s: any) =>
+                    ['SAY', 'EA', 'SÖZ'].includes(s.type),
+                  )?.score ||
+                  student.scores?.[0]?.score ||
+                  0
+                : student.scores?.[0]?.score || student.score || 0;
 
             const y = doc.y;
-            
+
             // Sayfa sonu kontrolü
             if (y > 500) {
               doc.addPage();
@@ -782,7 +865,13 @@ export class ExportService {
             doc.text(this.safeToFixed(student.net || 0), col5X, y);
             doc.text(this.safeToFixed(primaryScore), col6X, y);
             doc.text((student.rank || '-').toString(), col7X, y);
-            doc.text(student.percentile ? `%${this.safeToFixed(student.percentile, 1)}` : '-', col8X, y);
+            doc.text(
+              student.percentile
+                ? `%${this.safeToFixed(student.percentile, 1)}`
+                : '-',
+              col8X,
+              y,
+            );
             doc.moveDown(0.5);
           });
         }
@@ -832,7 +921,7 @@ export class ExportService {
 
       // Tablo başlıkları
       const headers = ['Öğrenci No', 'Öğrenci Adı'];
-      data.exams.forEach(exam => {
+      data.exams.forEach((exam) => {
         headers.push(exam.title.substring(0, 20));
       });
       headers.push('Ort. Sıra');
@@ -855,17 +944,16 @@ export class ExportService {
       });
 
       // Veri satırları
-      data.students.forEach(student => {
-        const rowData = [
-          student.studentNumber,
-          student.fullName,
-        ];
+      data.students.forEach((student) => {
+        const rowData = [student.studentNumber, student.fullName];
 
-        student.rankings.forEach(r => {
+        student.rankings.forEach((r) => {
           rowData.push(r.rank !== null ? String(r.rank) : '-');
         });
 
-        rowData.push(student.averageRank > 0 ? String(student.averageRank) : '-');
+        rowData.push(
+          student.averageRank > 0 ? String(student.averageRank) : '-',
+        );
 
         const row = worksheet.addRow(rowData);
         row.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -888,11 +976,23 @@ export class ExportService {
             const percentile = (r.rank / totalStudents) * 100;
 
             if (percentile <= 20) {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF90EE90' } }; // Yeşil
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF90EE90' },
+              }; // Yeşil
             } else if (percentile >= 80) {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B6B' } }; // Kırmızı
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFF6B6B' },
+              }; // Kırmızı
             } else {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE066' } }; // Sarı
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFE066' },
+              }; // Sarı
             }
           }
         });
@@ -900,14 +1000,27 @@ export class ExportService {
         // Ortalama sütunu renklendirme
         const avgCell = row.getCell(data.exams.length + 3);
         if (student.averageRank > 0) {
-          const percentile = (student.averageRank / data.classInfo.studentCount) * 100;
+          const percentile =
+            (student.averageRank / data.classInfo.studentCount) * 100;
           if (percentile <= 20) {
-            avgCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF90EE90' } };
+            avgCell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FF90EE90' },
+            };
             avgCell.font = { bold: true };
           } else if (percentile >= 80) {
-            avgCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B6B' } };
+            avgCell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFF6B6B' },
+            };
           } else {
-            avgCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE066' } };
+            avgCell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFE066' },
+            };
           }
         }
       });
@@ -934,14 +1047,18 @@ export class ExportService {
   ): Promise<Buffer> {
     try {
       const data = await this.reportsService.getGradeRankingMatrix(
-        gradeId, schoolId, examType
+        gradeId,
+        schoolId,
+        examType,
       );
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Sıralama Matrisi');
 
       // Başlık
-      worksheet.mergeCells('A1:' + String.fromCharCode(65 + data.exams.length + 3) + '1');
+      worksheet.mergeCells(
+        'A1:' + String.fromCharCode(65 + data.exams.length + 3) + '1',
+      );
       const titleCell = worksheet.getCell('A1');
       titleCell.value = `${data.classInfo.name} - Öğrenci Sıralama Matrisi`;
       titleCell.font = { bold: true, size: 14 };
@@ -949,7 +1066,7 @@ export class ExportService {
 
       // Tablo başlıkları
       const headers = ['Öğrenci No', 'Öğrenci Adı', 'Şube'];
-      data.exams.forEach(exam => {
+      data.exams.forEach((exam) => {
         headers.push(exam.title.substring(0, 15));
       });
       headers.push('Ort. Sıra');
@@ -959,34 +1076,46 @@ export class ExportService {
       headerRow.alignment = { horizontal: 'center' };
 
       // Veri satırları
-      data.students.forEach(student => {
+      data.students.forEach((student) => {
         const rowData = [
           student.studentNumber,
           student.fullName,
           student.className,
         ];
 
-        student.rankings.forEach(r => {
+        student.rankings.forEach((r) => {
           rowData.push(r.rank || '-');
         });
 
         rowData.push(student.averageRank || '-');
 
         const row = worksheet.addRow(rowData);
-        
+
         // Renk kodlaması
         student.rankings.forEach((r, index) => {
           if (r.rank) {
             const cell = row.getCell(index + 4);
             const totalStudents = data.classInfo.studentCount;
             const percentile = (r.rank / totalStudents) * 100;
-            
+
             if (percentile <= 20) {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF90EE90' } };
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF90EE90' },
+              };
             } else if (percentile >= 80) {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF6B6B' } };
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFF6B6B' },
+              };
             } else {
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE066' } };
+              cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFFFE066' },
+              };
             }
           }
         });

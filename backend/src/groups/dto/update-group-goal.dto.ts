@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsObject, IsBoolean, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsObject,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
 
 export class UpdateGroupGoalDto {
   @IsOptional()

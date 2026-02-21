@@ -1,4 +1,4 @@
-﻿-- Create table for multi-teacher authorization in groups
+-- Create table for multi-teacher authorization in groups
 CREATE TABLE IF NOT EXISTS "GroupTeacher" (
   "id" TEXT NOT NULL,
   "groupId" TEXT NOT NULL,

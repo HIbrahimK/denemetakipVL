@@ -1,4 +1,10 @@
-import { IsEnum, IsOptional, IsString, IsNumber, IsObject } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsObject,
+} from 'class-validator';
 import { GroupPostType } from '@prisma/client';
 
 export class CreateGroupPostDto {

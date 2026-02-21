@@ -30,9 +30,14 @@ export class MessagesProcessor extends WorkerHost {
 
   async handleScheduledMessage(job: Job) {
     const { messageId, schoolId, recipientIds, targetClassIds } = job.data;
-    
+
     try {
-      await this.messagesService.sendMessageToRecipients(messageId, schoolId, recipientIds, targetClassIds);
+      await this.messagesService.sendMessageToRecipients(
+        messageId,
+        schoolId,
+        recipientIds,
+        targetClassIds,
+      );
       console.log(`Scheduled message ${messageId} sent successfully`);
     } catch (error) {
       console.error(`Failed to send scheduled message ${messageId}:`, error);
@@ -50,10 +55,14 @@ export class MessagesProcessor extends WorkerHost {
       let totalDeleted = 0;
 
       for (const school of schools) {
-        const settings = await this.messagesService.getOrCreateSettings(school.id);
-        
+        const settings = await this.messagesService.getOrCreateSettings(
+          school.id,
+        );
+
         const deleteBeforeDate = new Date();
-        deleteBeforeDate.setDate(deleteBeforeDate.getDate() - settings.autoDeleteDays);
+        deleteBeforeDate.setDate(
+          deleteBeforeDate.getDate() - settings.autoDeleteDays,
+        );
 
         // Soft delete old messages
         const result = await this.prisma.message.updateMany({
@@ -92,14 +101,18 @@ export class MessagesProcessor extends WorkerHost {
       let totalReminders = 0;
 
       for (const school of schools) {
-        const settings = await this.messagesService.getOrCreateSettings(school.id);
-        
+        const settings = await this.messagesService.getOrCreateSettings(
+          school.id,
+        );
+
         if (settings.reminderAfterDays === 0) {
           continue; // Skip if reminders are disabled
         }
 
         const reminderDate = new Date();
-        reminderDate.setDate(reminderDate.getDate() - settings.reminderAfterDays);
+        reminderDate.setDate(
+          reminderDate.getDate() - settings.reminderAfterDays,
+        );
 
         // Find unread messages older than reminder threshold
         const unreadMessages = await this.prisma.messageRecipient.findMany({
@@ -131,10 +144,15 @@ export class MessagesProcessor extends WorkerHost {
           try {
             // Here we would send a reminder email
             // For now, just log it
-            console.log(`Reminder needed for message ${unreadMessage.messageId} to user ${unreadMessage.recipientId}`);
+            console.log(
+              `Reminder needed for message ${unreadMessage.messageId} to user ${unreadMessage.recipientId}`,
+            );
             totalReminders++;
           } catch (error) {
-            console.error(`Failed to send reminder for message ${unreadMessage.messageId}:`, error);
+            console.error(
+              `Failed to send reminder for message ${unreadMessage.messageId}:`,
+              error,
+            );
           }
         }
       }

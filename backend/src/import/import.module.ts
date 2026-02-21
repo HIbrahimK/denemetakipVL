@@ -16,4 +16,4 @@ import { AchievementsModule } from '../achievements/achievements.module';
   controllers: [ImportController],
   providers: [ImportService, ExcelParsingService, ImportProcessor],
 })
-export class ImportModule { }
+export class ImportModule {}

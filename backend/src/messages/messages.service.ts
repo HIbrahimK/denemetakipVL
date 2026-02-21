@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
@@ -19,7 +24,11 @@ export class MessagesService {
     @InjectQueue('messages') private messagesQueue: Queue,
   ) {}
 
-  async create(createMessageDto: CreateMessageDto, userId: string, schoolId: string) {
+  async create(
+    createMessageDto: CreateMessageDto,
+    userId: string,
+    schoolId: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { student: true },
@@ -37,11 +46,17 @@ export class MessagesService {
     // Get settings to check character limit
     const settings = await this.getOrCreateSettings(schoolId);
     if (createMessageDto.body.length > settings.maxCharacterLimit) {
-      throw new BadRequestException(`Message exceeds maximum character limit of ${settings.maxCharacterLimit}`);
+      throw new BadRequestException(
+        `Message exceeds maximum character limit of ${settings.maxCharacterLimit}`,
+      );
     }
 
     // Check if teacher needs approval for broadcasts
-    if (user.role === Role.TEACHER && createMessageDto.type === MessageType.BROADCAST && settings.requireTeacherApproval) {
+    if (
+      user.role === Role.TEACHER &&
+      createMessageDto.type === MessageType.BROADCAST &&
+      settings.requireTeacherApproval
+    ) {
       createMessageDto.requiresApproval = true;
     }
 
@@ -66,7 +81,9 @@ export class MessagesService {
         targetRoles: createMessageDto.targetRoles || undefined,
         targetGradeId: createMessageDto.targetGradeId,
         targetClassId: createMessageDto.targetClassId,
-        scheduledFor: createMessageDto.scheduledFor ? new Date(createMessageDto.scheduledFor) : null,
+        scheduledFor: createMessageDto.scheduledFor
+          ? new Date(createMessageDto.scheduledFor)
+          : null,
         sentAt: status === MessageStatus.SENT ? new Date() : null,
         requiresApproval: createMessageDto.requiresApproval || false,
         allowReplies: createMessageDto.allowReplies ?? false,
@@ -79,9 +96,12 @@ export class MessagesService {
     });
 
     // Create attachments if provided
-    if (createMessageDto.attachments && createMessageDto.attachments.length > 0) {
+    if (
+      createMessageDto.attachments &&
+      createMessageDto.attachments.length > 0
+    ) {
       await this.prisma.messageAttachment.createMany({
-        data: createMessageDto.attachments.map(att => ({
+        data: createMessageDto.attachments.map((att) => ({
           messageId: message.id,
           filename: att.filename,
           fileUrl: att.fileUrl,
@@ -94,34 +114,58 @@ export class MessagesService {
     // If not requiring approval and not scheduled, send immediately
     if (status === MessageStatus.SENT) {
       await this.sendMessageToRecipients(
-        message.id, 
-        schoolId, 
+        message.id,
+        schoolId,
         createMessageDto.recipientIds,
-        createMessageDto.targetClassIds
+        createMessageDto.targetClassIds,
       );
     } else if (createMessageDto.scheduledFor) {
       // Schedule the message
-      await this.messagesQueue.add('send-scheduled', 
-        { 
-          messageId: message.id, 
-          schoolId, 
+      await this.messagesQueue.add(
+        'send-scheduled',
+        {
+          messageId: message.id,
+          schoolId,
           recipientIds: createMessageDto.recipientIds,
-          targetClassIds: createMessageDto.targetClassIds
+          targetClassIds: createMessageDto.targetClassIds,
         },
-        { delay: new Date(createMessageDto.scheduledFor).getTime() - Date.now() }
+        {
+          delay: new Date(createMessageDto.scheduledFor).getTime() - Date.now(),
+        },
       );
     }
 
     return message;
   }
 
-  async sendMessageToRecipients(messageId: string, schoolId: string, directRecipientIds?: string[], targetClassIds?: string[]) {
+  async sendMessageToRecipients(
+    messageId: string,
+    schoolId: string,
+    directRecipientIds?: string[],
+    targetClassIds?: string[],
+  ) {
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
       include: {
         sender: true,
-        targetGrade: { include: { classes: { include: { students: { include: { user: true, parent: { include: { user: true } } } } } } } },
-        targetClass: { include: { students: { include: { user: true, parent: { include: { user: true } } } } } },
+        targetGrade: {
+          include: {
+            classes: {
+              include: {
+                students: {
+                  include: { user: true, parent: { include: { user: true } } },
+                },
+              },
+            },
+          },
+        },
+        targetClass: {
+          include: {
+            students: {
+              include: { user: true, parent: { include: { user: true } } },
+            },
+          },
+        },
       },
     });
 
@@ -135,12 +179,14 @@ export class MessagesService {
     if (message.type === MessageType.DIRECT) {
       // Direct messages - use provided recipient IDs
       if (!directRecipientIds || directRecipientIds.length === 0) {
-        throw new BadRequestException('Direct messages must have recipients specified');
+        throw new BadRequestException(
+          'Direct messages must have recipients specified',
+        );
       }
       recipientIds = directRecipientIds;
     } else if (message.type === MessageType.BROADCAST) {
       // Broadcast messages
-      const targetRoles = message.targetRoles as string[] || [];
+      const targetRoles = (message.targetRoles as string[]) || [];
 
       // Çoklu şube seçimi varsa
       if (targetClassIds && targetClassIds.length > 0) {
@@ -159,34 +205,49 @@ export class MessagesService {
           },
         });
 
-        classes.forEach(cls => {
-          cls.students.forEach(student => {
-            if (targetRoles.length === 0 || targetRoles.includes(Role.STUDENT)) {
+        classes.forEach((cls) => {
+          cls.students.forEach((student) => {
+            if (
+              targetRoles.length === 0 ||
+              targetRoles.includes(Role.STUDENT)
+            ) {
               recipientIds.push(student.userId);
             }
-            if ((targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) && student.parent) {
+            if (
+              (targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) &&
+              student.parent
+            ) {
               recipientIds.push(student.parent.userId);
             }
           });
         });
       } else if (message.targetClassId && message.targetClass) {
         // Class-wide message
-        message.targetClass.students.forEach(student => {
+        message.targetClass.students.forEach((student) => {
           if (targetRoles.length === 0 || targetRoles.includes(Role.STUDENT)) {
             recipientIds.push(student.userId);
           }
-          if ((targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) && student.parent) {
+          if (
+            (targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) &&
+            student.parent
+          ) {
             recipientIds.push(student.parent.userId);
           }
         });
       } else if (message.targetGradeId && message.targetGrade) {
         // Grade-wide message
-        message.targetGrade.classes.forEach(cls => {
-          cls.students.forEach(student => {
-            if (targetRoles.length === 0 || targetRoles.includes(Role.STUDENT)) {
+        message.targetGrade.classes.forEach((cls) => {
+          cls.students.forEach((student) => {
+            if (
+              targetRoles.length === 0 ||
+              targetRoles.includes(Role.STUDENT)
+            ) {
               recipientIds.push(student.userId);
             }
-            if ((targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) && student.parent) {
+            if (
+              (targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) &&
+              student.parent
+            ) {
               recipientIds.push(student.parent.userId);
             }
           });
@@ -199,7 +260,7 @@ export class MessagesService {
             role: { in: targetRoles as Role[] },
           },
         });
-        recipientIds = users.map(u => u.id);
+        recipientIds = users.map((u) => u.id);
       }
     }
 
@@ -208,7 +269,7 @@ export class MessagesService {
 
     // Create recipient records
     await this.prisma.messageRecipient.createMany({
-      data: recipientIds.map(recipientId => ({
+      data: recipientIds.map((recipientId) => ({
         messageId: message.id,
         recipientId,
       })),
@@ -236,16 +297,16 @@ export class MessagesService {
   private async sendEmailNotifications(message: any, recipientIds: string[]) {
     try {
       const recipients = await this.prisma.user.findMany({
-        where: { 
+        where: {
           id: { in: recipientIds },
           // Sadece öğretmen ve yöneticilere email gönder
-          role: { in: ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'] }
+          role: { in: ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'] },
         },
       });
 
       for (const recipient of recipients) {
         if (!recipient.email) continue;
-        
+
         try {
           await this.emailService.sendEmail(
             recipient.email,
@@ -255,7 +316,7 @@ export class MessagesService {
               <p><strong>From:</strong> ${message.sender.firstName} ${message.sender.lastName}</p>
               <p>${message.body}</p>
               <p><a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/messages/${message.id}">View Message</a></p>
-            `
+            `,
           );
         } catch (error) {
           console.error(`Failed to send email to ${recipient.email}:`, error);
@@ -436,7 +497,8 @@ export class MessagesService {
     // Check permissions
     const isRecipient = !!recipient;
     const isSender = message.senderId === userId;
-    const isAdmin = user.role === Role.SCHOOL_ADMIN || user.role === Role.SUPER_ADMIN;
+    const isAdmin =
+      user.role === Role.SCHOOL_ADMIN || user.role === Role.SUPER_ADMIN;
 
     if (!isRecipient && !isSender && !isAdmin) {
       throw new ForbiddenException('You do not have access to this message');
@@ -526,7 +588,12 @@ export class MessagesService {
     return { count };
   }
 
-  async update(messageId: string, updateMessageDto: UpdateMessageDto, userId: string, schoolId: string) {
+  async update(
+    messageId: string,
+    updateMessageDto: UpdateMessageDto,
+    userId: string,
+    schoolId: string,
+  ) {
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
     });
@@ -575,7 +642,8 @@ export class MessagesService {
       throw new NotFoundException('User not found');
     }
 
-    const isAdmin = user.role === Role.SCHOOL_ADMIN || user.role === Role.SUPER_ADMIN;
+    const isAdmin =
+      user.role === Role.SCHOOL_ADMIN || user.role === Role.SUPER_ADMIN;
     const isSender = message.senderId === userId;
 
     // Check if user is trying to delete as recipient
@@ -605,7 +673,9 @@ export class MessagesService {
 
     // Only sender or admin can delete the message itself
     if (!isSender && !isAdmin) {
-      throw new ForbiddenException('You do not have permission to delete this message');
+      throw new ForbiddenException(
+        'You do not have permission to delete this message',
+      );
     }
 
     // Soft delete the message
@@ -618,7 +688,12 @@ export class MessagesService {
     });
   }
 
-  async createReply(messageId: string, createReplyDto: CreateReplyDto, userId: string, schoolId: string) {
+  async createReply(
+    messageId: string,
+    createReplyDto: CreateReplyDto,
+    userId: string,
+    schoolId: string,
+  ) {
     // Verify the message exists and user has access
     const messageData = await this.findOne(messageId, userId, schoolId);
 
@@ -650,7 +725,11 @@ export class MessagesService {
     });
   }
 
-  async saveDraft(saveDraftDto: SaveDraftDto, userId: string, schoolId: string) {
+  async saveDraft(
+    saveDraftDto: SaveDraftDto,
+    userId: string,
+    schoolId: string,
+  ) {
     return this.prisma.messageDraft.create({
       data: {
         userId,
@@ -733,7 +812,7 @@ export class MessagesService {
 
   async getOrCreateSettings(schoolId: string) {
     let settings = await this.getSettings(schoolId);
-    
+
     if (!settings) {
       settings = await this.prisma.messageSettings.create({
         data: { schoolId },
@@ -794,14 +873,21 @@ export class MessagesService {
     return { success: true };
   }
 
-  private async getMessageRecipientIds(messageId: string, schoolId: string): Promise<string[]> {
+  private async getMessageRecipientIds(
+    messageId: string,
+    schoolId: string,
+  ): Promise<string[]> {
     // This is a helper method to retrieve recipient IDs
     // For direct messages, we'll need to query them separately
     // For now, returning empty array to be populated by sendMessageToRecipients logic
     return [];
   }
 
-  async exportDeliveryReport(messageId: string, userId: string, schoolId: string) {
+  async exportDeliveryReport(
+    messageId: string,
+    userId: string,
+    schoolId: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -833,15 +919,18 @@ export class MessagesService {
     }
 
     // Check permissions
-    const isAdmin = user.role === Role.SCHOOL_ADMIN || user.role === Role.SUPER_ADMIN;
+    const isAdmin =
+      user.role === Role.SCHOOL_ADMIN || user.role === Role.SUPER_ADMIN;
     const isSender = message.senderId === userId;
 
     if (!isSender && !isAdmin) {
-      throw new ForbiddenException('You do not have permission to view this report');
+      throw new ForbiddenException(
+        'You do not have permission to view this report',
+      );
     }
 
     // Format data for CSV export
-    return message.recipients.map(r => ({
+    return message.recipients.map((r) => ({
       recipientName: `${r.recipient.firstName} ${r.recipient.lastName}`,
       recipientEmail: r.recipient.email,
       recipientRole: r.recipient.role,

@@ -1,4 +1,13 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsDateString, IsInt, IsBoolean, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsOptional,
+  IsDateString,
+  IsInt,
+  IsBoolean,
+  IsArray,
+} from 'class-validator';
 import { StudyPlanTargetType, ExamType, StudyPlanStatus } from '@prisma/client';
 
 export class CreateStudyPlanDto {

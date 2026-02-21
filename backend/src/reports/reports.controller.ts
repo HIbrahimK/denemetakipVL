@@ -8,7 +8,6 @@ import {
   HttpException,
   HttpStatus,
   Param,
-  NotFoundException,
 } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { ExportService } from './export.service';
@@ -48,11 +47,7 @@ export class ReportsController {
 
     const grade = gradeLevel ? parseInt(gradeLevel, 10) : undefined;
 
-    return this.reportsService.getExamsSummaryReport(
-      schoolId,
-      examType,
-      grade,
-    );
+    return this.reportsService.getExamsSummaryReport(schoolId, examType, grade);
   }
 
   /**
@@ -490,8 +485,105 @@ export class ReportsController {
   }
 
   /**
-   * Sınıf sıralama matris raporunu Excel olarak indirir
+   * Yıl bazlı karşılaştırma raporları
    */
+  @Get('comparisons/year-over-year')
+  @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
+  async getYearOverYearComparison(
+    @Req() req: any,
+    @Query('examType') examType: ExamType,
+    @Query('gradeLevel') gradeLevel: string,
+    @Query('month') month: string,
+    @Query('year') year?: string,
+    @Query('lessonName') lessonName?: string,
+  ) {
+    const schoolId = req.user.schoolId;
+
+    if (!examType || !gradeLevel || !month) {
+      throw new HttpException(
+        'examType, gradeLevel ve month parametreleri gereklidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const parsedGradeLevel = parseInt(gradeLevel, 10);
+    const parsedMonth = parseInt(month, 10);
+    const parsedYear = year ? parseInt(year, 10) : new Date().getFullYear();
+
+    if (
+      Number.isNaN(parsedGradeLevel) ||
+      Number.isNaN(parsedMonth) ||
+      Number.isNaN(parsedYear)
+    ) {
+      throw new HttpException(
+        'gradeLevel, month ve year parametreleri sayi olmalidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (parsedMonth < 1 || parsedMonth > 12) {
+      throw new HttpException(
+        'month 1-12 araliginda olmalidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.reportsService.getYearOverYearComparison(
+      schoolId,
+      examType,
+      parsedGradeLevel,
+      parsedMonth,
+      parsedYear,
+      lessonName,
+    );
+  }
+
+  @Get('comparisons/subject-year-trend')
+  @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
+  async getSubjectYearTrend(
+    @Req() req: any,
+    @Query('examType') examType: ExamType,
+    @Query('lessonName') lessonName: string,
+    @Query('gradeLevel') gradeLevel?: string,
+    @Query('years') years?: string,
+    @Query('endYear') endYear?: string,
+  ) {
+    const schoolId = req.user.schoolId;
+
+    if (!examType || !lessonName) {
+      throw new HttpException(
+        'examType ve lessonName parametreleri gereklidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const parsedGradeLevel = gradeLevel ? parseInt(gradeLevel, 10) : undefined;
+    const parsedYears = years ? parseInt(years, 10) : 3;
+    const parsedEndYear = endYear
+      ? parseInt(endYear, 10)
+      : new Date().getFullYear();
+
+    if (
+      (gradeLevel && Number.isNaN(parsedGradeLevel)) ||
+      Number.isNaN(parsedYears) ||
+      Number.isNaN(parsedEndYear)
+    ) {
+      throw new HttpException(
+        'gradeLevel, years ve endYear parametreleri sayi olmalidir',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.reportsService.getSubjectYearTrend(
+      schoolId,
+      examType,
+      lessonName,
+      parsedGradeLevel,
+      parsedYears,
+      parsedEndYear,
+    );
+  }
+
   @Get('classes/:classId/ranking-matrix/excel')
   @Roles(Role.TEACHER, Role.SCHOOL_ADMIN)
   async downloadClassRankingMatrixExcel(

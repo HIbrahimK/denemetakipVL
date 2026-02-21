@@ -25,10 +25,12 @@ import { APP_GUARD } from '@nestjs/core';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     SchoolsModule,
@@ -54,5 +56,4 @@ import { APP_GUARD } from '@nestjs/core';
     },
   ],
 })
-export class AppModule { }
-
+export class AppModule {}

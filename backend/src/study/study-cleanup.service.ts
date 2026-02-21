@@ -22,7 +22,7 @@ export class StudyCleanupService {
     try {
       // Get cleanup settings from database
       const settings = await this.getCleanupSettings();
-      
+
       if (!settings.enabled) {
         this.logger.log('Cleanup is disabled in settings');
         return;
@@ -30,9 +30,15 @@ export class StudyCleanupService {
 
       // Calculate cutoff date (previous month)
       const now = new Date();
-      const cutoffDate = new Date(now.getFullYear(), now.getMonth() - settings.monthsToKeep, 1);
-      
-      this.logger.log(`Cleaning up assignments older than: ${cutoffDate.toISOString()}`);
+      const cutoffDate = new Date(
+        now.getFullYear(),
+        now.getMonth() - settings.monthsToKeep,
+        1,
+      );
+
+      this.logger.log(
+        `Cleaning up assignments older than: ${cutoffDate.toISOString()}`,
+      );
 
       // Find old active plans (not templates) to clean up
       const oldActivePlans = await this.prisma.studyPlan.findMany({
@@ -49,7 +55,7 @@ export class StudyCleanupService {
         return;
       }
 
-      const planIds = oldActivePlans.map(p => p.id);
+      const planIds = oldActivePlans.map((p) => p.id);
 
       // Find assignments related to these plans
       const oldAssignments = await this.prisma.studyPlanAssignment.findMany({
@@ -59,22 +65,23 @@ export class StudyCleanupService {
         select: { id: true },
       });
 
-      const assignmentIds = oldAssignments.map(a => a.id);
+      const assignmentIds = oldAssignments.map((a) => a.id);
 
       // Delete related tasks first
       const deletedTasks = await this.prisma.studyTask.deleteMany({
-        where: { 
+        where: {
           OR: [
             { assignmentId: { in: assignmentIds } },
             { planId: { in: planIds } },
-          ]
+          ],
         },
       });
 
       // Delete assignments
-      const deletedAssignments = await this.prisma.studyPlanAssignment.deleteMany({
-        where: { id: { in: assignmentIds } },
-      });
+      const deletedAssignments =
+        await this.prisma.studyPlanAssignment.deleteMany({
+          where: { id: { in: assignmentIds } },
+        });
 
       // Delete active plans (but keep templates)
       const deletedPlans = await this.prisma.studyPlan.deleteMany({
@@ -85,7 +92,7 @@ export class StudyCleanupService {
       await this.updateLastCleanupTimestamp();
 
       this.logger.log(
-        `Cleanup completed: Deleted ${deletedPlans.count} active plans, ${deletedAssignments.count} assignments, and ${deletedTasks.count} tasks`
+        `Cleanup completed: Deleted ${deletedPlans.count} active plans, ${deletedAssignments.count} assignments, and ${deletedTasks.count} tasks`,
       );
     } catch (error) {
       this.logger.error('Error during monthly cleanup:', error);
@@ -154,7 +161,11 @@ export class StudyCleanupService {
 
     const settings = await this.getCleanupSettings();
     const now = new Date();
-    const cutoffDate = new Date(now.getFullYear(), now.getMonth() - settings.monthsToKeep, 1);
+    const cutoffDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - settings.monthsToKeep,
+      1,
+    );
 
     const planWhere: any = {
       createdAt: { lt: cutoffDate },
@@ -175,7 +186,7 @@ export class StudyCleanupService {
       return { deletedPlans: 0, deletedAssignments: 0, deletedTasks: 0 };
     }
 
-    const planIds = oldActivePlans.map(p => p.id);
+    const planIds = oldActivePlans.map((p) => p.id);
 
     const oldAssignments = await this.prisma.studyPlanAssignment.findMany({
       where: { planId: { in: planIds } },
@@ -186,20 +197,22 @@ export class StudyCleanupService {
       return { deletedPlans: 0, deletedAssignments: 0, deletedTasks: 0 };
     }
 
-    const assignmentIds = oldAssignments.map(a => a.id);
+    const assignmentIds = oldAssignments.map((a) => a.id);
 
     const deletedTasks = await this.prisma.studyTask.deleteMany({
-      where: { 
+      where: {
         OR: [
           { assignmentId: { in: assignmentIds } },
           { planId: { in: planIds } },
-        ]
+        ],
       },
     });
 
-    const deletedAssignments = await this.prisma.studyPlanAssignment.deleteMany({
-      where: { id: { in: assignmentIds } },
-    });
+    const deletedAssignments = await this.prisma.studyPlanAssignment.deleteMany(
+      {
+        where: { id: { in: assignmentIds } },
+      },
+    );
 
     const deletedPlans = await this.prisma.studyPlan.deleteMany({
       where: { id: { in: planIds } },

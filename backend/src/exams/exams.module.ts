@@ -10,4 +10,4 @@ import { ReportsModule } from '../reports/reports.module';
   providers: [ExamsService, ExamNotificationTask],
   exports: [ExamsService],
 })
-export class ExamsModule { }
+export class ExamsModule {}

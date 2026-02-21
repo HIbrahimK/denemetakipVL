@@ -33,9 +33,7 @@ import { Observable, interval, map, switchMap, from } from 'rxjs';
 @Controller('messages')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class MessagesController {
-  constructor(
-    private readonly messagesService: MessagesService,
-  ) {}
+  constructor(private readonly messagesService: MessagesService) {}
 
   @Post('upload')
   @Roles('SCHOOL_ADMIN', 'TEACHER')
@@ -50,16 +48,27 @@ export class MessagesController {
           cb(null, uploadPath);
         },
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
       fileFilter: (req, file, cb) => {
-        const allowedMimes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        const allowedMimes = [
+          'application/pdf',
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+        ];
         if (allowedMimes.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Sadece PDF, JPG, JPEG ve PNG dosyaları yüklenebilir'), false);
+          cb(
+            new BadRequestException(
+              'Sadece PDF, JPG, JPEG ve PNG dosyaları yüklenebilir',
+            ),
+            false,
+          );
         }
       },
       limits: {
@@ -83,7 +92,11 @@ export class MessagesController {
   @Post()
   @Roles('SCHOOL_ADMIN', 'TEACHER')
   create(@Body() createMessageDto: CreateMessageDto, @CurrentUser() user: any) {
-    return this.messagesService.create(createMessageDto, user.id, user.schoolId);
+    return this.messagesService.create(
+      createMessageDto,
+      user.id,
+      user.schoolId,
+    );
   }
 
   @Get('inbox')
@@ -105,14 +118,18 @@ export class MessagesController {
   }
 
   @Sse('stream')
-  async streamMessages(@CurrentUser() user: any): Promise<Observable<MessageEvent>> {
+  async streamMessages(
+    @CurrentUser() user: any,
+  ): Promise<Observable<MessageEvent>> {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
     return interval(3000).pipe(
-      switchMap(() => from(this.messagesService.getUnreadCount(user.id, user.schoolId))),
-      map((data) => ({ data } as MessageEvent)),
+      switchMap(() =>
+        from(this.messagesService.getUnreadCount(user.id, user.schoolId)),
+      ),
+      map((data) => ({ data }) as MessageEvent),
     );
   }
 
@@ -142,8 +159,14 @@ export class MessagesController {
 
   @Post('templates')
   @Roles('SCHOOL_ADMIN')
-  createTemplate(@Body() createTemplateDto: CreateTemplateDto, @CurrentUser() user: any) {
-    return this.messagesService.createTemplate(createTemplateDto, user.schoolId);
+  createTemplate(
+    @Body() createTemplateDto: CreateTemplateDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.messagesService.createTemplate(
+      createTemplateDto,
+      user.schoolId,
+    );
   }
 
   @Delete('templates/:id')
@@ -160,8 +183,14 @@ export class MessagesController {
 
   @Patch('settings')
   @Roles('SCHOOL_ADMIN')
-  updateSettings(@Body() updateSettingsDto: UpdateSettingsDto, @CurrentUser() user: any) {
-    return this.messagesService.updateSettings(user.schoolId, updateSettingsDto);
+  updateSettings(
+    @Body() updateSettingsDto: UpdateSettingsDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.messagesService.updateSettings(
+      user.schoolId,
+      updateSettingsDto,
+    );
   }
 
   @Get(':id')
@@ -177,7 +206,12 @@ export class MessagesController {
     @Body() updateMessageDto: UpdateMessageDto,
     @CurrentUser() user: any,
   ) {
-    return this.messagesService.update(id, updateMessageDto, user.id, user.schoolId);
+    return this.messagesService.update(
+      id,
+      updateMessageDto,
+      user.id,
+      user.schoolId,
+    );
   }
 
   @Delete(':id')
@@ -205,7 +239,12 @@ export class MessagesController {
     @Body() createReplyDto: CreateReplyDto,
     @CurrentUser() user: any,
   ) {
-    return this.messagesService.createReply(id, createReplyDto, user.id, user.schoolId);
+    return this.messagesService.createReply(
+      id,
+      createReplyDto,
+      user.id,
+      user.schoolId,
+    );
   }
 
   @Post(':id/approve')
@@ -217,6 +256,10 @@ export class MessagesController {
   @Get(':id/delivery-report')
   @Roles('SCHOOL_ADMIN', 'TEACHER')
   exportDeliveryReport(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.messagesService.exportDeliveryReport(id, user.id, user.schoolId);
+    return this.messagesService.exportDeliveryReport(
+      id,
+      user.id,
+      user.schoolId,
+    );
   }
 }

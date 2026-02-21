@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudyPlanDto, AssignStudyPlanDto } from './dto';
 import { Prisma } from '@prisma/client';
@@ -30,10 +35,14 @@ export enum DeleteMode {
 
 @Injectable()
 export class StudyPlanService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateStudyPlanDto, teacherId: string, schoolId: string) {
-    console.log('[StudyPlanService] Creating study plan:', { dto, teacherId, schoolId });
+    console.log('[StudyPlanService] Creating study plan:', {
+      dto,
+      teacherId,
+      schoolId,
+    });
     try {
       const data: any = {
         name: dto.name,
@@ -86,12 +95,17 @@ export class StudyPlanService {
     }
   }
 
-  async findAll(userId: string, userRole: string, schoolId: string, filters?: {
-    isTemplate?: boolean;
-    status?: string;
-    isShared?: boolean;
-    examType?: string;
-  }) {
+  async findAll(
+    userId: string,
+    userRole: string,
+    schoolId: string,
+    filters?: {
+      isTemplate?: boolean;
+      status?: string;
+      isShared?: boolean;
+      examType?: string;
+    },
+  ) {
     const where: any = {
       schoolId,
       deletedAt: null, // Soft delete kontrolü
@@ -138,22 +152,27 @@ export class StudyPlanService {
             {
               targetType: 'GROUP',
               targetId: {
-                in: (await this.prisma.groupMembership.findMany({
-                  where: { studentId: user.student.id, leftAt: null },
-                  select: { groupId: true },
-                })).map(m => m.groupId)
-              }
+                in: (
+                  await this.prisma.groupMembership.findMany({
+                    where: { studentId: user.student.id, leftAt: null },
+                    select: { groupId: true },
+                  })
+                ).map((m) => m.groupId),
+              },
             },
             // Sınıf atamaları için
             { targetType: 'CLASS', targetId: user.student.classId ?? '' },
             // Sınıf seviyesi atamaları için
             {
               targetType: 'GRADE',
-              targetId: user.student.classId ?
-                (await this.prisma.class.findUnique({
-                  where: { id: user.student.classId },
-                  select: { gradeId: true }
-                }))?.gradeId ?? '' : ''
+              targetId: user.student.classId
+                ? ((
+                    await this.prisma.class.findUnique({
+                      where: { id: user.student.classId },
+                      select: { gradeId: true },
+                    })
+                  )?.gradeId ?? '')
+                : '',
             },
           ],
           status: { in: ['ACTIVE', 'COMPLETED'] },
@@ -161,7 +180,7 @@ export class StudyPlanService {
         select: { planId: true },
       });
 
-      where.id = { in: assignments.map(a => a.planId) };
+      where.id = { in: assignments.map((a) => a.planId) };
     } else if (userRole === 'ADMIN') {
       // Admin tüm planları görebilir
     }
@@ -187,7 +206,12 @@ export class StudyPlanService {
     });
   }
 
-  async findOne(id: string, userId: string, userRole: string, schoolId: string) {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+    schoolId: string,
+  ) {
     const plan = await this.prisma.studyPlan.findUnique({
       where: { id },
       include: {
@@ -258,7 +282,12 @@ export class StudyPlanService {
     return plan;
   }
 
-  async update(id: string, dto: Partial<CreateStudyPlanDto>, userId: string, schoolId: string) {
+  async update(
+    id: string,
+    dto: Partial<CreateStudyPlanDto>,
+    userId: string,
+    schoolId: string,
+  ) {
     const plan = await this.prisma.studyPlan.findUnique({
       where: { id },
     });
@@ -305,7 +334,8 @@ export class StudyPlanService {
     if (dto.planData !== undefined) updateData.planData = dto.planData;
     if (dto.status !== undefined) updateData.status = dto.status;
     if (dto.isTemplate !== undefined) updateData.isTemplate = dto.isTemplate;
-    if (dto.templateName !== undefined) updateData.templateName = dto.templateName;
+    if (dto.templateName !== undefined)
+      updateData.templateName = dto.templateName;
     if (dto.isShared !== undefined) {
       updateData.isShared = dto.isShared;
       if (dto.isShared) {
@@ -313,7 +343,8 @@ export class StudyPlanService {
       }
     }
     if (dto.isPublic !== undefined) updateData.isPublic = dto.isPublic;
-    if (dto.startDate !== undefined) updateData.startDate = new Date(dto.startDate);
+    if (dto.startDate !== undefined)
+      updateData.startDate = new Date(dto.startDate);
     if (dto.endDate !== undefined) updateData.endDate = new Date(dto.endDate);
 
     return this.prisma.studyPlan.update({
@@ -362,7 +393,12 @@ export class StudyPlanService {
     return { message: 'Study plan archived successfully' };
   }
 
-  async remove(id: string, userId: string, schoolId: string, mode: DeleteMode = DeleteMode.CANCEL_ASSIGNMENTS) {
+  async remove(
+    id: string,
+    userId: string,
+    schoolId: string,
+    mode: DeleteMode = DeleteMode.CANCEL_ASSIGNMENTS,
+  ) {
     const plan = await this.prisma.studyPlan.findUnique({
       where: { id },
       include: {
@@ -385,11 +421,14 @@ export class StudyPlanService {
     const completedTasks = plan.tasks;
     if (completedTasks.length > 0) {
       // Her öğrenci için performans özetini kaydet
-      const studentPerformance: Record<string, {
-        completedQuestions: number;
-        totalDuration: number;
-        completedTasks: number;
-      }> = {};
+      const studentPerformance: Record<
+        string,
+        {
+          completedQuestions: number;
+          totalDuration: number;
+          completedTasks: number;
+        }
+      > = {};
 
       for (const task of completedTasks) {
         if (!studentPerformance[task.studentId]) {
@@ -399,8 +438,10 @@ export class StudyPlanService {
             completedTasks: 0,
           };
         }
-        studentPerformance[task.studentId].completedQuestions += (task as any).actualQuestionCount ?? 0;
-        studentPerformance[task.studentId].totalDuration += (task as any).actualDuration ?? 0;
+        studentPerformance[task.studentId].completedQuestions +=
+          (task as any).actualQuestionCount ?? 0;
+        studentPerformance[task.studentId].totalDuration +=
+          (task as any).actualDuration ?? 0;
         studentPerformance[task.studentId].completedTasks += 1;
       }
 
@@ -475,7 +516,12 @@ export class StudyPlanService {
     }
   }
 
-  async assign(planId: string, dto: AssignStudyPlanDto, userId: string, schoolId: string) {
+  async assign(
+    planId: string,
+    dto: AssignStudyPlanDto,
+    userId: string,
+    schoolId: string,
+  ) {
     const templatePlan = await this.prisma.studyPlan.findUnique({
       where: { id: planId },
     });
@@ -494,7 +540,9 @@ export class StudyPlanService {
       (templatePlan as any).isPublic;
 
     if (!canAssign) {
-      throw new ForbiddenException('You do not have permission to assign this template');
+      throw new ForbiddenException(
+        'You do not have permission to assign this template',
+      );
     }
 
     // Tarih hesaplama (yıl, ay, hafta'dan) - Do this BEFORE creating the plan
@@ -506,7 +554,8 @@ export class StudyPlanService {
       const firstDayOfMonth = new Date(dto.year, dto.month - 1, 1);
       // İlk pazartesiyi bul
       const dayOfWeek = firstDayOfMonth.getDay();
-      const daysUntilMonday = dayOfWeek === 0 ? 1 : (dayOfWeek === 1 ? 0 : 8 - dayOfWeek);
+      const daysUntilMonday =
+        dayOfWeek === 0 ? 1 : dayOfWeek === 1 ? 0 : 8 - dayOfWeek;
       const firstMonday = new Date(firstDayOfMonth);
       firstMonday.setDate(firstDayOfMonth.getDate() + daysUntilMonday);
 
@@ -572,7 +621,11 @@ export class StudyPlanService {
     const rows = planData?.rows ?? [];
 
     // Helper function: Bir öğrenci için task'ları oluştur
-    const createTasksForStudent = async (studentId: string, assignmentId: string, customPlanData?: any) => {
+    const createTasksForStudent = async (
+      studentId: string,
+      assignmentId: string,
+      customPlanData?: any,
+    ) => {
       const taskRows = customPlanData?.rows ?? rows;
 
       for (let rowIndex = 0; rowIndex < taskRows.length; rowIndex++) {
@@ -593,7 +646,8 @@ export class StudyPlanService {
               dayIndex,
               subjectName: cell.subjectName,
               topicName: cell.topicName,
-              targetQuestionCount: cell.targetQuestionCount || cell.questionCount,
+              targetQuestionCount:
+                cell.targetQuestionCount || cell.questionCount,
               targetDuration: cell.targetDuration || cell.duration,
               targetResource: cell.targetResource || cell.resource,
               status: 'PENDING',
@@ -628,10 +682,18 @@ export class StudyPlanService {
         createdAssignments.push(assignment.id);
 
         // Hedef tipine göre öğrencileri bul ve task oluştur
-        const studentIds = await this.getStudentsForTarget(target.type as AssignmentTargetType, target.id, schoolId);
+        const studentIds = await this.getStudentsForTarget(
+          target.type as AssignmentTargetType,
+          target.id,
+          schoolId,
+        );
 
         for (const studentId of studentIds) {
-          await createTasksForStudent(studentId, assignment.id, target.customPlanData);
+          await createTasksForStudent(
+            studentId,
+            assignment.id,
+            target.customPlanData,
+          );
         }
       }
     }
@@ -665,7 +727,9 @@ export class StudyPlanService {
         // Update summary
         if (student) {
           summary.students.count++;
-          summary.students.names.push(`${student.user.firstName} ${student.user.lastName}`);
+          summary.students.names.push(
+            `${student.user.firstName} ${student.user.lastName}`,
+          );
         }
       }
     }
@@ -693,7 +757,11 @@ export class StudyPlanService {
         });
         createdAssignments.push(assignment.id);
 
-        const studentIds = await this.getStudentsForTarget(AssignmentTargetType.GROUP, groupId, schoolId);
+        const studentIds = await this.getStudentsForTarget(
+          AssignmentTargetType.GROUP,
+          groupId,
+          schoolId,
+        );
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id);
         }
@@ -745,7 +813,11 @@ export class StudyPlanService {
         });
         createdAssignments.push(assignment.id);
 
-        const studentIds = await this.getStudentsForTarget(AssignmentTargetType.CLASS, classId, schoolId);
+        const studentIds = await this.getStudentsForTarget(
+          AssignmentTargetType.CLASS,
+          classId,
+          schoolId,
+        );
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id);
         }
@@ -785,7 +857,11 @@ export class StudyPlanService {
         });
         createdAssignments.push(assignment.id);
 
-        const studentIds = await this.getStudentsForTarget(AssignmentTargetType.GRADE, gradeId, schoolId);
+        const studentIds = await this.getStudentsForTarget(
+          AssignmentTargetType.GRADE,
+          gradeId,
+          schoolId,
+        );
         for (const studentId of studentIds) {
           await createTasksForStudent(studentId, assignment.id);
         }
@@ -803,7 +879,8 @@ export class StudyPlanService {
     }
 
     // Calculate total unique students
-    const totalStudents = summary.students.count +
+    const totalStudents =
+      summary.students.count +
       summary.groups.totalStudents +
       summary.classes.totalStudents +
       summary.grades.totalStudents;
@@ -833,11 +910,11 @@ export class StudyPlanService {
   private async getStudentsForTarget(
     targetType: AssignmentTargetType,
     targetId: string,
-    schoolId: string
+    schoolId: string,
   ): Promise<string[]> {
     switch (targetType) {
-      case AssignmentTargetType.STUDENT:
-        // Öğrenci doğrudan
+      case AssignmentTargetType.STUDENT: {
+        // ��renci do�rudan
         const student = await this.prisma.student.findUnique({
           where: { id: targetId },
         });
@@ -845,37 +922,41 @@ export class StudyPlanService {
           return [student.id];
         }
         return [];
+      }
 
-      case AssignmentTargetType.GROUP:
-        // Mentor grubu üyeleri
+      case AssignmentTargetType.GROUP: {
+        // Mentor grubu �yeleri
         const memberships = await this.prisma.groupMembership.findMany({
           where: { groupId: targetId, leftAt: null },
           select: { studentId: true },
         });
-        return memberships.map(m => m.studentId);
+        return memberships.map((m) => m.studentId);
+      }
 
-      case AssignmentTargetType.CLASS:
-        // Sınıftaki öğrenciler
+      case AssignmentTargetType.CLASS: {
+        // S�n�ftaki ��renciler
         const classStudents = await this.prisma.student.findMany({
           where: { classId: targetId, schoolId },
           select: { id: true },
         });
-        return classStudents.map(s => s.id);
+        return classStudents.map((s) => s.id);
+      }
 
-      case AssignmentTargetType.GRADE:
-        // Sınıf seviyesindeki tüm öğrenciler (örn: tüm 8. sınıflar)
+      case AssignmentTargetType.GRADE: {
+        // S�n�f seviyesindeki t�m ��renciler (�rn: t�m 8. s�n�flar)
         const classes = await this.prisma.class.findMany({
           where: { gradeId: targetId },
           select: { id: true },
         });
         const gradeStudents = await this.prisma.student.findMany({
           where: {
-            classId: { in: classes.map(c => c.id) },
+            classId: { in: classes.map((c) => c.id) },
             schoolId,
           },
           select: { id: true },
         });
-        return gradeStudents.map(s => s.id);
+        return gradeStudents.map((s) => s.id);
+      }
 
       default:
         return [];
@@ -964,7 +1045,12 @@ export class StudyPlanService {
   }
 
   // Planı kopyala (duplicate)
-  async duplicate(id: string, userId: string, schoolId: string, newName?: string) {
+  async duplicate(
+    id: string,
+    userId: string,
+    schoolId: string,
+    newName?: string,
+  ) {
     const plan = await this.prisma.studyPlan.findUnique({
       where: { id },
     });
@@ -1017,7 +1103,12 @@ export class StudyPlanService {
   }
 
   // Planı paylaş
-  async share(id: string, userId: string, schoolId: string, isPublic: boolean = false) {
+  async share(
+    id: string,
+    userId: string,
+    schoolId: string,
+    isPublic: boolean = false,
+  ) {
     const plan = await this.prisma.studyPlan.findUnique({
       where: { id },
     });
@@ -1089,53 +1180,64 @@ export class StudyPlanService {
         let targetDetails: any = null;
 
         switch (assignment.targetType) {
-          case 'STUDENT':
+          case 'STUDENT': {
             const student = await this.prisma.student.findUnique({
               where: { id: assignment.targetId },
               include: {
                 user: { select: { firstName: true, lastName: true } },
               },
             });
-            targetDetails = student ? {
-              name: `${student.user.firstName} ${student.user.lastName}`,
-              type: 'Öğrenci',
-            } : null;
+            targetDetails = student
+              ? {
+                  name: `${student.user.firstName} ${student.user.lastName}`,
+                  type: '��renci',
+                }
+              : null;
             break;
+          }
 
-          case 'GROUP':
+          case 'GROUP': {
             const group = await this.prisma.mentorGroup.findUnique({
               where: { id: assignment.targetId },
               select: { name: true },
             });
-            targetDetails = group ? {
-              name: group.name,
-              type: 'Grup',
-            } : null;
+            targetDetails = group
+              ? {
+                  name: group.name,
+                  type: 'Grup',
+                }
+              : null;
             break;
+          }
 
-          case 'CLASS':
+          case 'CLASS': {
             const classObj = await this.prisma.class.findUnique({
               where: { id: assignment.targetId },
               include: { grade: { select: { name: true } } },
             });
-            targetDetails = classObj ? {
-              name: classObj.name, // Sınıf adı (örn: "8/A")
-              type: 'Sınıf',
-            } : null;
+            targetDetails = classObj
+              ? {
+                  name: classObj.name, // S�n�f ad� (�rn: "8/A")
+                  type: 'S�n�f',
+                }
+              : null;
             break;
+          }
 
-          case 'GRADE':
+          case 'GRADE': {
             const grade = await this.prisma.grade.findUnique({
               where: { id: assignment.targetId },
               select: { name: true },
             });
-            targetDetails = grade ? {
-              name: grade.name, // Sınıf seviyesi adı (örn: "8. Sınıf")
-              type: 'Sınıf Seviyesi',
-            } : null;
+            targetDetails = grade
+              ? {
+                  name: grade.name, // S�n�f seviyesi ad� (�rn: "8. S�n�f")
+                  type: 'S�n�f Seviyesi',
+                }
+              : null;
             break;
+          }
         }
-
         // Task istatistikleri
         const taskStats = await this.prisma.studyTask.count({
           where: { assignmentId: assignment.id },
@@ -1152,14 +1254,18 @@ export class StudyPlanService {
             completed: completedTaskStats,
           },
         };
-      })
+      }),
     );
 
     return assignmentsWithDetails;
   }
 
   // Bir atamayı iptal et
-  async cancelAssignment(assignmentId: string, userId: string, schoolId: string) {
+  async cancelAssignment(
+    assignmentId: string,
+    userId: string,
+    schoolId: string,
+  ) {
     const assignment = await this.prisma.studyPlanAssignment.findUnique({
       where: { id: assignmentId },
       include: { plan: true },
@@ -1174,7 +1280,10 @@ export class StudyPlanService {
     }
 
     // Planın sahibi veya atamayı yapan kişi iptal edebilir
-    if (assignment.plan.teacherId !== userId && assignment.assignedById !== userId) {
+    if (
+      assignment.plan.teacherId !== userId &&
+      assignment.assignedById !== userId
+    ) {
       throw new ForbiddenException('You cannot cancel this assignment');
     }
 
@@ -1216,44 +1325,51 @@ export class StudyPlanService {
     const assignmentsWithDetails = await Promise.all(
       assignments.map(async (assignment) => {
         let targetName = '';
-        
+
         switch (assignment.targetType) {
-          case 'STUDENT':
+          case 'STUDENT': {
             const student = await this.prisma.student.findUnique({
               where: { id: assignment.targetId },
               include: { user: true },
             });
-            targetName = student ? `${student.user.firstName} ${student.user.lastName}` : 'Öğrenci';
+            targetName = student
+              ? `${student.user.firstName} ${student.user.lastName}`
+              : '��renci';
             break;
-            
-          case 'GROUP':
+          }
+
+          case 'GROUP': {
             const group = await this.prisma.mentorGroup.findUnique({
               where: { id: assignment.targetId },
             });
             targetName = group?.name || 'Grup';
             break;
-            
-          case 'CLASS':
+          }
+
+          case 'CLASS': {
             const classEntity = await this.prisma.class.findUnique({
               where: { id: assignment.targetId },
               include: { grade: true },
             });
-            targetName = classEntity ? `${classEntity.grade.name}-${classEntity.name}` : 'Sınıf';
+            targetName = classEntity
+              ? `${classEntity.grade.name}-${classEntity.name}`
+              : 'S�n�f';
             break;
-            
-          case 'GRADE':
+          }
+
+          case 'GRADE': {
             const grade = await this.prisma.grade.findUnique({
               where: { id: assignment.targetId },
             });
-            targetName = grade?.name || 'Sınıf Seviyesi';
+            targetName = grade?.name || 'S�n�f Seviyesi';
             break;
+          }
         }
-
         return {
           targetType: assignment.targetType,
           targetName,
         };
-      })
+      }),
     );
 
     return { assignments: assignmentsWithDetails };

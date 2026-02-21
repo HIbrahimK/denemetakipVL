@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsDateString, IsInt, IsOptional, IsBoolean, Min } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 
 export class LogStudySessionDto {
   @IsString()

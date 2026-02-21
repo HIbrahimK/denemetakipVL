@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { LogStudySessionDto } from './dto';
 
@@ -61,7 +65,12 @@ export class StudySessionService {
     });
   }
 
-  async findAll(userId: string, userRole: string, schoolId: string, filters?: any) {
+  async findAll(
+    userId: string,
+    userRole: string,
+    schoolId: string,
+    filters?: any,
+  ) {
     const where: any = { schoolId };
 
     if (userRole === 'STUDENT') {
@@ -123,7 +132,12 @@ export class StudySessionService {
     });
   }
 
-  async findOne(id: string, userId: string, userRole: string, schoolId: string) {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+    schoolId: string,
+  ) {
     const session = await this.prisma.studySession.findUnique({
       where: { id },
       include: {
@@ -162,14 +176,15 @@ export class StudySessionService {
       }
     }
 
-    if (false) { // Eski kontrol
-      throw new ForbiddenException('You can only view your own sessions');
-    }
-
     return session;
   }
 
-  async getStats(userId: string, userRole: string, schoolId: string, filters?: any) {
+  async getStats(
+    userId: string,
+    userRole: string,
+    schoolId: string,
+    filters?: any,
+  ) {
     const where: any = { schoolId };
 
     if (userRole === 'STUDENT') {
@@ -204,9 +219,13 @@ export class StudySessionService {
       },
     });
 
-    const totalMinutes = sessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
+    const totalMinutes = sessions.reduce(
+      (sum, s) => sum + Math.round(s.duration / 60),
+      0,
+    );
     const totalSessions = sessions.length;
-    const avgMinutesPerSession = totalSessions > 0 ? totalMinutes / totalSessions : 0;
+    const avgMinutesPerSession =
+      totalSessions > 0 ? totalMinutes / totalSessions : 0;
 
     // Group by day
     const byDay: { [key: string]: number } = {};

@@ -22,7 +22,12 @@ export class AchievementsController {
   constructor(private readonly achievementsService: AchievementsService) {}
 
   private parseBundle(bundle: string): AchievementSeedBundle {
-    const allowed: AchievementSeedBundle[] = ['LGS', 'TYT', 'AYT', 'CONSISTENCY'];
+    const allowed: AchievementSeedBundle[] = [
+      'LGS',
+      'TYT',
+      'AYT',
+      'CONSISTENCY',
+    ];
     if (!allowed.includes(bundle as AchievementSeedBundle)) {
       throw new BadRequestException('Invalid bundle name');
     }
@@ -35,7 +40,9 @@ export class AchievementsController {
     @Query('includeInactive') includeInactive?: string,
     @Query('examType') examType?: string,
   ) {
-    const normalizedExamType = Object.values(ExamType).includes(examType as ExamType)
+    const normalizedExamType = Object.values(ExamType).includes(
+      examType as ExamType,
+    )
       ? (examType as ExamType)
       : undefined;
 

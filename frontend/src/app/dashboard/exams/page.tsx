@@ -46,6 +46,8 @@ export default function ExamsPage() {
     const [editExam, setEditExam] = useState<any>(null);
     const [typeFilter, setTypeFilter] = useState('ALL');
     const [gradeFilter, setGradeFilter] = useState('');
+    const [yearFilter, setYearFilter] = useState('');
+    const [archiveFilter, setArchiveFilter] = useState<'ACTIVE' | 'ALL' | 'ARCHIVED'>('ACTIVE');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [userRole, setUserRole] = useState<string>('');
@@ -129,6 +131,15 @@ export default function ExamsPage() {
 
     const filteredExams = useMemo(() => {
         let list = [...exams];
+        if (archiveFilter === 'ACTIVE') {
+            list = list.filter(e => !e.isArchived);
+        } else if (archiveFilter === 'ARCHIVED') {
+            list = list.filter(e => !!e.isArchived);
+        }
+        if (yearFilter) {
+            const selectedYear = Number(yearFilter);
+            list = list.filter(e => new Date(e.date).getFullYear() === selectedYear);
+        }
         if (typeFilter !== 'ALL') {
             list = list.filter(e => e.type === typeFilter);
         }
@@ -145,9 +156,22 @@ export default function ExamsPage() {
             list = list.filter(e => new Date(e.date).getTime() <= end);
         }
         return list;
-    }, [exams, typeFilter, gradeFilter, startDate, endDate]);
+    }, [archiveFilter, endDate, exams, gradeFilter, startDate, typeFilter, yearFilter]);
+
+    const availableYears = useMemo(() => {
+        const years = new Set<number>();
+        exams.forEach((exam) => {
+            const year = new Date(exam.date).getFullYear();
+            if (Number.isFinite(year)) {
+                years.add(year);
+            }
+        });
+        return Array.from(years).sort((a, b) => b - a);
+    }, [exams]);
 
     const resetFilters = () => {
+        setArchiveFilter('ACTIVE');
+        setYearFilter('');
         setTypeFilter('ALL');
         setGradeFilter('');
         setStartDate('');
@@ -196,38 +220,65 @@ export default function ExamsPage() {
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">Sınav türü, tarih aralığı ve sınıf seviyesine göre listeyi daraltın. Son eklenen üstte.</p>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <CardContent className="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Layers className="h-4 w-4" /> Sınav Türü</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Layers className="h-4 w-4" /> Sinav Turu</label>
                         <select
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value="ALL">Tümü</option>
+                            <option value="ALL">Tumu</option>
                             <option value="TYT">TYT</option>
                             <option value="AYT">AYT</option>
                             <option value="LGS">LGS</option>
-                            <option value="OZEL">Özel</option>
+                            <option value="OZEL">Ozel</option>
                         </select>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Users className="h-4 w-4" /> Sınıf Seviyesi</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><Users className="h-4 w-4" /> Sinif Seviyesi</label>
                         <select
                             value={gradeFilter}
                             onChange={(e) => setGradeFilter(e.target.value)}
                             className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                            <option value="">Tümü</option>
+                            <option value="">Tumu</option>
                             {[5,6,7,8,9,10,11,12].map(grade => (
-                                <option key={grade} value={grade}>{grade}. Sınıf</option>
+                                <option key={grade} value={grade}>{grade}. Sinif</option>
                             ))}
                         </select>
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Başlangıç</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">Yil</label>
+                        <select
+                            value={yearFilter}
+                            onChange={(e) => setYearFilter(e.target.value)}
+                            className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="">Tum yillar</option>
+                            {availableYears.map((year) => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300">Arsiv</label>
+                        <select
+                            value={archiveFilter}
+                            onChange={(e) => setArchiveFilter(e.target.value as 'ACTIVE' | 'ALL' | 'ARCHIVED')}
+                            className="w-full h-10 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="ACTIVE">Arsivdekileri gizle</option>
+                            <option value="ALL">Arsiv + aktif</option>
+                            <option value="ARCHIVED">Sadece arsiv</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Baslangic</label>
                         <Input
                             type="date"
                             value={startDate}
@@ -237,7 +288,7 @@ export default function ExamsPage() {
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Bitiş</label>
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2"><CalendarRange className="h-4 w-4" /> Bitis</label>
                         <div className="flex gap-2 items-center">
                             <Input
                                 type="date"
@@ -245,8 +296,8 @@ export default function ExamsPage() {
                                 onChange={(e) => setEndDate(e.target.value)}
                                 className="h-10"
                             />
-                            <Button variant="outline" size="icon" className="shrink-0 border-slate-300 dark:border-slate-700" onClick={resetFilters}>
-                                Sıfırla
+                            <Button variant="outline" size="sm" className="shrink-0 border-slate-300 dark:border-slate-700" onClick={resetFilters}>
+                                Sifirla
                             </Button>
                         </div>
                     </div>
@@ -261,13 +312,23 @@ export default function ExamsPage() {
                         <p className="text-slate-500 dark:text-slate-400">Filtrelere uyan sınav bulunamadı.</p>
                     </div>
                 ) : filteredExams.map((exam) => (
-                    <Card key={exam.id} className="group hover:shadow-md transition-all duration-200 border-slate-200 dark:border-slate-800 dark:bg-slate-900">
+                    <Card
+                        key={exam.id}
+                        className={`group hover:shadow-md transition-all duration-200 border-slate-200 dark:border-slate-800 dark:bg-slate-900 ${exam.isArchived ? 'opacity-75' : ''}`}
+                    >
                         <CardHeader className="relative pb-2">
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-900 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-700/10 mb-2">
-                                        {exam.type}
-                                    </span>
+                                    <div className="mb-2 flex flex-wrap gap-2">
+                                        <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-900 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-700/10">
+                                            {exam.type}
+                                        </span>
+                                        {exam.isArchived && (
+                                            <span className="inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-950 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-amber-700/20">
+                                                Arsiv
+                                            </span>
+                                        )}
+                                    </div>
                                     <CardTitle className="line-clamp-1 text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                         {exam.title}
                                     </CardTitle>

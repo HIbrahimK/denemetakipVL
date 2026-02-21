@@ -46,38 +46,77 @@ export class GroupsController {
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
   createGroup(@Body() dto: CreateMentorGroupDto, @Request() req) {
     console.log('POST /groups - User:', req.user, 'DTO:', dto);
-    return this.groupsService.create(dto, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.create(
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Get()
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN', 'STUDENT')
   findAllGroups(@Request() req) {
     // Use req.user.id (database ID) instead of req.user.userId
-    return this.groupsService.findAll(req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.findAll(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Get(':id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN', 'STUDENT')
   findOneGroup(@Param('id') id: string, @Request() req) {
-    return this.groupsService.findOne(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.findOne(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Patch(':id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
-  updateGroup(@Param('id') id: string, @Body() dto: UpdateMentorGroupDto, @Request() req) {
-    return this.groupsService.update(id, dto, req.user.id, req.user.role, req.user.schoolId);
+  updateGroup(
+    @Param('id') id: string,
+    @Body() dto: UpdateMentorGroupDto,
+    @Request() req,
+  ) {
+    return this.groupsService.update(
+      id,
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete(':id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
   removeGroup(@Param('id') id: string, @Request() req) {
-    return this.groupsService.remove(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.remove(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/members')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
-  addMember(@Param('id') id: string, @Body() dto: AddGroupMemberDto, @Request() req) {
-    return this.groupsService.addMember(id, dto, req.user.id, req.user.role, req.user.schoolId);
+  addMember(
+    @Param('id') id: string,
+    @Body() dto: AddGroupMemberDto,
+    @Request() req,
+  ) {
+    return this.groupsService.addMember(
+      id,
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/members/bulk')
@@ -87,13 +126,29 @@ export class GroupsController {
     @Body() dto: { studentIds: string[] },
     @Request() req,
   ) {
-    return this.groupsService.addMembersBulk(id, dto.studentIds, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.addMembersBulk(
+      id,
+      dto.studentIds,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/transfer')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
-  transferMember(@Param('id') id: string, @Body('studentId') studentId: string, @Request() req) {
-    return this.groupsService.transferMember(id, studentId, req.user.id, req.user.role, req.user.schoolId);
+  transferMember(
+    @Param('id') id: string,
+    @Body('studentId') studentId: string,
+    @Request() req,
+  ) {
+    return this.groupsService.transferMember(
+      id,
+      studentId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete(':id/members/:studentId')
@@ -117,7 +172,12 @@ export class GroupsController {
   @Get(':id/teachers')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
   getGroupTeachers(@Param('id') id: string, @Request() req) {
-    return this.groupsService.getGroupTeachers(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.getGroupTeachers(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/teachers')
@@ -127,7 +187,13 @@ export class GroupsController {
     @Body() dto: ManageGroupTeachersDto,
     @Request() req,
   ) {
-    return this.groupsService.addGroupTeachers(id, dto.teacherIds, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.addGroupTeachers(
+      id,
+      dto.teacherIds,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete(':id/teachers/:teacherId')
@@ -137,19 +203,40 @@ export class GroupsController {
     @Param('teacherId') teacherId: string,
     @Request() req,
   ) {
-    return this.groupsService.removeGroupTeacher(id, teacherId, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.removeGroupTeacher(
+      id,
+      teacherId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/goals')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
-  createGroupGoal(@Param('id') id: string, @Body() dto: CreateGroupGoalDto, @Request() req) {
-    return this.groupsService.createGroupGoal(id, dto, req.user.id, req.user.role, req.user.schoolId);
+  createGroupGoal(
+    @Param('id') id: string,
+    @Body() dto: CreateGroupGoalDto,
+    @Request() req,
+  ) {
+    return this.groupsService.createGroupGoal(
+      id,
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Get(':id/stats')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN', 'STUDENT')
   getGroupStats(@Param('id') id: string, @Request() req) {
-    return this.groupsService.getGroupStats(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.getGroupStats(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Get(':id/available-students')
@@ -160,7 +247,14 @@ export class GroupsController {
     @Query('classId') classId: string,
     @Request() req,
   ) {
-    return this.groupsService.getAvailableStudents(id, req.user.id, req.user.role, req.user.schoolId, gradeId, classId);
+    return this.groupsService.getAvailableStudents(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      gradeId,
+      classId,
+    );
   }
 
   @Get(':id/transfer-candidates')
@@ -171,7 +265,14 @@ export class GroupsController {
     @Query('classId') classId: string,
     @Request() req,
   ) {
-    return this.groupsService.getTransferCandidates(id, req.user.id, req.user.role, req.user.schoolId, gradeId, classId);
+    return this.groupsService.getTransferCandidates(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      gradeId,
+      classId,
+    );
   }
 
   @Get('grades')
@@ -189,7 +290,11 @@ export class GroupsController {
   @Post('auto/sync')
   @Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
   syncAutoGroups(@Request() req) {
-    return this.groupsService.syncAutoGroups(req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.syncAutoGroups(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Patch(':id/goals/:goalId')
@@ -200,7 +305,14 @@ export class GroupsController {
     @Body() dto: UpdateGroupGoalDto,
     @Request() req,
   ) {
-    return this.groupsService.updateGroupGoal(id, goalId, dto, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.updateGroupGoal(
+      id,
+      goalId,
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete(':id/goals/:goalId')
@@ -210,19 +322,40 @@ export class GroupsController {
     @Param('goalId') goalId: string,
     @Request() req,
   ) {
-    return this.groupsService.deleteGroupGoal(id, goalId, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.deleteGroupGoal(
+      id,
+      goalId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Get(':id/board')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN', 'STUDENT')
   getBoardPosts(@Param('id') id: string, @Request() req) {
-    return this.groupsService.getBoardPosts(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.getBoardPosts(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/board')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN')
-  createBoardPost(@Param('id') id: string, @Body() dto: CreateGroupPostDto, @Request() req) {
-    return this.groupsService.createBoardPost(id, dto, req.user.id, req.user.role, req.user.schoolId);
+  createBoardPost(
+    @Param('id') id: string,
+    @Body() dto: CreateGroupPostDto,
+    @Request() req,
+  ) {
+    return this.groupsService.createBoardPost(
+      id,
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Patch(':id/board/:postId')
@@ -233,7 +366,14 @@ export class GroupsController {
     @Body() dto: UpdateGroupPostDto,
     @Request() req,
   ) {
-    return this.groupsService.updateBoardPost(id, postId, dto, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.updateBoardPost(
+      id,
+      postId,
+      dto,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete(':id/board/:postId')
@@ -243,7 +383,13 @@ export class GroupsController {
     @Param('postId') postId: string,
     @Request() req,
   ) {
-    return this.groupsService.deleteBoardPost(id, postId, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.deleteBoardPost(
+      id,
+      postId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/board/:postId/replies')
@@ -254,7 +400,14 @@ export class GroupsController {
     @Body() dto: CreateGroupPostReplyDto,
     @Request() req,
   ) {
-    return this.groupsService.createBoardReply(id, postId, dto.body, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.createBoardReply(
+      id,
+      postId,
+      dto.body,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Patch(':id/board/:postId/replies/:replyId')
@@ -266,7 +419,15 @@ export class GroupsController {
     @Body() dto: UpdateGroupPostReplyDto,
     @Request() req,
   ) {
-    return this.groupsService.updateBoardReply(id, postId, replyId, dto.body, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.updateBoardReply(
+      id,
+      postId,
+      replyId,
+      dto.body,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete(':id/board/:postId/replies/:replyId')
@@ -277,7 +438,14 @@ export class GroupsController {
     @Param('replyId') replyId: string,
     @Request() req,
   ) {
-    return this.groupsService.deleteBoardReply(id, postId, replyId, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.deleteBoardReply(
+      id,
+      postId,
+      replyId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/board/:postId/respond')
@@ -288,7 +456,14 @@ export class GroupsController {
     @Body() dto: CreateGroupPostResponseDto,
     @Request() req,
   ) {
-    return this.groupsService.respondToBoardPost(id, postId, dto.selectedOption, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.respondToBoardPost(
+      id,
+      postId,
+      dto.selectedOption,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Patch(':id/goals/:goalId/complete')
@@ -298,7 +473,13 @@ export class GroupsController {
     @Param('goalId') goalId: string,
     @Request() req,
   ) {
-    return this.groupsService.completeGoalAsStudent(id, goalId, req.user.id, req.user.role, req.user.schoolId);
+    return this.groupsService.completeGoalAsStudent(
+      id,
+      goalId,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post(':id/board/upload')
@@ -314,7 +495,8 @@ export class GroupsController {
           cb(null, uploadPath);
         },
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
@@ -330,7 +512,12 @@ export class GroupsController {
         if (allowedMimes.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Sadece PDF, JPG, JPEG, PNG, DOCX ve XLSX dosyaları yüklenebilir'), false);
+          cb(
+            new BadRequestException(
+              'Sadece PDF, JPG, JPEG, PNG, DOCX ve XLSX dosyaları yüklenebilir',
+            ),
+            false,
+          );
         }
       },
       limits: {
@@ -368,13 +555,21 @@ export class GroupsController {
       questionId,
     );
     const safeFilename = basename(fileInfo.filePath || '');
-    const filePath = join(process.cwd(), 'uploads', 'group-board', safeFilename);
+    const filePath = join(
+      process.cwd(),
+      'uploads',
+      'group-board',
+      safeFilename,
+    );
 
     if (!fs.existsSync(filePath)) {
       throw new BadRequestException('Dosya bulunamadı');
     }
 
-    res.setHeader('Content-Type', fileInfo.mimeType || 'application/octet-stream');
+    res.setHeader(
+      'Content-Type',
+      fileInfo.mimeType || 'application/octet-stream',
+    );
     res.setHeader(
       'Content-Disposition',
       `attachment; filename="${encodeURIComponent(fileInfo.fileName || 'dosya')}"`,

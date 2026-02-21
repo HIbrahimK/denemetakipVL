@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { API_BASE_URL } from "@/lib/auth";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     BarChart3,
     TrendingUp,
@@ -21,8 +23,6 @@ import {
 import {
     LineChart,
     Line,
-    BarChart,
-    Bar,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -32,6 +32,7 @@ import {
 } from "recharts";
 
 type ExamType = 'TYT' | 'AYT' | 'LGS';
+type ProgressRange = 'LAST_5' | 'LAST_10' | 'ALL';
 
 interface LessonResult {
     lessonName: string;
@@ -62,6 +63,11 @@ interface ExamAttempt {
     totalNet: number;
     lessonResults: LessonResult[];
     scores: ExamScore[];
+    primaryScoreType?: string | null;
+    schoolAverageNet?: number | null;
+    classAverageNet?: number | null;
+    schoolAverageScore?: number | null;
+    classAverageScore?: number | null;
     schoolParticipantCount: number | null;
     districtParticipantCount: number | null;
     cityParticipantCount: number | null;
@@ -105,6 +111,12 @@ function StudentResultsContent() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedExamType, setSelectedExamType] = useState<ExamType | 'ALL'>('ALL');
     const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
+    const [progressRange, setProgressRange] = useState<ProgressRange>('LAST_10');
+    const [includePreviousYear, setIncludePreviousYear] = useState(false);
+    const formatTooltipValue = (value: number | string | undefined) =>
+        typeof value === 'number' || typeof value === 'string'
+            ? Number(value).toFixed(2)
+            : '-';
 
     useEffect(() => {
         const fetchData = async () => {
@@ -136,7 +148,7 @@ function StudentResultsContent() {
                 }
                 setData(result);
             } catch (err) {
-                if ((err as any)?.name === 'AbortError') {
+                if (err instanceof Error && err.name === 'AbortError') {
                     setError('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
                 } else {
                     setError('Sonuçlar yüklenirken hata oluştu.');
@@ -217,26 +229,95 @@ function StudentResultsContent() {
                 count: data.count,
             }))
             .sort((a, b) => b.avgNet - a.avgNet);
-    }, [data, selectedExamType, searchTerm]);
+    }, [data, filteredExams]);
+
+    const progressExams = useMemo(() => {
+        if (!filteredExams || filteredExams.length === 0) return [];
+
+        const sortedByDateDesc = filteredExams
+            .slice()
+            .sort((a, b) => new Date(b.examDate).getTime() - new Date(a.examDate).getTime());
+
+        if (progressRange === 'ALL') {
+            return sortedByDateDesc.slice().reverse();
+        }
+
+        const limit = progressRange === 'LAST_5' ? 5 : 10;
+        return sortedByDateDesc.slice(0, limit).reverse();
+    }, [filteredExams, progressRange]);
+
+    const previousYearAverages = useMemo(() => {
+        if (!progressExams || progressExams.length === 0 || !filteredExams || filteredExams.length === 0) {
+            return null;
+        }
+
+        const rangeStart = new Date(progressExams[0].examDate);
+        const rangeEnd = new Date(progressExams[progressExams.length - 1].examDate);
+        if (Number.isNaN(rangeStart.getTime()) || Number.isNaN(rangeEnd.getTime())) {
+            return null;
+        }
+
+        const previousRangeStart = new Date(rangeStart);
+        previousRangeStart.setFullYear(previousRangeStart.getFullYear() - 1);
+
+        const previousRangeEnd = new Date(rangeEnd);
+        previousRangeEnd.setFullYear(previousRangeEnd.getFullYear() - 1);
+
+        const previousYearExams = filteredExams.filter((exam) => {
+            const examDate = new Date(exam.examDate);
+            if (Number.isNaN(examDate.getTime())) {
+                return false;
+            }
+            return examDate >= previousRangeStart && examDate <= previousRangeEnd;
+        });
+
+        if (previousYearExams.length === 0) {
+            return null;
+        }
+
+        const average = (values: Array<number | null | undefined>) => {
+            const validValues = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+            if (validValues.length === 0) return null;
+            const sum = validValues.reduce((acc, value) => acc + value, 0);
+            return Number((sum / validValues.length).toFixed(2));
+        };
+
+        return {
+            studentPuan: average(previousYearExams.map((exam) => exam.scores[0]?.score ?? null)),
+            classPuan: average(previousYearExams.map((exam) => exam.classAverageScore ?? null)),
+            schoolPuan: average(previousYearExams.map((exam) => exam.schoolAverageScore ?? null)),
+            studentNet: average(previousYearExams.map((exam) => exam.totalNet ?? null)),
+            classNet: average(previousYearExams.map((exam) => exam.classAverageNet ?? null)),
+            schoolNet: average(previousYearExams.map((exam) => exam.schoolAverageNet ?? null)),
+            examCount: previousYearExams.length,
+        };
+    }, [filteredExams, progressExams]);
 
     // Progress chart data
     const progressData = useMemo(() => {
-        if (!data || !filteredExams) return [];
-        return filteredExams
-            .slice()
-            .reverse()
-            .map((exam, idx) => {
-                const primaryScore = exam.scores.length > 0 ? exam.scores[0].score : 0;
-                const schoolRank = exam.scores.length > 0 ? exam.scores[0].rankSchool : null;
-                return {
-                    name: `${idx + 1}`,
-                    date: new Date(exam.examDate).toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }),
-                    puan: primaryScore,
-                    net: exam.totalNet,
-                    sıralama: schoolRank,
-                };
-            });
-    }, [data, selectedExamType, searchTerm]);
+        if (!progressExams || progressExams.length === 0) return [];
+        return progressExams.map((exam, idx) => {
+            const primaryScore = exam.scores.length > 0 ? exam.scores[0].score : null;
+            const schoolRank = exam.scores.length > 0 ? exam.scores[0].rankSchool : null;
+            return {
+                name: `${idx + 1}`,
+                date: new Date(exam.examDate).toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }),
+                puan: primaryScore,
+                net: exam.totalNet,
+                classPuan: exam.classAverageScore ?? null,
+                schoolPuan: exam.schoolAverageScore ?? null,
+                classNet: exam.classAverageNet ?? null,
+                schoolNet: exam.schoolAverageNet ?? null,
+                prevStudentPuan: includePreviousYear ? previousYearAverages?.studentPuan ?? null : null,
+                prevClassPuan: includePreviousYear ? previousYearAverages?.classPuan ?? null : null,
+                prevSchoolPuan: includePreviousYear ? previousYearAverages?.schoolPuan ?? null : null,
+                prevStudentNet: includePreviousYear ? previousYearAverages?.studentNet ?? null : null,
+                prevClassNet: includePreviousYear ? previousYearAverages?.classNet ?? null : null,
+                prevSchoolNet: includePreviousYear ? previousYearAverages?.schoolNet ?? null : null,
+                siralama: schoolRank,
+            };
+        });
+    }, [progressExams, includePreviousYear, previousYearAverages]);
 
     if (loading) {
         return (
@@ -460,7 +541,7 @@ function StudentResultsContent() {
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" style={{ fontSize: '10px' }} />
                                     <YAxis style={{ fontSize: '10px' }} />
-                                    <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
+                                    <Tooltip formatter={formatTooltipValue} />
                                     <Line type="monotone" dataKey="net" stroke="#4f46e5" strokeWidth={2} />
                                 </LineChart>
                             </ResponsiveContainer>
@@ -624,43 +705,122 @@ function StudentResultsContent() {
                 </div>
             </div>
 
-            {/* Progress Charts - Deneme listesinin altında */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm">Puan Gelişimi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={progressData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" style={{ fontSize: '10px' }} />
-                                <YAxis style={{ fontSize: '10px' }} />
-                                <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
-                                <Legend />
-                                <Line type="monotone" dataKey="puan" stroke="#4f46e5" strokeWidth={2} name="Puan" />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+            {/* Progress Charts - Deneme listesinin altinda */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        Gelisim Grafikleri
+                    </h2>
+                    <div className="flex items-center gap-3 flex-wrap justify-end">
+                        <Tabs value={progressRange} onValueChange={(value) => setProgressRange(value as ProgressRange)}>
+                            <TabsList className="grid h-9 grid-cols-3">
+                                <TabsTrigger value="LAST_5" className="px-3 text-xs">Son 5 Deneme</TabsTrigger>
+                                <TabsTrigger value="LAST_10" className="px-3 text-xs">Son 10 Deneme</TabsTrigger>
+                                <TabsTrigger value="ALL" className="px-3 text-xs">Tum Denemeler</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                        <label className="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+                            <Checkbox
+                                checked={includePreviousYear}
+                                onCheckedChange={(checked) => setIncludePreviousYear(Boolean(checked))}
+                            />
+                            Onceki yil ortalamalarini goster
+                        </label>
+                    </div>
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm">Net Gelişimi</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[250px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={progressData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" style={{ fontSize: '10px' }} />
-                                <YAxis style={{ fontSize: '10px' }} />
-                                <Tooltip formatter={(value: any) => Number(value).toFixed(2)} />
-                                <Legend />
-                                <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} name="Net" />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm">Puan Karsilastirma ({progressExams.length})</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={progressData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" style={{ fontSize: '10px' }} />
+                                    <YAxis style={{ fontSize: '10px' }} />
+                                    <Tooltip formatter={formatTooltipValue} />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="puan" stroke="#4f46e5" strokeWidth={2} name="Ogrenci" />
+                                    <Line type="monotone" dataKey="classPuan" stroke="#f59e0b" strokeWidth={2} name="Sinif Ort." />
+                                    <Line type="monotone" dataKey="schoolPuan" stroke="#0ea5e9" strokeWidth={2} name="Okul Ort." />
+                                    {includePreviousYear && previousYearAverages?.classPuan !== null && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="prevClassPuan"
+                                            stroke="#f59e0b"
+                                            strokeDasharray="6 4"
+                                            strokeWidth={1.5}
+                                            name="Gecen Yil Sinif Ort."
+                                            dot={false}
+                                        />
+                                    )}
+                                    {includePreviousYear && previousYearAverages?.schoolPuan !== null && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="prevSchoolPuan"
+                                            stroke="#0ea5e9"
+                                            strokeDasharray="6 4"
+                                            strokeWidth={1.5}
+                                            name="Gecen Yil Okul Ort."
+                                            dot={false}
+                                        />
+                                    )}
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm">Net Karsilastirma ({progressExams.length})</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[250px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={progressData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" style={{ fontSize: '10px' }} />
+                                    <YAxis style={{ fontSize: '10px' }} />
+                                    <Tooltip formatter={formatTooltipValue} />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="net" stroke="#10b981" strokeWidth={2} name="Ogrenci" />
+                                    <Line type="monotone" dataKey="classNet" stroke="#f97316" strokeWidth={2} name="Sinif Ort." />
+                                    <Line type="monotone" dataKey="schoolNet" stroke="#0284c7" strokeWidth={2} name="Okul Ort." />
+                                    {includePreviousYear && previousYearAverages?.classNet !== null && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="prevClassNet"
+                                            stroke="#f97316"
+                                            strokeDasharray="6 4"
+                                            strokeWidth={1.5}
+                                            name="Gecen Yil Sinif Ort."
+                                            dot={false}
+                                        />
+                                    )}
+                                    {includePreviousYear && previousYearAverages?.schoolNet !== null && (
+                                        <Line
+                                            type="monotone"
+                                            dataKey="prevSchoolNet"
+                                            stroke="#0284c7"
+                                            strokeDasharray="6 4"
+                                            strokeWidth={1.5}
+                                            name="Gecen Yil Okul Ort."
+                                            dot={false}
+                                        />
+                                    )}
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </CardContent>
+                    </Card>
+                </div>
+                {includePreviousYear && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Gecen yil karsilastirmasi ayni tarih araligindaki
+                        {` ${previousYearAverages?.examCount ?? 0} `}
+                        denemenin ortalamasina gore hesaplandi.
+                    </p>
+                )}
             </div>
 
             {/* Missed Exams */}

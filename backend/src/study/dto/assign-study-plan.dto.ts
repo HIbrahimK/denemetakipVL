@@ -1,4 +1,12 @@
-import { IsArray, IsString, IsOptional, IsInt, ValidateNested, IsEnum, IsObject } from 'class-validator';
+import {
+  IsArray,
+  IsString,
+  IsOptional,
+  IsInt,
+  ValidateNested,
+  IsEnum,
+  IsObject,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 // Assignment target type enum - Prisma schema ile aynı

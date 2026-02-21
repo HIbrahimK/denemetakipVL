@@ -45,14 +45,16 @@ export class StudyRecommendationService {
     const recommendations: any[] = [];
 
     // 1. Identify weak subjects from task performance
-    const subjectScores: { [key: string]: { total: number; count: number } } = {};
+    const subjectScores: { [key: string]: { total: number; count: number } } =
+      {};
 
     completedTasks.forEach((task: any) => {
       if (task.subjectName) {
-        const totalAnswered = task.correctCount + task.wrongCount + task.blankCount;
+        const totalAnswered =
+          task.correctCount + task.wrongCount + task.blankCount;
         if (totalAnswered > 0) {
           const score = (task.correctCount / totalAnswered) * 100;
-          
+
           if (!subjectScores[task.subjectName]) {
             subjectScores[task.subjectName] = { total: 0, count: 0 };
           }
@@ -84,7 +86,10 @@ export class StudyRecommendationService {
     }
 
     // 2. Study consistency check
-    const totalMinutes = sessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
+    const totalMinutes = sessions.reduce(
+      (sum, s) => sum + Math.round(s.duration / 60),
+      0,
+    );
     const avgMinutesPerDay = sessions.length > 0 ? totalMinutes / 30 : 0;
 
     if (avgMinutesPerDay < 60) {

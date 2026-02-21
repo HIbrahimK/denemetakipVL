@@ -1,11 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateStudyTaskDto, CompleteStudyTaskDto, VerifyStudyTaskDto, VerificationType } from './dto';
+import {
+  CreateStudyTaskDto,
+  CompleteStudyTaskDto,
+  VerifyStudyTaskDto,
+  VerificationType,
+} from './dto';
 import { StudyTaskStatus } from '@prisma/client';
 
 @Injectable()
 export class StudyTaskService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateStudyTaskDto, schoolId: string) {
     // Verify student belongs to school
@@ -65,7 +74,12 @@ export class StudyTaskService {
     });
   }
 
-  async findAll(userId: string, userRole: string, schoolId: string, filters?: any) {
+  async findAll(
+    userId: string,
+    userRole: string,
+    schoolId: string,
+    filters?: any,
+  ) {
     const where: any = { schoolId };
 
     if (userRole === 'STUDENT') {
@@ -90,7 +104,10 @@ export class StudyTaskService {
       where.planId = filters.planId;
     }
 
-    if (filters?.studentId && (userRole === 'TEACHER' || userRole === 'SCHOOL_ADMIN')) {
+    if (
+      filters?.studentId &&
+      (userRole === 'TEACHER' || userRole === 'SCHOOL_ADMIN')
+    ) {
       where.studentId = filters.studentId;
     }
 
@@ -122,7 +139,12 @@ export class StudyTaskService {
     });
   }
 
-  async findOne(id: string, userId: string, userRole: string, schoolId: string) {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: string,
+    schoolId: string,
+  ) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id },
       include: {
@@ -169,7 +191,12 @@ export class StudyTaskService {
     return task;
   }
 
-  async complete(id: string, dto: CompleteStudyTaskDto, userId: string, schoolId: string) {
+  async complete(
+    id: string,
+    dto: CompleteStudyTaskDto,
+    userId: string,
+    schoolId: string,
+  ) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id },
       include: {
@@ -231,7 +258,13 @@ export class StudyTaskService {
     });
   }
 
-  async verify(id: string, dto: VerifyStudyTaskDto, userId: string, schoolId: string, verifierRole: string) {
+  async verify(
+    id: string,
+    dto: VerifyStudyTaskDto,
+    userId: string,
+    schoolId: string,
+    verifierRole: string,
+  ) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id },
       include: {
@@ -258,8 +291,13 @@ export class StudyTaskService {
     }
 
     // Only check completion status for parent verification
-    if (dto.verificationType === VerificationType.PARENT && task.status !== StudyTaskStatus.COMPLETED) {
-      throw new ForbiddenException('Only completed tasks can be verified by parents');
+    if (
+      dto.verificationType === VerificationType.PARENT &&
+      task.status !== StudyTaskStatus.COMPLETED
+    ) {
+      throw new ForbiddenException(
+        'Only completed tasks can be verified by parents',
+      );
     }
 
     const updateData: any = {};
@@ -292,7 +330,10 @@ export class StudyTaskService {
       // If teacher approves, task is considered COMPLETED (or VERIFIED)
       if (dto.approved) {
         // If not completed yet, mark as completed
-        if (task.status !== StudyTaskStatus.COMPLETED && task.status !== 'VERIFIED' as StudyTaskStatus) {
+        if (
+          task.status !== StudyTaskStatus.COMPLETED &&
+          task.status !== ('VERIFIED' as StudyTaskStatus)
+        ) {
           updateData.status = StudyTaskStatus.COMPLETED;
           updateData.completedAt = new Date();
         }
@@ -325,7 +366,12 @@ export class StudyTaskService {
     });
   }
 
-  async updateStatus(id: string, status: StudyTaskStatus, userId: string, schoolId: string) {
+  async updateStatus(
+    id: string,
+    status: StudyTaskStatus,
+    userId: string,
+    schoolId: string,
+  ) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id },
       include: {
@@ -399,7 +445,7 @@ export class StudyTaskService {
     // Only teachers who created the plan or the student can delete
     const canDelete =
       (userRole === 'TEACHER' && task.plan?.teacherId === userId) ||
-      (userRole === 'SCHOOL_ADMIN') ||
+      userRole === 'SCHOOL_ADMIN' ||
       (userRole === 'STUDENT' && task.student.userId === userId);
 
     if (!canDelete) {
@@ -435,7 +481,12 @@ export class StudyTaskService {
     });
   }
 
-  async approveTask(taskId: string, teacherId: string, schoolId: string, comment?: string) {
+  async approveTask(
+    taskId: string,
+    teacherId: string,
+    schoolId: string,
+    comment?: string,
+  ) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id: taskId },
       include: {
@@ -518,7 +569,12 @@ export class StudyTaskService {
     });
   }
 
-  async rejectTask(taskId: string, teacherId: string, schoolId: string, comment: string) {
+  async rejectTask(
+    taskId: string,
+    teacherId: string,
+    schoolId: string,
+    comment: string,
+  ) {
     const task = await this.prisma.studyTask.findUnique({
       where: { id: taskId },
       include: {

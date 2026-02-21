@@ -149,6 +149,7 @@ export default function StudyPlansPage() {
   const [selectedPlanForDelete, setSelectedPlanForDelete] = useState<StudyPlan | null>(null);
   const [deleteMode, setDeleteMode] = useState<'cancel' | 'delete' | 'archive'>('cancel');
   const [deleting, setDeleting] = useState(false);
+  const [seedingPreset, setSeedingPreset] = useState<'TYT' | 'AYT' | 'LGS' | 'ACTIVITIES' | null>(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -419,6 +420,49 @@ export default function StudyPlansPage() {
     window.open(`/dashboard/study-plans/${planId}?print=true`, '_blank', 'noopener,noreferrer');
   };
 
+  const handleLoadSeedPreset = async (
+    preset: 'TYT' | 'AYT' | 'LGS' | 'ACTIVITIES',
+    label: string
+  ) => {
+    setSeedingPreset(preset);
+    try {
+      const response = await fetch(`${API_BASE_URL}/subjects/seed-preset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preset }),
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(result?.message || `${label} yuklemesi basarisiz`);
+      }
+
+      if (result?.alreadyLoaded) {
+        toast({
+          title: 'Bilgi',
+          description: result?.message || `${label} zaten yuklu`,
+        });
+        return;
+      }
+
+      toast({
+        title: 'Basarili',
+        description: result?.message || `${label} konulari/aktiviteleri yuklendi.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Hata',
+        description: error?.message || `${label} yuklenirken hata olustu`,
+        variant: 'destructive',
+      });
+    } finally {
+      setSeedingPreset(null);
+    }
+  };
+
   // Assignment functions
   const openAssignModal = (plan: StudyPlan) => {
     setSelectedPlanForAssignment(plan);
@@ -650,6 +694,53 @@ export default function StudyPlansPage() {
           </div>
         )}
       </div>
+
+      {user?.role === 'SCHOOL_ADMIN' && (
+        <Card className="border-blue-200 bg-blue-50/40">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Konu ve Aktivite Yükleme</CardTitle>
+            <CardDescription>
+              Seed dosyalarındaki hazır TYT/AYT/LGS konu listelerini ve aktiviteleri tek tıkla yükleyin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleLoadSeedPreset('TYT', 'TYT')}
+                disabled={seedingPreset !== null}
+              >
+                {seedingPreset === 'TYT' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                TYT Konularını Yükle
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleLoadSeedPreset('AYT', 'AYT')}
+                disabled={seedingPreset !== null}
+              >
+                {seedingPreset === 'AYT' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                AYT Konularını Yükle
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleLoadSeedPreset('LGS', 'LGS')}
+                disabled={seedingPreset !== null}
+              >
+                {seedingPreset === 'LGS' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                LGS Konularını Yükle
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleLoadSeedPreset('ACTIVITIES', 'Aktivite')}
+                disabled={seedingPreset !== null}
+              >
+                {seedingPreset === 'ACTIVITIES' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Aktiviteleri Yükle
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
