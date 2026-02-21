@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, X } from "lucide-react";
+import { useSchool } from "@/contexts/school-context";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -13,6 +14,7 @@ export default function PWARegister() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const { schoolAppName } = useSchool();
 
   useEffect(() => {
     // Check if already installed
@@ -47,12 +49,12 @@ export default function PWARegister() {
     // Register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register("/sw.js", { scope: "/" })
         .then((registration) => {
-          console.log("Service Worker registered:", registration);
+          registration.update();
         })
         .catch((error) => {
-          console.log("Service Worker registration failed:", error);
+          console.error("Service Worker registration failed:", error);
         });
     }
 
@@ -68,10 +70,8 @@ export default function PWARegister() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
 
-    if (outcome === "accepted") {
-      console.log("User accepted the install prompt");
-    } else {
-      console.log("User dismissed the install prompt");
+    if (outcome !== "accepted") {
+      localStorage.setItem("pwa-install-dismissed", Date.now().toString());
     }
 
     setDeferredPrompt(null);
@@ -116,7 +116,7 @@ export default function PWARegister() {
             Uygulamayı Yükle
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            Deneme Takip'i ana ekranınıza ekleyerek daha hızlı erişin.
+            {schoolAppName || "Deneme Takip Sistemi"} uygulamasını ana ekranınıza ekleyerek daha hızlı erişin.
           </p>
           <div className="flex gap-2 mt-3">
             <Button

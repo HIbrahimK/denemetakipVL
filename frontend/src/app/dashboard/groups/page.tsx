@@ -136,13 +136,13 @@ export default function GroupsPage() {
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
           {canSyncAutoGroups && (
-            <Button variant="outline" className="w-full sm:w-auto" onClick={handleSyncAutoGroups} disabled={syncingAuto}>
+            <Button variant="outline" className="h-auto w-full whitespace-normal text-left sm:h-10 sm:w-auto sm:whitespace-nowrap" onClick={handleSyncAutoGroups} disabled={syncingAuto}>
               {syncingAuto ? 'Oluşturuluyor...' : 'Sınıf Gruplarını Oluştur'}
             </Button>
           )}
           {canManageGroups && (
             <Link href="/dashboard/groups/new" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto">
+              <Button className="h-auto w-full whitespace-normal text-left sm:h-10 sm:w-auto sm:whitespace-nowrap">
                 <Plus className="mr-2 h-4 w-4" />
                 Yeni Grup Olutur
               </Button>
@@ -237,15 +237,15 @@ export default function GroupsPage() {
                 <CardDescription>{group._count?.memberships || 0} öğrenci</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button variant="outline" size="sm" className="w-full flex-1" asChild>
                     <Link href={`/dashboard/groups/${group.id}/board`}>
                       <Eye className="mr-2 h-4 w-4" />
                       Pano
                     </Link>
                   </Button>
                   {canManageGroups && (
-                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Button variant="outline" size="sm" className="w-full flex-1" asChild>
                       <Link href={`/dashboard/groups/${group.id}`}>
                         <Settings className="mr-2 h-4 w-4" />
                         Ayarlar

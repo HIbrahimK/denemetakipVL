@@ -11,16 +11,23 @@ import { CreateReplyDto } from './dto/create-reply.dto';
 import { SaveDraftDto } from './dto/save-draft.dto';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
-import { MessageType, MessageStatus, Role } from '@prisma/client';
+import {
+  MessageType,
+  MessageStatus,
+  NotificationType,
+  Role,
+} from '@prisma/client';
 import { EmailService } from '../email/email.service';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class MessagesService {
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
+    private notificationsService: NotificationsService,
     @InjectQueue('messages') private messagesQueue: Queue,
   ) {}
 
@@ -289,6 +296,22 @@ export class MessagesService {
     const settings = await this.getSettings(schoolId);
     if (settings?.enableEmailNotifications) {
       await this.sendEmailNotifications(message, recipientIds);
+    }
+
+    try {
+      await this.notificationsService.dispatchSystemNotification({
+        schoolId,
+        type: NotificationType.NEW_MESSAGE,
+        title: `Yeni Mesaj: ${message.subject}`,
+        body: `${message.sender.firstName} ${message.sender.lastName} bir mesaj gonderdi.`,
+        targetUserIds: recipientIds,
+        deeplink: `/dashboard/messages/${message.id}`,
+        metadata: {
+          messageId: message.id,
+        },
+      });
+    } catch (error) {
+      console.error('Push notification dispatch failed for message:', error);
     }
 
     return { success: true, recipientCount: recipientIds.length };

@@ -1,5 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { promises as fs } from 'fs';
+import { join } from 'path';
+import sharp from 'sharp';
+
+const PWA_ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512] as const;
+const PWA_ICON_DIR = join(process.cwd(), 'uploads', 'public', 'pwa-icons');
 
 @Injectable()
 export class SchoolsService {
@@ -13,6 +23,8 @@ export class SchoolsService {
       }
       return {
         name: school.name,
+        appShortName: school.appShortName,
+        subdomainAlias: school.subdomainAlias,
         logoUrl: school.logoUrl,
       };
     }
@@ -29,10 +41,71 @@ export class SchoolsService {
   }
 
   async updateSchool(id: string, dto: any) {
+    if (Object.prototype.hasOwnProperty.call(dto, 'logoUrl')) {
+      try {
+        await this.syncSchoolPwaIcons(id, dto.logoUrl ?? null);
+      } catch {
+        throw new BadRequestException(
+          'Logo islenemedi. Lutfen gecerli bir gorsel yukleyin.',
+        );
+      }
+    }
+
     return this.prisma.school.update({
       where: { id },
       data: dto,
     });
+  }
+
+  private async syncSchoolPwaIcons(schoolId: string, logoUrl: string | null) {
+    const schoolIconDir = join(PWA_ICON_DIR, schoolId);
+
+    if (!logoUrl) {
+      await fs.rm(schoolIconDir, { recursive: true, force: true });
+      return;
+    }
+
+    const imageBuffer = await this.resolveLogoBuffer(logoUrl);
+    await fs.mkdir(schoolIconDir, { recursive: true });
+
+    await Promise.all(
+      PWA_ICON_SIZES.map(async (size) => {
+        const outputPath = join(schoolIconDir, `icon-${size}x${size}.png`);
+        await sharp(imageBuffer)
+          .resize(size, size, {
+            fit: 'contain',
+            background: { r: 255, g: 255, b: 255, alpha: 0 },
+          })
+          .png({ compressionLevel: 9, quality: 100 })
+          .toFile(outputPath);
+      }),
+    );
+
+    await sharp(imageBuffer)
+      .resize(32, 32, {
+        fit: 'contain',
+        background: { r: 255, g: 255, b: 255, alpha: 0 },
+      })
+      .png({ compressionLevel: 9, quality: 100 })
+      .toFile(join(schoolIconDir, 'favicon-32x32.png'));
+  }
+
+  private async resolveLogoBuffer(logoUrl: string): Promise<Buffer> {
+    if (logoUrl.startsWith('data:image/')) {
+      const parts = logoUrl.split(',');
+      if (parts.length < 2) {
+        throw new Error('Gecersiz logo verisi');
+      }
+      return Buffer.from(parts[1], 'base64');
+    }
+
+    const response = await fetch(logoUrl);
+    if (!response.ok) {
+      throw new Error('Logo dosyasi indirilemedi');
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
   }
 
   async getPromotionPreview(id: string) {

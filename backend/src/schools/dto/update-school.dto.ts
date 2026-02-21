@@ -2,16 +2,27 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
-  IsUrl,
   IsInt,
   Min,
   Max,
+  Matches,
 } from 'class-validator';
 
 export class UpdateSchoolDto {
   @IsString()
   @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsOptional()
+  appShortName?: string;
+
+  @IsString()
+  @Matches(/^[a-z0-9-]+$/i, {
+    message: 'subdomainAlias sadece harf, rakam ve tire icerebilir',
+  })
+  @IsOptional()
+  subdomainAlias?: string;
 
   @IsString()
   @IsOptional()
@@ -40,6 +51,34 @@ export class UpdateSchoolDto {
   @IsBoolean()
   @IsOptional()
   autoCleanupEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushNewMessageEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushExamReminderEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushGroupPostEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushAchievementEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushStudyPlanEnabled?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  pushCustomEnabled?: boolean;
 
   @IsInt()
   @Min(1)

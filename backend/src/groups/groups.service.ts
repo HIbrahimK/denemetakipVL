@@ -5,7 +5,8 @@
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { GroupPostType } from '@prisma/client';
+import { GroupPostType, NotificationType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import { basename, join } from 'path';
 import { existsSync, unlinkSync } from 'fs';
 import {
@@ -18,7 +19,10 @@ import {
 
 @Injectable()
 export class GroupsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   private isAdmin(role: string) {
     return role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN';
@@ -1924,7 +1928,7 @@ export class GroupsService {
       );
     }
 
-    return this.prisma.groupPost.create({
+    const createdPost = await this.prisma.groupPost.create({
       data: {
         groupId,
         schoolId,
@@ -1960,6 +1964,75 @@ export class GroupsService {
         },
       },
     });
+
+    try {
+      const memberships = await this.prisma.groupMembership.findMany({
+        where: {
+          groupId,
+          schoolId,
+          leftAt: null,
+        },
+        select: {
+          student: {
+            select: {
+              userId: true,
+              parent: {
+                select: {
+                  userId: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const groupTeachers = await this.prisma.mentorGroup.findUnique({
+        where: { id: groupId },
+        select: {
+          teacherId: true,
+          teacherAssignments: {
+            where: { leftAt: null },
+            select: { teacherId: true },
+          },
+        },
+      });
+
+      const recipientUserIds = new Set<string>();
+
+      memberships.forEach((membership) => {
+        recipientUserIds.add(membership.student.userId);
+        if (membership.student.parent?.userId) {
+          recipientUserIds.add(membership.student.parent.userId);
+        }
+      });
+
+      if (groupTeachers?.teacherId) {
+        recipientUserIds.add(groupTeachers.teacherId);
+      }
+      groupTeachers?.teacherAssignments.forEach((assignment) => {
+        recipientUserIds.add(assignment.teacherId);
+      });
+
+      recipientUserIds.delete(userId);
+
+      await this.notificationsService.dispatchSystemNotification({
+        schoolId,
+        type: NotificationType.GROUP_POST,
+        title: 'Mentorluk grubunda yeni paylasim',
+        body: dto.title || dto.body || 'Grupta yeni bir paylasim yapildi.',
+        targetUserIds: [...recipientUserIds],
+        deeplink: `/dashboard/groups/${groupId}/board`,
+        metadata: {
+          groupId,
+          postId: createdPost.id,
+          postType: dto.type,
+        },
+      });
+    } catch (error) {
+      console.error('Push notification dispatch failed for group post:', error);
+    }
+
+    return createdPost;
   }
 
   async updateBoardPost(

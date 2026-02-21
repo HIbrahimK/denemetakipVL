@@ -1,16 +1,21 @@
 ﻿import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationType } from '@prisma/client';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { CalendarQueryDto } from './dto/calendar-query.dto';
 import { DuplicateExamDto } from './dto/duplicate-exam.dto';
 import { ExamCalendarSettingsDto } from './dto/calendar-settings.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class ExamsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(createExamDto: CreateExamDto) {
     const data: any = {
@@ -769,5 +774,22 @@ export class ExamsService {
       where: { id: notification.id },
       data: { messageId: message.id },
     });
+
+    try {
+      await this.notificationsService.dispatchSystemNotification({
+        schoolId: exam.schoolId,
+        type: NotificationType.EXAM_REMINDER,
+        title: messageSubject,
+        body: messageBody,
+        targetUserIds: students.map((student) => student.userId),
+        deeplink: '/dashboard/student-calendar',
+        metadata: {
+          examId: exam.id,
+          notificationType: notification.notificationType,
+        },
+      });
+    } catch (error) {
+      console.error('Push notification dispatch failed for exam:', error);
+    }
   }
 }

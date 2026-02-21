@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStudyPlanDto, AssignStudyPlanDto } from './dto';
-import { Prisma } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 // Study plan status enum (inline since it's not in Prisma client yet)
 enum StudyPlanStatus {
@@ -35,7 +36,10 @@ export enum DeleteMode {
 
 @Injectable()
 export class StudyPlanService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(dto: CreateStudyPlanDto, teacherId: string, schoolId: string) {
     console.log('[StudyPlanService] Creating study plan:', {
@@ -607,6 +611,7 @@ export class StudyPlanService {
 
     const createdTasks: string[] = [];
     const createdAssignments: string[] = [];
+    const assignedStudentIds = new Set<string>();
 
     // Summary tracking
     const summary = {
@@ -689,6 +694,7 @@ export class StudyPlanService {
         );
 
         for (const studentId of studentIds) {
+          assignedStudentIds.add(studentId);
           await createTasksForStudent(
             studentId,
             assignment.id,
@@ -722,6 +728,7 @@ export class StudyPlanService {
         });
         createdAssignments.push(assignment.id);
 
+        assignedStudentIds.add(studentId);
         await createTasksForStudent(studentId, assignment.id);
 
         // Update summary
@@ -763,6 +770,7 @@ export class StudyPlanService {
           schoolId,
         );
         for (const studentId of studentIds) {
+          assignedStudentIds.add(studentId);
           await createTasksForStudent(studentId, assignment.id);
         }
 
@@ -819,6 +827,7 @@ export class StudyPlanService {
           schoolId,
         );
         for (const studentId of studentIds) {
+          assignedStudentIds.add(studentId);
           await createTasksForStudent(studentId, assignment.id);
         }
 
@@ -863,6 +872,7 @@ export class StudyPlanService {
           schoolId,
         );
         for (const studentId of studentIds) {
+          assignedStudentIds.add(studentId);
           await createTasksForStudent(studentId, assignment.id);
         }
 
@@ -887,6 +897,51 @@ export class StudyPlanService {
 
     // Template stays as is, new active plan created
     // No need to update template status
+
+    try {
+      if (assignedStudentIds.size > 0) {
+        const assignedStudents = await this.prisma.student.findMany({
+          where: {
+            id: { in: [...assignedStudentIds] },
+            schoolId,
+          },
+          select: {
+            userId: true,
+            parent: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        });
+
+        const recipientUserIds = new Set<string>();
+        assignedStudents.forEach((student) => {
+          recipientUserIds.add(student.userId);
+          if (student.parent?.userId) {
+            recipientUserIds.add(student.parent.userId);
+          }
+        });
+
+        await this.notificationsService.dispatchSystemNotification({
+          schoolId,
+          type: NotificationType.STUDY_PLAN_ASSIGNED,
+          title: 'Yeni calisma planin hazir',
+          body: `${activePlan.name} plani senin icin atandi.`,
+          targetUserIds: [...recipientUserIds],
+          deeplink: `/dashboard/my-tasks/${activePlan.id}`,
+          metadata: {
+            planId: activePlan.id,
+            templateId: planId,
+          },
+        });
+      }
+    } catch (error) {
+      console.error(
+        'Push notification dispatch failed for study plan assignment:',
+        error,
+      );
+    }
 
     return {
       message: 'Study plan assigned successfully',

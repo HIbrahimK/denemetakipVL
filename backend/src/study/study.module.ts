@@ -6,9 +6,10 @@ import { StudySessionService } from './study-session.service';
 import { StudyRecommendationService } from './study-recommendation.service';
 import { StudyCleanupService } from './study-cleanup.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationsModule],
   controllers: [StudyController],
   providers: [
     StudyPlanService,

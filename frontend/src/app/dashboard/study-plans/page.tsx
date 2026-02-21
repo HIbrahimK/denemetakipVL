@@ -668,17 +668,17 @@ export default function StudyPlansPage() {
           </p>
         </div>
         {user?.role !== 'STUDENT' && (
-          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
             {user?.role === 'SCHOOL_ADMIN' && (
               <>
                 <Link href="/dashboard/admin/subjects" className="w-full sm:w-auto">
-                  <Button variant="outline" className="w-full sm:w-auto">
+                  <Button variant="outline" className="h-auto w-full whitespace-normal text-left sm:h-10 sm:w-auto sm:whitespace-nowrap">
                     <GraduationCap className="mr-2 h-4 w-4" />
                     Ders/Konu Yönetimi
                   </Button>
                 </Link>
                 <Link href="/dashboard/study-plans/settings" className="w-full sm:w-auto">
-                  <Button variant="outline" className="w-full sm:w-auto">
+                  <Button variant="outline" className="h-auto w-full whitespace-normal text-left sm:h-10 sm:w-auto sm:whitespace-nowrap">
                     <Settings className="mr-2 h-4 w-4" />
                     Ayarlar
                   </Button>
@@ -686,7 +686,7 @@ export default function StudyPlansPage() {
               </>
             )}
             <Link href="/dashboard/study-plans/new" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto">
+              <Button className="h-auto w-full whitespace-normal text-left sm:h-10 sm:w-auto sm:whitespace-nowrap">
                 <Plus className="mr-2 h-4 w-4" />
                 Yeni Çalışma Planı Hazırla
               </Button>

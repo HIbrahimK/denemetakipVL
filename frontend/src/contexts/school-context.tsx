@@ -5,11 +5,13 @@ import { API_BASE_URL } from '@/lib/auth';
 
 interface SchoolData {
   name: string;
+  appShortName: string;
   logoUrl: string;
 }
 
 interface SchoolContextType {
   schoolName: string;
+  schoolAppName: string;
   schoolLogo: string;
   isLoading: boolean;
   refreshSchoolData: () => void;
@@ -20,6 +22,7 @@ const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
 export function SchoolProvider({ children }: { children: ReactNode }) {
   const [schoolData, setSchoolData] = useState<SchoolData>({
     name: "DenemeTakip.net",
+    appShortName: "Deneme Takip Sistemi",
     logoUrl: "/LOGO.png"
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +39,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         if (user.school) {
           setSchoolData({
             name: user.school.name || "DenemeTakip.net",
+            appShortName: user.school.appShortName || "Deneme Takip Sistemi",
             logoUrl: user.school.logoUrl || "/LOGO.png"
           });
           setIsLoading(false);
@@ -53,6 +57,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const data = await response.json();
             const newSchoolData = {
               name: data.name || "DenemeTakip.net",
+              appShortName: data.appShortName || "Deneme Takip Sistemi",
               logoUrl: data.logoUrl || "/LOGO.png"
             };
             
@@ -75,6 +80,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             if (data.name || data.logoUrl) {
               setSchoolData({
                 name: data.name || "DenemeTakip.net",
+                appShortName: data.appShortName || "Deneme Takip Sistemi",
                 logoUrl: data.logoUrl || "/LOGO.png"
               });
             }
@@ -120,6 +126,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     <SchoolContext.Provider 
       value={{ 
         schoolName: schoolData.name, 
+        schoolAppName: schoolData.appShortName || schoolData.name,
         schoolLogo: schoolData.logoUrl,
         isLoading,
         refreshSchoolData: fetchSchoolData

@@ -1,13 +1,13 @@
 {
   "name": "Deneme Takip Sistemi",
   "short_name": "DenemeTakip",
-  "description": "Okul deneme sınavı takip sistemi",
+  "description": "Okul deneme sinavi takip sistemi",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#1e1e2d",
   "theme_color": "#1e1e2d",
-  "orientation": "portrait-primary",
-  "scope": "/",
   "lang": "tr",
   "icons": [
     {
@@ -59,7 +59,6 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["education", "productivity"],
   "screenshots": [
     {
       "src": "/screenshots/dashboard.png",
@@ -73,5 +72,9 @@
       "type": "image/png",
       "form_factor": "narrow"
     }
+  ],
+  "categories": [
+    "education",
+    "productivity"
   ]
 }

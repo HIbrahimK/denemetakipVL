@@ -70,11 +70,20 @@ export default function SettingsPage() {
     const [school, setSchool] = useState<any>(null);
     const [formData, setFormData] = useState({
         name: "",
+        appShortName: "Deneme Takip Sistemi",
+        subdomainAlias: "",
         website: "",
         address: "",
         phone: "",
         isParentLoginActive: true,
         studentLoginType: "studentNumber",
+        pushEnabled: true,
+        pushNewMessageEnabled: true,
+        pushExamReminderEnabled: true,
+        pushGroupPostEnabled: true,
+        pushAchievementEnabled: true,
+        pushStudyPlanEnabled: true,
+        pushCustomEnabled: true,
     });
     const [backups, setBackups] = useState<any[]>([]);
     const [confirmDialog, setConfirmDialog] = useState<{
@@ -133,11 +142,20 @@ export default function SettingsPage() {
             setSchool(data);
             setFormData({
                 name: data.name || "",
+                appShortName: data.appShortName || "Deneme Takip Sistemi",
+                subdomainAlias: data.subdomainAlias || "",
                 website: data.website || "",
                 address: data.address || "",
                 phone: data.phone || "",
                 isParentLoginActive: data.isParentLoginActive ?? true,
                 studentLoginType: data.studentLoginType || "studentNumber",
+                pushEnabled: data.pushEnabled ?? true,
+                pushNewMessageEnabled: data.pushNewMessageEnabled ?? true,
+                pushExamReminderEnabled: data.pushExamReminderEnabled ?? true,
+                pushGroupPostEnabled: data.pushGroupPostEnabled ?? true,
+                pushAchievementEnabled: data.pushAchievementEnabled ?? true,
+                pushStudyPlanEnabled: data.pushStudyPlanEnabled ?? true,
+                pushCustomEnabled: data.pushCustomEnabled ?? true,
             });
         } catch (error) {
             console.error(error);
@@ -263,7 +281,13 @@ export default function SettingsPage() {
                     
                     // Update localStorage to refresh logo in dashboard
                     const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-                    storedUser.school = { logoUrl: base64, name: updated.name };
+                    storedUser.school = {
+                        ...storedUser.school,
+                        logoUrl: base64,
+                        name: updated.name,
+                        appShortName: updated.appShortName,
+                        subdomainAlias: updated.subdomainAlias,
+                    };
                     localStorage.setItem("user", JSON.stringify(storedUser));
                     
                     // Trigger school data refresh
@@ -298,8 +322,12 @@ export default function SettingsPage() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const token = localStorage.getItem("token");
         const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const payload: Record<string, unknown> = {
+            ...formData,
+            appShortName: formData.appShortName.trim() || "Deneme Takip Sistemi",
+            subdomainAlias: formData.subdomainAlias.trim() || undefined,
+        };
 
         try {
             const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
@@ -308,16 +336,22 @@ export default function SettingsPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
                 const updated = await res.json();
                 setSchool(updated);
                 
-                // Update user school name in localStorage
+                // Update user school values in localStorage
                 const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-                storedUser.school = { ...storedUser.school, name: updated.name };
+                storedUser.school = {
+                    ...storedUser.school,
+                    name: updated.name,
+                    logoUrl: updated.logoUrl,
+                    appShortName: updated.appShortName,
+                    subdomainAlias: updated.subdomainAlias,
+                };
                 localStorage.setItem("user", JSON.stringify(storedUser));
                 
                 // Trigger school data refresh
@@ -646,6 +680,37 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
+                                    <Label htmlFor="school-app-name" className="font-bold text-slate-900 dark:text-slate-100">Uygulama Görünen Adı:</Label>
+                                    <Input
+                                        id="school-app-name"
+                                        value={formData.appShortName}
+                                        onChange={(e) => setFormData({ ...formData, appShortName: e.target.value })}
+                                        placeholder="Orn: SCAL Deneme Takip"
+                                        className="h-11 border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-[#17a2b8]"
+                                    />
+                                    <p className="text-xs text-slate-500">
+                                        PWA uygulama adı ve ileride kullanılacak kurum görünümü için kullanılır.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="school-subdomain" className="font-bold text-slate-900 dark:text-slate-100">Kısa Kod / Subdomain Takma Adı:</Label>
+                                    <Input
+                                        id="school-subdomain"
+                                        value={formData.subdomainAlias}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                subdomainAlias: e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""),
+                                            })
+                                        }
+                                        placeholder="Orn: SCAL"
+                                        className="h-11 border-slate-200 dark:border-slate-800 focus:ring-1 focus:ring-[#17a2b8]"
+                                    />
+                                    <p className="text-xs text-slate-500">
+                                        Gelecekte subdomain için kullanılacak kısa ad (örn: scal.denemetakip.net).
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
                                     <Label htmlFor="school-website" className="font-bold text-slate-900 dark:text-slate-100">Okul İnternet Sitesi Adresi:</Label>
                                     <Input
                                         id="school-website"
@@ -712,6 +777,61 @@ export default function SettingsPage() {
                                             <span className="text-sm font-medium">TC Kimlik No</span>
                                         </label>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3 rounded-lg border border-slate-200 dark:border-slate-800 p-4">
+                                <Label className="font-bold text-slate-900 dark:text-slate-100">Push Bildirim Ayarları</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                    <label className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={formData.pushEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushEnabled: checked })}
+                                        />
+                                        <span>Tüm push bildirimleri aktif</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={formData.pushNewMessageEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushNewMessageEnabled: checked })}
+                                        />
+                                        <span>Yeni mesaj bildirimi</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={formData.pushExamReminderEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushExamReminderEnabled: checked })}
+                                        />
+                                        <span>Yaklaşan deneme bildirimi</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={formData.pushGroupPostEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushGroupPostEnabled: checked })}
+                                        />
+                                        <span>Mentör grup paylaşımı</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={formData.pushAchievementEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushAchievementEnabled: checked })}
+                                        />
+                                        <span>Yeni rozet kazanımı</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <Checkbox
+                                            checked={formData.pushStudyPlanEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushStudyPlanEnabled: checked })}
+                                        />
+                                        <span>Yeni çalışma planı ataması</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 sm:col-span-2">
+                                        <Checkbox
+                                            checked={formData.pushCustomEnabled}
+                                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, pushCustomEnabled: checked })}
+                                        />
+                                        <span>Özel gönderilen duyuru bildirimleri</span>
+                                    </label>
                                 </div>
                             </div>
 

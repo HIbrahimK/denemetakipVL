@@ -132,6 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
                 { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+                { name: "Bildirimler", href: "/dashboard/notifications", icon: Bell },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -141,6 +142,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return [
                 { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+                { name: "Bildirimler", href: "/dashboard/notifications", icon: Bell },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -156,6 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+                { name: "Bildirimler", href: "/dashboard/notifications", icon: Bell },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -172,6 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { name: "Başarılar", href: "/dashboard/admin/achievements", icon: Award },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+            { name: "Bildirimler", href: "/dashboard/notifications", icon: Bell },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];

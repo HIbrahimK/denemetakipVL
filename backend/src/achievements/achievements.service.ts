@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AchievementCategory, ExamType } from '@prisma/client';
+import {
+  AchievementCategory,
+  ExamType,
+  NotificationType,
+} from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   AchievementSeedBundle,
   ALL_ACHIEVEMENT_BUNDLES,
@@ -10,7 +15,10 @@ import {
 
 @Injectable()
 export class AchievementsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   // Get all achievements for a school
   async findAll(
@@ -358,7 +366,15 @@ export class AchievementsService {
   async checkAndUnlock(studentId: string, achievementType: string) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
-      select: { schoolId: true },
+      select: {
+        schoolId: true,
+        userId: true,
+        parent: {
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
     if (!student) return null;
@@ -386,7 +402,7 @@ export class AchievementsService {
     if (existing?.unlockedAt) return existing;
 
     // Unlock achievement
-    return this.prisma.studentAchievement.upsert({
+    const unlocked = await this.prisma.studentAchievement.upsert({
       where: {
         studentId_achievementId: {
           studentId,
@@ -408,6 +424,34 @@ export class AchievementsService {
         achievement: true,
       },
     });
+
+    try {
+      const recipientUserIds = [student.userId];
+      if (student.parent?.userId) {
+        recipientUserIds.push(student.parent.userId);
+      }
+
+      await this.notificationsService.dispatchSystemNotification({
+        schoolId: student.schoolId,
+        type: NotificationType.ACHIEVEMENT_UNLOCKED,
+        title: 'Yeni rozet kazandin',
+        body: unlocked.achievement.name,
+        targetUserIds: recipientUserIds,
+        deeplink: '/dashboard/achievements',
+        metadata: {
+          achievementId: unlocked.achievementId,
+          achievementType,
+          studentId,
+        },
+      });
+    } catch (error) {
+      console.error(
+        'Push notification dispatch failed for achievement unlock:',
+        error,
+      );
+    }
+
+    return unlocked;
   }
 
   // Auto-check achievements after exam is submitted

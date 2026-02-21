@@ -545,7 +545,9 @@ model Resource {
 model School {
   id                        String                      @id @default(uuid())
   name                      String
+  appShortName              String                      @default("Deneme Takip Sistemi")
   code                      String                      @unique
+  subdomainAlias            String?                     @unique
   logoUrl                   String?
   domain                    String?                     @unique
   createdAt                 DateTime                    @default(now())
@@ -555,6 +557,13 @@ model School {
   phone                     String?
   studentLoginType          String                      @default("studentNumber")
   website                   String?
+  pushEnabled               Boolean                     @default(true)
+  pushNewMessageEnabled     Boolean                     @default(true)
+  pushExamReminderEnabled   Boolean                     @default(true)
+  pushGroupPostEnabled      Boolean                     @default(true)
+  pushAchievementEnabled    Boolean                     @default(true)
+  pushStudyPlanEnabled      Boolean                     @default(true)
+  pushCustomEnabled         Boolean                     @default(true)
   
   // Study Plan Cleanup Settings
   autoCleanupEnabled        Boolean                     @default(true)
@@ -586,6 +595,9 @@ model School {
   achievements              Achievement[]
   studentAchievements       StudentAchievement[]
   groupPosts                GroupPost[]
+  pushSubscriptions         PushSubscription[]
+  notificationCampaigns     NotificationCampaign[]
+  userNotificationSettings  UserNotificationSetting[]
 }
 
 model Student {
@@ -923,6 +935,96 @@ model User {
   school               School                @relation(fields: [schoolId], references: [id])
   groupPosts           GroupPost[]
   groupPostReplies     GroupPostReply[]
+  pushSubscriptions    PushSubscription[]
+  notificationsCreated NotificationCampaign[] @relation("NotificationCampaignCreatedBy")
+  notificationDeliveries NotificationDelivery[]
+  notificationSetting  UserNotificationSetting?
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid())
+  schoolId   String
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastSeenAt DateTime?
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
+
+  @@index([schoolId, userId, isActive])
+  @@index([userId, isActive])
+}
+
+model UserNotificationSetting {
+  id                  String   @id @default(uuid())
+  schoolId            String
+  userId              String   @unique
+  enabled             Boolean  @default(true)
+  newMessage          Boolean  @default(true)
+  examReminder        Boolean  @default(true)
+  groupPost           Boolean  @default(true)
+  achievementUnlocked Boolean  @default(true)
+  studyPlanAssigned   Boolean  @default(true)
+  customNotification  Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  school              School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, enabled])
+}
+
+model NotificationCampaign {
+  id               String                 @id @default(uuid())
+  schoolId         String
+  createdById      String?
+  type             NotificationType       @default(CUSTOM)
+  status           NotificationStatus     @default(DRAFT)
+  targetType       NotificationTargetType @default(ALL)
+  targetRoles      Role[]
+  targetIds        String[]
+  title            String
+  body             String
+  deeplink         String?
+  iconUrl          String?
+  imageUrl         String?
+  metadata         Json?
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  school           School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdBy        User?                  @relation("NotificationCampaignCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  deliveries       NotificationDelivery[]
+
+  @@index([schoolId, createdAt])
+  @@index([schoolId, status, scheduledFor])
+  @@index([type, createdAt])
+}
+
+model NotificationDelivery {
+  id             String                   @id @default(uuid())
+  campaignId     String
+  userId         String
+  subscriptionId String?
+  status         NotificationDeliveryStatus @default(PENDING)
+  errorMessage   String?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  createdAt      DateTime                 @default(now())
+  campaign       NotificationCampaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user           User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   PushSubscription?        @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([campaignId, status])
+  @@index([userId, createdAt])
+  @@index([subscriptionId])
 }
 
 enum AchievementCategory {
@@ -1038,4 +1140,36 @@ enum TopicDifficulty {
   EASY
   MEDIUM
   HARD
+}
+
+enum NotificationType {
+  NEW_MESSAGE
+  EXAM_REMINDER
+  GROUP_POST
+  ACHIEVEMENT_UNLOCKED
+  STUDY_PLAN_ASSIGNED
+  CUSTOM
+}
+
+enum NotificationStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  CANCELLED
+}
+
+enum NotificationTargetType {
+  ALL
+  ROLE
+  USERS
+  GRADE
+  CLASS
+  GROUP
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
 }

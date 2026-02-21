@@ -35,7 +35,7 @@ export class SchoolsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT')
+  @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT', 'PARENT')
   async getSchool(@Request() req, @Param('id') id: string) {
     this.assertSchoolAccess(req, id);
     return this.schoolsService.getSchool(id);
