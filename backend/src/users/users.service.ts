@@ -109,7 +109,9 @@ export class UsersService {
     if (dto.lastName) allowedFields.lastName = dto.lastName;
     if (dto.phone) allowedFields.phone = dto.phone;
     if (dto.branch) allowedFields.branch = dto.branch;
-    if (dto.avatar) allowedFields.avatar = dto.avatar;
+    if (dto.avatar && user.role !== Role.STUDENT) {
+      allowedFields.avatar = dto.avatar;
+    }
 
     return this.prisma.user.update({
       where: { id: userId },

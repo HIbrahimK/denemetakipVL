@@ -15,6 +15,11 @@ import { LoginDto, StudentLoginDto, RegisterDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/password-reset.dto';
 import { JwtPayload } from './auth.strategy';
 import * as crypto from 'crypto';
+import {
+  isAllowedAvatarStyle,
+  isAllowedStudentAvatar,
+  parseAvatarSeed,
+} from './constants/avatar-presets';
 
 @Injectable()
 export class AuthService {
@@ -430,9 +435,37 @@ export class AuthService {
 
   // Update avatar seed
   async updateAvatar(userId: string, avatarSeed: string) {
+    const parsedAvatar = parseAvatarSeed(avatarSeed);
+    if (!parsedAvatar) {
+      throw new BadRequestException('Gecersiz avatar formati');
+    }
+
+    const { style, seed } = parsedAvatar;
+    if (!isAllowedAvatarStyle(style)) {
+      throw new BadRequestException('Gecersiz avatar stili');
+    }
+    if (seed.length > 64) {
+      throw new BadRequestException('Gecersiz avatar secimi');
+    }
+
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (currentUser.role === 'STUDENT' && !isAllowedStudentAvatar(style, seed)) {
+      throw new ForbiddenException(
+        'Ogrenciler sadece hazir profil fotograflarini kullanabilir',
+      );
+    }
+
+    const normalizedAvatarSeed = `${style}:${seed}`;
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { avatarSeed },
+      data: { avatarSeed: normalizedAvatarSeed },
       include: { school: true },
     });
 

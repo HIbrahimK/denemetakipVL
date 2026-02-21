@@ -10,15 +10,51 @@ import { Label } from "@/components/ui/label";
 import { UserCircle, Key, Lock, Image } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// DiceBear avatar styles and sample seeds
+// DiceBear avatar styles and preset seeds
 const AVATAR_STYLES = [
-    { id: 'avataaars', name: 'Avataaars', seeds: ['Felix', 'Aneka', 'Luna', 'Max', 'Sophie', 'Oliver', 'Emma', 'Jack'] },
-    { id: 'bottts', name: 'Robots', seeds: ['Bot1', 'Bot2', 'Bot3', 'Bot4', 'Bot5', 'Bot6', 'Bot7', 'Bot8'] },
-    { id: 'personas', name: 'Personas', seeds: ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'] },
-    { id: 'lorelei', name: 'Lorelei', seeds: ['Aria', 'Bella', 'Clara', 'Daisy', 'Ella', 'Fiona', 'Gwen', 'Holly'] },
-    { id: 'micah', name: 'Micah', seeds: ['Sam1', 'Sam2', 'Sam3', 'Sam4', 'Sam5', 'Sam6', 'Sam7', 'Sam8'] },
-    { id: 'adventurer', name: 'Adventurer', seeds: ['Hero1', 'Hero2', 'Hero3', 'Hero4', 'Hero5', 'Hero6', 'Hero7', 'Hero8'] },
+    {
+        id: 'avataaars',
+        name: 'Avataaars',
+        seeds: ['Felix', 'Aneka', 'Luna', 'Max', 'Sophie', 'Oliver', 'Emma', 'Jack', 'Deniz', 'Mert', 'Zeynep', 'Ayse', 'Berk', 'Elif', 'Eren', 'Asli']
+    },
+    {
+        id: 'bottts',
+        name: 'Robots',
+        seeds: ['Bot1', 'Bot2', 'Bot3', 'Bot4', 'Bot5', 'Bot6', 'Bot7', 'Bot8', 'Bot9', 'Bot10', 'Bot11', 'Bot12', 'Bot13', 'Bot14', 'Bot15', 'Bot16']
+    },
+    {
+        id: 'personas',
+        name: 'Personas',
+        seeds: ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Iris', 'Jason', 'Karen', 'Leo', 'Mia', 'Nora', 'Owen', 'Paul']
+    },
+    {
+        id: 'lorelei',
+        name: 'Lorelei',
+        seeds: ['Aria', 'Bella', 'Clara', 'Daisy', 'Ella', 'Fiona', 'Gwen', 'Holly', 'Ines', 'Jade', 'Kira', 'Lily', 'Maya', 'Nina', 'Opal', 'Pia']
+    },
+    {
+        id: 'micah',
+        name: 'Micah',
+        seeds: ['Sam1', 'Sam2', 'Sam3', 'Sam4', 'Sam5', 'Sam6', 'Sam7', 'Sam8', 'Sam9', 'Sam10', 'Sam11', 'Sam12', 'Sam13', 'Sam14', 'Sam15', 'Sam16']
+    },
+    {
+        id: 'adventurer',
+        name: 'Adventurer',
+        seeds: ['Hero1', 'Hero2', 'Hero3', 'Hero4', 'Hero5', 'Hero6', 'Hero7', 'Hero8', 'Hero9', 'Hero10', 'Hero11', 'Hero12', 'Hero13', 'Hero14', 'Hero15', 'Hero16']
+    },
 ];
+
+const DEFAULT_STYLE = AVATAR_STYLES[0].id;
+const DEFAULT_SEED = AVATAR_STYLES[0].seeds[0];
+
+const isValidPresetAvatar = (style: string, seed: string) => {
+    const styleOption = AVATAR_STYLES.find((item) => item.id === style);
+    if (!styleOption) {
+        return false;
+    }
+
+    return styleOption.seeds.includes(seed);
+};
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -37,8 +73,8 @@ export default function ProfilePage() {
     const [branchMessage, setBranchMessage] = useState("");
 
     // Avatar selection
-    const [selectedStyle, setSelectedStyle] = useState('avataaars');
-    const [selectedSeed, setSelectedSeed] = useState('');
+    const [selectedStyle, setSelectedStyle] = useState(DEFAULT_STYLE);
+    const [selectedSeed, setSelectedSeed] = useState(DEFAULT_SEED);
     const [avatarMessage, setAvatarMessage] = useState("");
 
     useEffect(() => {
@@ -71,17 +107,18 @@ export default function ProfilePage() {
                     // Update localStorage with fresh data
                     localStorage.setItem("user", JSON.stringify(userData));
                     
-                    // Set avatar seed if exists
+                    // Set avatar seed if exists and valid, else fallback to defaults
+                    let nextStyle = DEFAULT_STYLE;
+                    let nextSeed = DEFAULT_SEED;
                     if (userData.avatarSeed) {
                         const parts = userData.avatarSeed.split(':');
-                        if (parts.length === 2) {
-                            setSelectedStyle(parts[0]);
-                            setSelectedSeed(parts[1]);
+                        if (parts.length === 2 && isValidPresetAvatar(parts[0], parts[1])) {
+                            nextStyle = parts[0];
+                            nextSeed = parts[1];
                         }
-                    } else {
-                        // Default to first name as seed
-                        setSelectedSeed(userData.firstName);
                     }
+                    setSelectedStyle(nextStyle);
+                    setSelectedSeed(nextSeed);
                 } else {
                     setError("Profil bilgileri alınamadı. Lütfen tekrar giriş yapın.");
                 }
@@ -152,6 +189,11 @@ export default function ProfilePage() {
 
     const handleAvatarUpdate = async () => {
         setAvatarMessage("");
+        if (!isValidPresetAvatar(selectedStyle, selectedSeed)) {
+            setAvatarMessage("Lutfen hazir avatar listesinden secim yapin.");
+            return;
+        }
+
         const token = localStorage.getItem("token");
         const avatarSeed = `${selectedStyle}:${selectedSeed}`;
 
@@ -251,6 +293,7 @@ export default function ProfilePage() {
     };
 
     const shouldShowEmail = Boolean(user?.email) && user?.role !== "STUDENT" && user?.role !== "PARENT";
+    const isStudent = user?.role === "STUDENT";
 
     if (profileLoading) {
         return (
@@ -384,6 +427,12 @@ export default function ProfilePage() {
                             </p>
                         </div>
                     </div>
+
+                    {isStudent && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Öğrenciler sadece hazır profil fotoğraflarını kullanabilir.
+                        </p>
+                    )}
 
                     {/* Style Selector */}
                     <div className="space-y-3">

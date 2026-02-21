@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +59,7 @@ function base64ToUint8Array(base64String: string) {
 
 export default function NotificationsPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [permission, setPermission] = useState("default");
@@ -93,7 +95,7 @@ export default function NotificationsPage() {
   });
 
   const canManageCampaigns =
-    user?.role === "SCHOOL_ADMIN" || user?.role === "SUPER_ADMIN" || user?.role === "TEACHER";
+    user?.role === "SCHOOL_ADMIN" || user?.role === "SUPER_ADMIN";
   const selectedCampaign = useMemo(
     () => campaigns.find((campaign) => campaign.id === selectedCampaignId) || null,
     [campaigns, selectedCampaignId],
@@ -149,12 +151,14 @@ export default function NotificationsPage() {
 
   const initialize = async () => {
     const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!["SCHOOL_ADMIN", "SUPER_ADMIN"].includes(localUser?.role)) {
+      router.replace("/dashboard");
+      return;
+    }
     setUser(localUser);
     setPermission(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
     await loadMine();
-    if (["SCHOOL_ADMIN", "SUPER_ADMIN", "TEACHER"].includes(localUser?.role)) {
-      await loadCampaigns();
-    }
+    await loadCampaigns();
     await syncSubscription();
   };
 
@@ -363,6 +367,10 @@ export default function NotificationsPage() {
         <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
       </div>
     );
+  }
+
+  if (!canManageCampaigns) {
+    return null;
   }
 
   return (
