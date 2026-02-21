@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +33,7 @@ import { tr } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useSchool } from '@/contexts/school-context';
 
 // Types
 interface StudyTask {
@@ -129,14 +130,18 @@ const DAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 export default function StudyPlanDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { schoolName, schoolLogo, isLoading: isSchoolLoading } = useSchool();
   const planId = params.id as string;
+  const printOnLoad = searchParams.get('print') === 'true';
 
   const [plan, setPlan] = useState<StudyPlan | null>(null);
   const [assignmentSummary, setAssignmentSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [assignmentToCancel, setAssignmentToCancel] = useState<string | null>(null);
+  const [printTriggered, setPrintTriggered] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -148,6 +153,17 @@ export default function StudyPlanDetailPage() {
     setUser(JSON.parse(userStr));
     fetchPlan();
   }, [planId]);
+
+  useEffect(() => {
+    if (!loading && !isSchoolLoading && plan && printOnLoad && !printTriggered) {
+      setPrintTriggered(true);
+      const timer = window.setTimeout(() => {
+        window.print();
+      }, 300);
+
+      return () => window.clearTimeout(timer);
+    }
+  }, [loading, isSchoolLoading, plan, printOnLoad, printTriggered]);
 
   const fetchPlan = async () => {
     try {
@@ -296,6 +312,12 @@ export default function StudyPlanDetailPage() {
   const printRowCount = plan.planData?.rows?.length ?? 0;
   const printDensityClass =
     printRowCount > 9 ? 'print-density-compact' : printRowCount > 6 ? 'print-density-tight' : 'print-density-normal';
+  const preparedByTeacher =
+    plan.teacher?.user
+      ? `${plan.teacher.user.firstName} ${plan.teacher.user.lastName}`
+      : plan.assignedBy
+        ? `${plan.assignedBy.firstName} ${plan.assignedBy.lastName}`
+        : 'Belirtilmedi';
 
   return (
     <div className="container mx-auto py-6 space-y-6 study-plan-page">
@@ -688,12 +710,18 @@ export default function StudyPlanDetailPage() {
 
       <section className={`study-plan-print ${printDensityClass}`}>
         <div className="study-plan-print-header">
-          <h1>{plan.name}</h1>
-          <p>
-            {plan.examType} • {plan.gradeLevels.map((g) => `${g}. Sınıf`).join(', ')} •{' '}
-            {format(new Date(plan.weekStartDate), 'dd MMM yyyy', { locale: tr })} -{' '}
-            {format(addDays(new Date(plan.weekStartDate), 6), 'dd MMM yyyy', { locale: tr })}
-          </p>
+          <div className="study-plan-print-brand">
+            <img className="study-plan-print-logo" src={schoolLogo || '/LOGO.png'} alt={`${schoolName} logosu`} />
+            <div>
+              <div className="study-plan-print-school-name">{schoolName || 'DenemeTakip.net'}</div>
+              <h1>{plan.name}</h1>
+              <p>
+                {plan.examType} • {plan.gradeLevels.map((g) => `${g}. Sınıf`).join(', ')} •{' '}
+                {format(new Date(plan.weekStartDate), 'dd MMM yyyy', { locale: tr })} -{' '}
+                {format(addDays(new Date(plan.weekStartDate), 6), 'dd MMM yyyy', { locale: tr })}
+              </p>
+            </div>
+          </div>
         </div>
 
         <table className="study-plan-print-table">
@@ -738,6 +766,8 @@ export default function StudyPlanDetailPage() {
             ))}
           </tbody>
         </table>
+
+        <div className="study-plan-print-footer">Hazırlayan öğretmen: {preparedByTeacher}</div>
       </section>
 
       <style jsx global>{`
@@ -787,7 +817,27 @@ export default function StudyPlanDetailPage() {
           }
 
           .study-plan-print-header {
-            margin-bottom: 6px;
+            margin-bottom: 5px;
+          }
+
+          .study-plan-print-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .study-plan-print-logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            flex-shrink: 0;
+          }
+
+          .study-plan-print-school-name {
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1px;
           }
 
           .study-plan-print-header h1 {
@@ -878,6 +928,13 @@ export default function StudyPlanDetailPage() {
             color: #9ca3af;
           }
 
+          .study-plan-print-footer {
+            margin-top: 4px;
+            font-size: 9px;
+            text-align: right;
+            color: #374151;
+          }
+
           .study-plan-print.print-density-tight {
             transform: scale(0.92);
             transform-origin: top left;
@@ -889,6 +946,10 @@ export default function StudyPlanDetailPage() {
           }
 
           .study-plan-print.print-density-tight .study-plan-print-header p {
+            font-size: 9px;
+          }
+
+          .study-plan-print.print-density-tight .study-plan-print-school-name {
             font-size: 9px;
           }
 
@@ -909,6 +970,10 @@ export default function StudyPlanDetailPage() {
             max-height: 28px;
           }
 
+          .study-plan-print.print-density-tight .study-plan-print-footer {
+            font-size: 8px;
+          }
+
           .study-plan-print.print-density-compact {
             transform: scale(0.84);
             transform-origin: top left;
@@ -920,6 +985,10 @@ export default function StudyPlanDetailPage() {
           }
 
           .study-plan-print.print-density-compact .study-plan-print-header p {
+            font-size: 8px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-school-name {
             font-size: 8px;
           }
 
@@ -938,6 +1007,10 @@ export default function StudyPlanDetailPage() {
 
           .study-plan-print.print-density-compact .study-plan-print-table .print-cell {
             max-height: 22px;
+          }
+
+          .study-plan-print.print-density-compact .study-plan-print-footer {
+            font-size: 7px;
           }
         }
       `}</style>

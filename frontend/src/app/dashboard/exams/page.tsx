@@ -174,6 +174,20 @@ export default function ExamsPage() {
                 </div>
             </div>
 
+            <Card className="border-indigo-200 bg-indigo-50/70 dark:border-indigo-900 dark:bg-indigo-950/30">
+                <CardContent className="py-3">
+                    <p className="text-sm text-indigo-900 dark:text-indigo-200">
+                        Sınav şablonlarını buradan indirebilirsiniz:
+                        {' '}
+                        <a className="font-semibold underline hover:no-underline" href="/dosyalar/TYTSablon.xlsx" download>TYT Şablonu</a>
+                        {' • '}
+                        <a className="font-semibold underline hover:no-underline" href="/dosyalar/AYTSablon.xlsx" download>AYT Şablonu</a>
+                        {' • '}
+                        <a className="font-semibold underline hover:no-underline" href="/dosyalar/lgsSablon (1).xls" download>LGS Şablonu</a>
+                    </p>
+                </CardContent>
+            </Card>
+
             {/* Filters */}
             <Card className="border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-50 via-indigo-50 to-slate-50 dark:from-slate-900 dark:via-slate-900/70 dark:to-slate-900">
                 <CardHeader className="pb-2 flex flex-col gap-1">

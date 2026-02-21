@@ -199,6 +199,14 @@ export default function StudentsPage() {
                 )}
             </div>
 
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+                Öğrenci şablonunu buradan indirebilirsiniz:
+                {' '}
+                <a className="font-semibold underline hover:no-underline" href="/dosyalar/OgrenciSablon.xlsx" download>
+                    Öğrenci Şablonu
+                </a>
+            </div>
+
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
                 {/* Bulk Actions Bar */}
                 {selectedStudents.size > 0 && userRole !== 'TEACHER' && (

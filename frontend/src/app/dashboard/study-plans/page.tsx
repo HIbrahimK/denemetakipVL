@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Users, Target, TrendingUp, Loader2, BookOpen, Eye, Filter, FileText, GraduationCap, Send, Search, X, Settings, ArrowLeft, ChevronDown, Check, Edit, AlertCircle, Archive, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Users, Target, TrendingUp, Loader2, BookOpen, Eye, Filter, FileText, GraduationCap, Send, Search, X, Settings, ArrowLeft, ChevronDown, Check, Edit, AlertCircle, Archive, Trash2, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -413,6 +413,10 @@ export default function StudyPlansPage() {
 
   const formatDate = (dateStr: string) => {
     return format(new Date(dateStr), 'dd MMM yyyy', { locale: tr });
+  };
+
+  const handlePrintPlan = (planId: string) => {
+    window.open(`/dashboard/study-plans/${planId}?print=true`, '_blank', 'noopener,noreferrer');
   };
 
   // Assignment functions
@@ -826,6 +830,22 @@ export default function StudyPlansPage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
+                                        onClick={() => handlePrintPlan(plan.id)}
+                                      >
+                                        <Printer className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Yazdır</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
                                         onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}
                                       >
                                         <Edit className="h-4 w-4" />
@@ -1086,6 +1106,22 @@ export default function StudyPlansPage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
+                                        onClick={() => handlePrintPlan(plan.id)}
+                                      >
+                                        <Printer className="h-4 w-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Yazdır</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
                                         onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}
                                       >
                                         <Edit className="h-4 w-4" />
@@ -1189,6 +1225,20 @@ export default function StudyPlansPage() {
                               <span>{formatDate(plan.weekStartDate)}</span>
                             </div>
                           )}
+                          <div className="pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full gap-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrintPlan(plan.id);
+                              }}
+                            >
+                              <Printer className="h-4 w-4" />
+                              Yazdır
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
