@@ -244,7 +244,6 @@ async function main() {
         examType: string;
         type?: string;
         gradeLevels: number[];
-        topics?: string[];
     }
 
     const subjects: SubjectDef[] = [
@@ -260,17 +259,16 @@ async function main() {
             examType: 'GENEL',
             type: 'ACTIVITY',
             gradeLevels: [9, 10, 11, 12],
-            topics: ['MEBİ DENEMESİ', 'TYT DENEMESİ', 'AYT DENEMESİ', 'MSÜ DENEMESİ']
         }
     ];
 
     for (const sub of subjects) {
-        let subject = await prisma.subject.findFirst({
+        const subject = await prisma.subject.findFirst({
             where: { name: sub.name, examType: sub.examType }
         });
 
         if (!subject) {
-            subject = await prisma.subject.create({
+            await prisma.subject.create({
                 data: {
                     name: sub.name,
                     examType: sub.examType,
@@ -282,50 +280,6 @@ async function main() {
             console.log(`✅ Subject created: ${sub.name}`);
         }
 
-        // Add standard special topics for normal subjects
-        if (sub.type !== 'ACTIVITY') {
-            const specialTopics = [
-                { name: `${sub.name} Branş Denemesi`, isSpecialActivity: true },
-                { name: `${sub.name} Konu Tekrarı`, isSpecialActivity: true }
-            ];
-
-            for (const t of specialTopics) {
-                const existing = await prisma.topic.findFirst({
-                    where: { subjectId: subject.id, name: t.name }
-                });
-
-                if (!existing) {
-                    await prisma.topic.create({
-                        data: {
-                            name: t.name,
-                            subjectId: subject.id,
-                            isSpecialActivity: t.isSpecialActivity,
-                            order: 999
-                        }
-                    });
-                    console.log(`   + Topic created: ${t.name}`);
-                }
-            }
-        } else if (sub.topics) {
-            // Add defined topics for Activity subject
-            for (const tName of sub.topics) {
-                const existing = await prisma.topic.findFirst({
-                    where: { subjectId: subject.id, name: tName }
-                });
-
-                if (!existing) {
-                    await prisma.topic.create({
-                        data: {
-                            name: tName,
-                            subjectId: subject.id,
-                            isSpecialActivity: true,
-                            order: 0
-                        }
-                    });
-                    console.log(`   + Activity Topic created: ${tName}`);
-                }
-            }
-        }
     }
 
     // Seed achievements

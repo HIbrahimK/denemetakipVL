@@ -36,20 +36,37 @@ export class StudyController {
     private readonly studyTaskService: StudyTaskService,
     private readonly studySessionService: StudySessionService,
     private readonly studyRecommendationService: StudyRecommendationService,
-  ) { }
+  ) {}
 
   // Study Plans
   @Post('plans')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
   async createPlan(@Body() dto: CreateStudyPlanDto, @Request() req) {
-    console.log('[StudyController] POST /study/plans - User:', req.user, 'DTO:', dto);
+    console.log(
+      '[StudyController] POST /study/plans - User:',
+      req.user,
+      'DTO:',
+      dto,
+    );
     try {
       // Use req.user.id (database ID) instead of req.user.userId (JWT sub)
       const teacherId = req.user.id;
       const schoolId = req.user.schoolId;
-      console.log('[StudyController] Using teacherId:', teacherId, 'schoolId:', schoolId);
-      const result = await this.studyPlanService.create(dto, teacherId, schoolId);
-      console.log('[StudyController] Study plan created successfully:', result.id);
+      console.log(
+        '[StudyController] Using teacherId:',
+        teacherId,
+        'schoolId:',
+        schoolId,
+      );
+      const result = await this.studyPlanService.create(
+        dto,
+        teacherId,
+        schoolId,
+      );
+      console.log(
+        '[StudyController] Study plan created successfully:',
+        result.id,
+      );
       return result;
     } catch (error) {
       console.error('[StudyController] Error creating study plan:', error);
@@ -72,7 +89,12 @@ export class StudyController {
     if (isShared !== undefined) filters.isShared = isShared === 'true';
     if (examType) filters.examType = examType;
 
-    return this.studyPlanService.findAll(req.user.id, req.user.role, req.user.schoolId, filters);
+    return this.studyPlanService.findAll(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      filters,
+    );
   }
 
   @Get('plans/templates')
@@ -103,13 +125,27 @@ export class StudyController {
   @Get('plans/:id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   findOnePlan(@Param('id') id: string, @Request() req) {
-    return this.studyPlanService.findOne(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.studyPlanService.findOne(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Patch('plans/:id')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
-  updatePlan(@Param('id') id: string, @Body() dto: Partial<CreateStudyPlanDto>, @Request() req) {
-    return this.studyPlanService.update(id, dto, req.user.id, req.user.schoolId);
+  updatePlan(
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateStudyPlanDto>,
+    @Request() req,
+  ) {
+    return this.studyPlanService.update(
+      id,
+      dto,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   @Delete('plans/:id')
@@ -119,14 +155,31 @@ export class StudyController {
     @Request() req,
     @Query('mode') mode?: string,
   ) {
-    const deleteMode = mode === 'delete' ? DeleteMode.DELETE_TEMPLATE : DeleteMode.CANCEL_ASSIGNMENTS;
-    return this.studyPlanService.remove(id, req.user.id, req.user.schoolId, deleteMode);
+    const deleteMode =
+      mode === 'delete'
+        ? DeleteMode.DELETE_TEMPLATE
+        : DeleteMode.CANCEL_ASSIGNMENTS;
+    return this.studyPlanService.remove(
+      id,
+      req.user.id,
+      req.user.schoolId,
+      deleteMode,
+    );
   }
 
   @Post('plans/:id/assign')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
-  assignPlan(@Param('id') id: string, @Body() dto: AssignStudyPlanDto, @Request() req) {
-    return this.studyPlanService.assign(id, dto, req.user.id, req.user.schoolId);
+  assignPlan(
+    @Param('id') id: string,
+    @Body() dto: AssignStudyPlanDto,
+    @Request() req,
+  ) {
+    return this.studyPlanService.assign(
+      id,
+      dto,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   @Get('plans/:id/assignment-summary')
@@ -142,7 +195,12 @@ export class StudyController {
     @Request() req,
     @Body('name') name?: string,
   ) {
-    return this.studyPlanService.duplicate(id, req.user.id, req.user.schoolId, name);
+    return this.studyPlanService.duplicate(
+      id,
+      req.user.id,
+      req.user.schoolId,
+      name,
+    );
   }
 
   @Post('plans/:id/archive')
@@ -158,19 +216,35 @@ export class StudyController {
     @Request() req,
     @Body('isPublic') isPublic?: boolean,
   ) {
-    return this.studyPlanService.share(id, req.user.id, req.user.schoolId, isPublic ?? false);
+    return this.studyPlanService.share(
+      id,
+      req.user.id,
+      req.user.schoolId,
+      isPublic ?? false,
+    );
   }
 
   @Get('plans/:id/assignments')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
   getPlanAssignments(@Param('id') id: string, @Request() req) {
-    return this.studyPlanService.getAssignments(id, req.user.id, req.user.schoolId);
+    return this.studyPlanService.getAssignments(
+      id,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   @Post('plans/assignments/:assignmentId/cancel')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
-  cancelAssignment(@Param('assignmentId') assignmentId: string, @Request() req) {
-    return this.studyPlanService.cancelAssignment(assignmentId, req.user.id, req.user.schoolId);
+  cancelAssignment(
+    @Param('assignmentId') assignmentId: string,
+    @Request() req,
+  ) {
+    return this.studyPlanService.cancelAssignment(
+      assignmentId,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   // Study Tasks
@@ -183,25 +257,54 @@ export class StudyController {
   @Get('tasks')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   findAllTasks(@Request() req, @Query() filters) {
-    return this.studyTaskService.findAll(req.user.id, req.user.role, req.user.schoolId, filters);
+    return this.studyTaskService.findAll(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      filters,
+    );
   }
 
   @Get('tasks/:id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   findOneTask(@Param('id') id: string, @Request() req) {
-    return this.studyTaskService.findOne(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.studyTaskService.findOne(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post('tasks/:id/complete')
   @Roles('STUDENT')
-  completeTask(@Param('id') id: string, @Body() dto: CompleteStudyTaskDto, @Request() req) {
-    return this.studyTaskService.complete(id, dto, req.user.id, req.user.schoolId);
+  completeTask(
+    @Param('id') id: string,
+    @Body() dto: CompleteStudyTaskDto,
+    @Request() req,
+  ) {
+    return this.studyTaskService.complete(
+      id,
+      dto,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   @Post('tasks/:id/verify')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'PARENT')
-  verifyTask(@Param('id') id: string, @Body() dto: VerifyStudyTaskDto, @Request() req) {
-    return this.studyTaskService.verify(id, dto, req.user.id, req.user.schoolId, req.user.role);
+  verifyTask(
+    @Param('id') id: string,
+    @Body() dto: VerifyStudyTaskDto,
+    @Request() req,
+  ) {
+    return this.studyTaskService.verify(
+      id,
+      dto,
+      req.user.id,
+      req.user.schoolId,
+      req.user.role,
+    );
   }
 
   @Patch('tasks/:id/status')
@@ -211,31 +314,62 @@ export class StudyController {
     @Body('status') status: any,
     @Request() req,
   ) {
-    return this.studyTaskService.updateStatus(id, status, req.user.id, req.user.schoolId);
+    return this.studyTaskService.updateStatus(
+      id,
+      status,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   @Delete('tasks/:id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   removeTask(@Param('id') id: string, @Request() req) {
-    return this.studyTaskService.remove(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.studyTaskService.remove(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post('tasks/:id/approve')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
-  approveTask(@Param('id') id: string, @Body() dto: ApproveTaskDto, @Request() req) {
-    return this.studyTaskService.approveTask(id, req.user.id, req.user.schoolId, dto.comment);
+  approveTask(
+    @Param('id') id: string,
+    @Body() dto: ApproveTaskDto,
+    @Request() req,
+  ) {
+    return this.studyTaskService.approveTask(
+      id,
+      req.user.id,
+      req.user.schoolId,
+      dto.comment,
+    );
   }
 
   @Post('tasks/:id/reject')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
-  rejectTask(@Param('id') id: string, @Body() dto: RejectTaskDto, @Request() req) {
-    return this.studyTaskService.rejectTask(id, req.user.id, req.user.schoolId, dto.comment);
+  rejectTask(
+    @Param('id') id: string,
+    @Body() dto: RejectTaskDto,
+    @Request() req,
+  ) {
+    return this.studyTaskService.rejectTask(
+      id,
+      req.user.id,
+      req.user.schoolId,
+      dto.comment,
+    );
   }
 
   @Get('tasks/pending-approval')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
   getPendingApprovalTasks(@Request() req) {
-    return this.studyTaskService.getPendingApprovalTasks(req.user.id, req.user.schoolId);
+    return this.studyTaskService.getPendingApprovalTasks(
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   // Study Sessions
@@ -248,19 +382,34 @@ export class StudyController {
   @Get('sessions')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT', 'PARENT')
   findAllSessions(@Request() req, @Query() filters) {
-    return this.studySessionService.findAll(req.user.id, req.user.role, req.user.schoolId, filters);
+    return this.studySessionService.findAll(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      filters,
+    );
   }
 
   @Get('sessions/stats')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT', 'PARENT')
   getSessionStats(@Request() req, @Query() filters) {
-    return this.studySessionService.getStats(req.user.id, req.user.role, req.user.schoolId, filters);
+    return this.studySessionService.getStats(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+      filters,
+    );
   }
 
   @Get('sessions/:id')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT', 'PARENT')
   findOneSession(@Param('id') id: string, @Request() req) {
-    return this.studySessionService.findOne(id, req.user.id, req.user.role, req.user.schoolId);
+    return this.studySessionService.findOne(
+      id,
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Delete('sessions/:id')
@@ -272,25 +421,43 @@ export class StudyController {
   // Recommendations
   @Post('recommendations/generate/:studentId')
   @Roles('TEACHER', 'SCHOOL_ADMIN')
-  generateRecommendations(@Param('studentId') studentId: string, @Request() req) {
-    return this.studyRecommendationService.generateForStudent(studentId, req.user.schoolId);
+  generateRecommendations(
+    @Param('studentId') studentId: string,
+    @Request() req,
+  ) {
+    return this.studyRecommendationService.generateForStudent(
+      studentId,
+      req.user.schoolId,
+    );
   }
 
   @Get('recommendations')
   @Roles('TEACHER', 'SCHOOL_ADMIN', 'STUDENT')
   findAllRecommendations(@Request() req) {
-    return this.studyRecommendationService.findAll(req.user.id, req.user.role, req.user.schoolId);
+    return this.studyRecommendationService.findAll(
+      req.user.id,
+      req.user.role,
+      req.user.schoolId,
+    );
   }
 
   @Post('recommendations/:id/apply')
   @Roles('STUDENT')
   applyRecommendation(@Param('id') id: string, @Request() req) {
-    return this.studyRecommendationService.markAsApplied(id, req.user.id, req.user.schoolId);
+    return this.studyRecommendationService.markAsApplied(
+      id,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 
   @Post('recommendations/:id/dismiss')
   @Roles('STUDENT')
   dismissRecommendation(@Param('id') id: string, @Request() req) {
-    return this.studyRecommendationService.dismiss(id, req.user.id, req.user.schoolId);
+    return this.studyRecommendationService.dismiss(
+      id,
+      req.user.id,
+      req.user.schoolId,
+    );
   }
 }

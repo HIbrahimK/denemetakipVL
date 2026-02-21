@@ -1,4 +1,4 @@
-import { Module, } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -22,7 +22,8 @@ import { PrismaModule } from '../prisma/prisma.module';
         return {
           secret: jwtSecret,
           signOptions: {
-            expiresIn: (configService.get<string>('JWT_EXPIRES_IN') || '7d') as any
+            expiresIn: (configService.get<string>('JWT_EXPIRES_IN') ||
+              '7d') as any,
           },
         };
       },
@@ -35,4 +36,4 @@ import { PrismaModule } from '../prisma/prisma.module';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

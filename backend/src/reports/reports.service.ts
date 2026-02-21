@@ -60,9 +60,46 @@ export interface SubjectReportSummary {
   }[];
 }
 
+export interface YearPeriodComparisonMetrics {
+  year: number;
+  month: number;
+  examCount: number;
+  participantCount: number;
+  averageNet: number;
+  averageScore: number;
+}
+
+export interface YearOverYearComparisonReport {
+  examType: ExamType;
+  gradeLevel: number;
+  month: number;
+  lessonName?: string;
+  current: YearPeriodComparisonMetrics;
+  previous: YearPeriodComparisonMetrics;
+  deltas: {
+    averageNet: number;
+    averageScore: number;
+    participantCount: number;
+  };
+}
+
+export interface SubjectYearTrendItem {
+  year: number;
+  examCount: number;
+  participantCount: number;
+  averageNet: number;
+}
+
+export interface SubjectYearTrendReport {
+  examType: ExamType;
+  lessonName: string;
+  gradeLevel?: number;
+  years: SubjectYearTrendItem[];
+}
+
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Okuldaki belirli sınıf ve sınav türüne göre tüm denemelerin özet raporunu getirir
@@ -108,7 +145,12 @@ export class ReportsService {
       // Ders bazında ortalamalar
       const lessonMap = new Map<
         string,
-        { correct: number[]; incorrect: number[]; empty: number[]; net: number[] }
+        {
+          correct: number[];
+          incorrect: number[];
+          empty: number[];
+          net: number[];
+        }
       >();
 
       exam.attempts.forEach((attempt) => {
@@ -160,11 +202,14 @@ export class ReportsService {
       );
 
       // Şube bazında ortalamalar
-      const branchMap = new Map<string, {
-        branchId: string;
-        branchName: string;
-        attempts: typeof exam.attempts;
-      }>();
+      const branchMap = new Map<
+        string,
+        {
+          branchId: string;
+          branchName: string;
+          attempts: typeof exam.attempts;
+        }
+      >();
 
       exam.attempts.forEach((attempt) => {
         const branchId = attempt.student.class.id;
@@ -184,7 +229,12 @@ export class ReportsService {
         // Şube içindeki ders bazında ortalamalar
         const branchLessonMap = new Map<
           string,
-          { correct: number[]; incorrect: number[]; empty: number[]; net: number[] }
+          {
+            correct: number[];
+            incorrect: number[];
+            empty: number[];
+            net: number[];
+          }
         >();
 
         branch.attempts.forEach((attempt) => {
@@ -251,7 +301,9 @@ export class ReportsService {
         participantCount,
         lessonAverages,
         scoreAverages,
-        branchAverages: branchAverages.sort((a, b) => a.branchName.localeCompare(b.branchName)),
+        branchAverages: branchAverages.sort((a, b) =>
+          a.branchName.localeCompare(b.branchName),
+        ),
       });
     }
 
@@ -443,6 +495,215 @@ export class ReportsService {
     };
   }
 
+  async getYearOverYearComparison(
+    schoolId: string,
+    examType: ExamType,
+    gradeLevel: number,
+    month: number,
+    year: number = new Date().getFullYear(),
+    lessonName?: string,
+  ): Promise<YearOverYearComparisonReport> {
+    const current = await this.aggregateMonthMetrics(
+      schoolId,
+      examType,
+      gradeLevel,
+      month,
+      year,
+      lessonName,
+    );
+
+    const previous = await this.aggregateMonthMetrics(
+      schoolId,
+      examType,
+      gradeLevel,
+      month,
+      year - 1,
+      lessonName,
+    );
+
+    return {
+      examType,
+      gradeLevel,
+      month,
+      lessonName,
+      current,
+      previous,
+      deltas: {
+        averageNet: Number(
+          (current.averageNet - previous.averageNet).toFixed(2),
+        ),
+        averageScore: Number(
+          (current.averageScore - previous.averageScore).toFixed(2),
+        ),
+        participantCount: current.participantCount - previous.participantCount,
+      },
+    };
+  }
+
+  async getSubjectYearTrend(
+    schoolId: string,
+    examType: ExamType,
+    lessonName: string,
+    gradeLevel?: number,
+    years: number = 3,
+    endYear: number = new Date().getFullYear(),
+  ): Promise<SubjectYearTrendReport> {
+    const span = Math.max(1, Math.min(years, 10));
+    const startYear = endYear - span + 1;
+    const yearItems: SubjectYearTrendItem[] = [];
+
+    for (let year = startYear; year <= endYear; year++) {
+      const startDate = new Date(year, 0, 1, 0, 0, 0, 0);
+      const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+      const summary = await this.aggregateDateRangeMetrics(
+        schoolId,
+        examType,
+        gradeLevel,
+        startDate,
+        endDate,
+        lessonName,
+      );
+
+      yearItems.push({
+        year,
+        examCount: summary.examCount,
+        participantCount: summary.participantCount,
+        averageNet: summary.averageNet,
+      });
+    }
+
+    return {
+      examType,
+      lessonName,
+      gradeLevel,
+      years: yearItems,
+    };
+  }
+
+  private async aggregateMonthMetrics(
+    schoolId: string,
+    examType: ExamType,
+    gradeLevel: number,
+    month: number,
+    year: number,
+    lessonName?: string,
+  ): Promise<YearPeriodComparisonMetrics> {
+    const startDate = new Date(year, month - 1, 1, 0, 0, 0, 0);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const summary = await this.aggregateDateRangeMetrics(
+      schoolId,
+      examType,
+      gradeLevel,
+      startDate,
+      endDate,
+      lessonName,
+    );
+
+    return {
+      year,
+      month,
+      examCount: summary.examCount,
+      participantCount: summary.participantCount,
+      averageNet: summary.averageNet,
+      averageScore: summary.averageScore,
+    };
+  }
+
+  private async aggregateDateRangeMetrics(
+    schoolId: string,
+    examType: ExamType,
+    gradeLevel: number | undefined,
+    startDate: Date,
+    endDate: Date,
+    lessonName?: string,
+  ): Promise<{
+    examCount: number;
+    participantCount: number;
+    averageNet: number;
+    averageScore: number;
+  }> {
+    const exams = await this.prisma.exam.findMany({
+      where: {
+        schoolId,
+        type: examType,
+        ...(gradeLevel ? { gradeLevel } : {}),
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        attempts: {
+          include: {
+            lessonResults: {
+              include: {
+                lesson: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            scores: true,
+          },
+        },
+      },
+    });
+
+    const normalizedLessonName = lessonName?.trim().toLocaleLowerCase('tr-TR');
+    let participantCount = 0;
+    let totalNet = 0;
+    let totalScore = 0;
+    let netSampleCount = 0;
+    let scoreSampleCount = 0;
+
+    for (const exam of exams) {
+      participantCount += exam.attempts.length;
+
+      for (const attempt of exam.attempts) {
+        if (normalizedLessonName) {
+          const lessonNets = attempt.lessonResults
+            .filter(
+              (lessonResult) =>
+                lessonResult.lesson.name.trim().toLocaleLowerCase('tr-TR') ===
+                normalizedLessonName,
+            )
+            .map((lessonResult) => lessonResult.net);
+
+          if (lessonNets.length > 0) {
+            totalNet += lessonNets.reduce(
+              (sum, lessonNet) => sum + lessonNet,
+              0,
+            );
+            netSampleCount += lessonNets.length;
+          }
+        } else {
+          totalNet += attempt.lessonResults.reduce(
+            (sum, lessonResult) => sum + lessonResult.net,
+            0,
+          );
+          netSampleCount += 1;
+        }
+
+        if (attempt.scores.length > 0) {
+          totalScore += attempt.scores[0].score;
+          scoreSampleCount += 1;
+        }
+      }
+    }
+
+    return {
+      examCount: exams.length,
+      participantCount,
+      averageNet:
+        netSampleCount > 0 ? Number((totalNet / netSampleCount).toFixed(2)) : 0,
+      averageScore:
+        scoreSampleCount > 0
+          ? Number((totalScore / scoreSampleCount).toFixed(2))
+          : 0,
+    };
+  }
+
   private calculateAverage(numbers: number[]): number {
     if (numbers.length === 0) return 0;
     const sum = numbers.reduce((acc, val) => acc + val, 0);
@@ -525,16 +786,17 @@ export class ReportsService {
               examId: exam.id,
               rank: attempt?.scores[0]?.rankSchool || null,
             };
-          })
+          }),
         );
 
         const validRanks = rankings
-          .map(r => r.rank)
+          .map((r) => r.rank)
           .filter((r): r is number => r !== null);
 
-        const averageRank = validRanks.length > 0
-          ? validRanks.reduce((a, b) => a + b, 0) / validRanks.length
-          : 0;
+        const averageRank =
+          validRanks.length > 0
+            ? validRanks.reduce((a, b) => a + b, 0) / validRanks.length
+            : 0;
 
         return {
           studentId: student.id,
@@ -547,16 +809,17 @@ export class ReportsService {
           examsAttended: validRanks.length,
           examsMissed: exams.length - validRanks.length,
         };
-      })
+      }),
     );
 
     // 5. İstatistikleri hesapla
-    const validStudents = studentRankings.filter(s => s.examsAttended > 0);
-    const topPerformer = validStudents.length > 0
-      ? validStudents.reduce((best, current) => 
-          current.averageRank < best.averageRank ? current : best
-        )
-      : null;
+    const validStudents = studentRankings.filter((s) => s.examsAttended > 0);
+    const topPerformer =
+      validStudents.length > 0
+        ? validStudents.reduce((best, current) =>
+            current.averageRank < best.averageRank ? current : best,
+          )
+        : null;
 
     return {
       classInfo: {
@@ -565,7 +828,7 @@ export class ReportsService {
         gradeName: classInfo.grade.name,
         studentCount: classInfo._count.students,
       },
-      exams: exams.map(e => ({
+      exams: exams.map((e) => ({
         id: e.id,
         title: e.title,
         date: e.date.toISOString(),
@@ -575,15 +838,19 @@ export class ReportsService {
       students: studentRankings,
       statistics: {
         totalExams: exams.length,
-        averageParticipation: exams.length > 0
-          ? validStudents.reduce((sum, s) => sum + s.examsAttended, 0) / 
-            (validStudents.length * exams.length) * 100
-          : 0,
-        topPerformer: topPerformer ? {
-          studentId: topPerformer.studentId,
-          fullName: topPerformer.fullName,
-          averageRank: topPerformer.averageRank,
-        } : null,
+        averageParticipation:
+          exams.length > 0
+            ? (validStudents.reduce((sum, s) => sum + s.examsAttended, 0) /
+                (validStudents.length * exams.length)) *
+              100
+            : 0,
+        topPerformer: topPerformer
+          ? {
+              studentId: topPerformer.studentId,
+              fullName: topPerformer.fullName,
+              averageRank: topPerformer.averageRank,
+            }
+          : null,
       },
     };
   }
@@ -672,16 +939,17 @@ export class ReportsService {
               examId: exam.id,
               rank: attempt?.scores[0]?.rankSchool || null,
             };
-          })
+          }),
         );
 
         const validRanks = rankings
-          .map(r => r.rank)
+          .map((r) => r.rank)
           .filter((r): r is number => r !== null);
 
-        const averageRank = validRanks.length > 0
-          ? validRanks.reduce((a, b) => a + b, 0) / validRanks.length
-          : 0;
+        const averageRank =
+          validRanks.length > 0
+            ? validRanks.reduce((a, b) => a + b, 0) / validRanks.length
+            : 0;
 
         return {
           studentId: student.id,
@@ -695,16 +963,17 @@ export class ReportsService {
           examsAttended: validRanks.length,
           examsMissed: exams.length - validRanks.length,
         };
-      })
+      }),
     );
 
     // 5. İstatistikleri hesapla
-    const validStudents = studentRankings.filter(s => s.examsAttended > 0);
-    const topPerformer = validStudents.length > 0
-      ? validStudents.reduce((best, current) => 
-          current.averageRank < best.averageRank ? current : best
-        )
-      : null;
+    const validStudents = studentRankings.filter((s) => s.examsAttended > 0);
+    const topPerformer =
+      validStudents.length > 0
+        ? validStudents.reduce((best, current) =>
+            current.averageRank < best.averageRank ? current : best,
+          )
+        : null;
 
     const totalStudents = students.length;
 
@@ -714,13 +983,13 @@ export class ReportsService {
         name: `Tüm ${grade.name}. Sınıflar`,
         gradeName: grade.name,
         studentCount: totalStudents,
-        classes: grade.classes.map(c => ({
+        classes: grade.classes.map((c) => ({
           id: c.id,
           name: c.name,
           studentCount: c._count.students,
         })),
       },
-      exams: exams.map(e => ({
+      exams: exams.map((e) => ({
         id: e.id,
         title: e.title,
         date: e.date.toISOString(),
@@ -730,15 +999,19 @@ export class ReportsService {
       students: studentRankings,
       statistics: {
         totalExams: exams.length,
-        averageParticipation: exams.length > 0
-          ? validStudents.reduce((sum, s) => sum + s.examsAttended, 0) / 
-            (validStudents.length * exams.length) * 100
-          : 0,
-        topPerformer: topPerformer ? {
-          studentId: topPerformer.studentId,
-          fullName: topPerformer.fullName,
-          averageRank: topPerformer.averageRank,
-        } : null,
+        averageParticipation:
+          exams.length > 0
+            ? (validStudents.reduce((sum, s) => sum + s.examsAttended, 0) /
+                (validStudents.length * exams.length)) *
+              100
+            : 0,
+        topPerformer: topPerformer
+          ? {
+              studentId: topPerformer.studentId,
+              fullName: topPerformer.fullName,
+              averageRank: topPerformer.averageRank,
+            }
+          : null,
       },
     };
   }

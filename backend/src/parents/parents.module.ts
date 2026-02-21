@@ -4,8 +4,8 @@ import { ParentsService } from './parents.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [ParentsController],
-    providers: [ParentsService],
+  imports: [PrismaModule],
+  controllers: [ParentsController],
+  providers: [ParentsService],
 })
 export class ParentsModule {}

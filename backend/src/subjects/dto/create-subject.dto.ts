@@ -1,4 +1,11 @@
-import { IsString, IsEnum, IsOptional, IsArray, IsInt, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsArray,
+  IsInt,
+  IsBoolean,
+} from 'class-validator';
 import { ExamType } from '@prisma/client';
 
 export class CreateSubjectDto {

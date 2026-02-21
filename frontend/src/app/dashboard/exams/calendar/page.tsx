@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
 import { Plus, Calendar as CalendarIcon, List, Archive, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,17 +40,22 @@ export default function ExamCalendarPage() {
     const [selectedGrade, setSelectedGrade] = useState<string>('ALL');
     const [includeArchived, setIncludeArchived] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [canCreateExam] = useState(() => {
-        if (typeof window === 'undefined') return false;
+    const [canCreateExam, setCanCreateExam] = useState(false);
+
+    useEffect(() => {
         const userStr = localStorage.getItem('user');
-        if (!userStr) return false;
+        if (!userStr) {
+            setCanCreateExam(false);
+            return;
+        }
+
         try {
             const user = JSON.parse(userStr);
-            return ['SCHOOL_ADMIN', 'TEACHER', 'SUPER_ADMIN'].includes(user?.role);
+            setCanCreateExam(['SCHOOL_ADMIN', 'TEACHER', 'SUPER_ADMIN'].includes(user?.role));
         } catch {
-            return false;
+            setCanCreateExam(false);
         }
-    });
+    }, []);
 
     // Akademik yıl hesaplama (Haziran başlangıç)
     const currentMonth = new Date().getMonth() + 1;

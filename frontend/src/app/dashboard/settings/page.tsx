@@ -35,9 +35,38 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSchool } from "@/contexts/school-context";
 
+type PromotionPreview = {
+    promotableClassCount: number;
+    promotableStudentCount: number;
+    archiveClassCount: number;
+    archiveStudentCount: number;
+    estimatedArchivedParentCount: number;
+    estimatedDeletedMessageCount: number;
+    estimatedDeletedMessageRecipientCount: number;
+    mentorGroupCount: number;
+    promotionByLevel: Array<{
+        fromLevel: number;
+        toLevel: number;
+        classCount: number;
+        studentCount: number;
+    }>;
+};
+
+type PromotionResponse = {
+    message: string;
+    summary?: {
+        promotedStudentCount?: number;
+        archivedStudentCount?: number;
+        deletedGroupCount?: number;
+    };
+};
+
 export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [promoting, setPromoting] = useState(false);
+    const [promotionPreviewLoading, setPromotionPreviewLoading] = useState(false);
+    const [promotionPreview, setPromotionPreview] = useState<PromotionPreview | null>(null);
     const [school, setSchool] = useState<any>(null);
     const [formData, setFormData] = useState({
         name: "",
@@ -62,13 +91,33 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const { refreshSchoolData } = useSchool();
 
-    const fetchBackups = async () => {
-        const token = localStorage.getItem("token");
+    const getSchoolId = () => {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
+        return user.schoolId as string | undefined;
+    };
+
+    const fetchJson = async <T,>(url: string, init?: RequestInit): Promise<T> => {
+        const response = await fetch(url, {
+            credentials: "include",
+            ...init,
+            headers: {
+                ...(init?.headers || {}),
+            },
+        });
+
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(payload?.message || "İşlem başarısız");
+        }
+        return payload as T;
+    };
+
+    const fetchBackups = async () => {
+        const schoolId = getSchoolId();
+        if (!schoolId) return;
+
         try {
-            const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/backups`, {
-            });
-            const data = await res.json();
+            const data = await fetchJson<any[]>(`${API_BASE_URL}/schools/${schoolId}/backups`);
             setBackups(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error(error);
@@ -76,19 +125,11 @@ export default function SettingsPage() {
     };
 
     const fetchSchool = async () => {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        if (!user.schoolId) return;
+        const schoolId = getSchoolId();
+        if (!schoolId) return;
 
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
-                headers: {
-                }
-            });
-            if (!res.ok) {
-                throw new Error('Failed to fetch school data');
-            }
-            const data = await res.json();
+            const data = await fetchJson<any>(`${API_BASE_URL}/schools/${schoolId}`);
             setSchool(data);
             setFormData({
                 name: data.name || "",
@@ -103,9 +144,28 @@ export default function SettingsPage() {
         }
     };
 
+    const fetchPromotionPreview = async () => {
+        const schoolId = getSchoolId();
+        if (!schoolId) return;
+
+        setPromotionPreviewLoading(true);
+        try {
+            const data = await fetchJson<PromotionPreview>(
+                `${API_BASE_URL}/schools/${schoolId}/promote/preview`,
+            );
+            setPromotionPreview(data);
+        } catch (error) {
+            console.error(error);
+            setPromotionPreview(null);
+        } finally {
+            setPromotionPreviewLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchSchool();
         fetchBackups();
+        fetchPromotionPreview();
     }, []);
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,8 +193,11 @@ export default function SettingsPage() {
         }
 
         setUploadingLogo(true);
-        const token = localStorage.getItem("token");
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const schoolId = getSchoolId();
+        if (!schoolId) {
+            setUploadingLogo(false);
+            return;
+        }
 
         try {
             // Resize and compress image before upload
@@ -185,8 +248,9 @@ export default function SettingsPage() {
                 // Convert to base64 with compression
                 const base64 = canvas.toDataURL('image/jpeg', 0.85);
 
-                const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
+                const res = await fetch(`${API_BASE_URL}/schools/${schoolId}`, {
                     method: "PATCH",
+                    credentials: "include",
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -240,6 +304,7 @@ export default function SettingsPage() {
         try {
             const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}`, {
                 method: "PATCH",
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -282,31 +347,41 @@ export default function SettingsPage() {
     };
 
     const handlePromote = async () => {
+        const previewDescription = promotionPreview
+            ? `${promotionPreview.promotableStudentCount} ogrenci ust sinifa tasinacak, ${promotionPreview.archiveStudentCount} ogrenci arsive alinacak. Islem oncesi otomatik yedek alinacak.`
+            : "Tum ogrenciler ust sinifa tasinacak ve 8/12. siniflar arsivlenecek. Islem oncesi otomatik yedek alinacak.";
         setConfirmDialog({
             open: true,
             title: "Sınıf Atlama Onayla",
-            description: "Tüm Öğrencilerin sınıf seviyesini bir üst seviyeye taşımak istediğinize emin misiniz?",
+            description: previewDescription,
             onConfirm: async () => {
-                const token = localStorage.getItem("token");
-                const user = JSON.parse(localStorage.getItem("user") || "{}");
+                const schoolId = getSchoolId();
+                if (!schoolId) {
+                    setConfirmDialog((prev) => ({ ...prev, open: false }));
+                    return;
+                }
+
+                setPromoting(true);
                 try {
-                    const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/promote`, {
+                    const data = await fetchJson<PromotionResponse>(`${API_BASE_URL}/schools/${schoolId}/promote`, {
                         method: "POST",
                     });
-                    const data = await res.json();
                     toast({
-                        title: "Başarılı",
-                        description: data.message,
+                        title: "Basarili",
+                        description: `${data.message} Tasinan: ${data.summary?.promotedStudentCount ?? 0}, Arsivlenen: ${data.summary?.archivedStudentCount ?? 0}, Silinen grup: ${data.summary?.deletedGroupCount ?? 0}`,
                     });
+                    fetchBackups();
+                    fetchPromotionPreview();
                 } catch (error) {
                     console.error(error);
                     toast({
                         title: "Hata",
-                        description: "Sınıf atlama işlemi sırasında bir hata oluştu.",
+                        description: "Sinif atlama islemi sirasinda bir hata olustu.",
                         variant: "destructive"
                     });
                 }
-                setConfirmDialog({ ...confirmDialog, open: false });
+                setPromoting(false);
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
             }
         });
     };
@@ -318,6 +393,7 @@ export default function SettingsPage() {
         try {
             const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/backup`, {
                 method: "POST",
+                credentials: "include",
             });
             const data = await res.json();
             toast({
@@ -342,6 +418,7 @@ export default function SettingsPage() {
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         try {
             const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/backups/${backupId}/download`, {
+                credentials: "include",
             });
             const backup = await res.json();
 
@@ -377,6 +454,7 @@ export default function SettingsPage() {
                 try {
                     const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/restore`, {
                         method: "POST",
+                        credentials: "include",
                         headers: {
                             "Content-Type": "application/json",
                         },
@@ -395,7 +473,7 @@ export default function SettingsPage() {
                         variant: "destructive"
                     });
                 }
-                setConfirmDialog({ ...confirmDialog, open: false });
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
             }
         });
     };
@@ -411,6 +489,7 @@ export default function SettingsPage() {
                 try {
                     const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/backups/${backupId}`, {
                         method: "DELETE",
+                        credentials: "include",
                     });
                     const data = await res.json();
                     toast({
@@ -426,7 +505,7 @@ export default function SettingsPage() {
                         variant: "destructive"
                     });
                 }
-                setConfirmDialog({ ...confirmDialog, open: false });
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
             }
         });
     };
@@ -461,6 +540,7 @@ export default function SettingsPage() {
 
                     const res = await fetch(`${API_BASE_URL}/schools/${user.schoolId}/restore-from-file`, {
                         method: "POST",
+                        credentials: "include",
                         headers: {
                             "Content-Type": "application/json",
                         },
@@ -490,7 +570,7 @@ export default function SettingsPage() {
                 } finally {
                     setLoading(false);
                 }
-                setConfirmDialog({ ...confirmDialog, open: false });
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
             }
         });
     };
@@ -656,18 +736,42 @@ export default function SettingsPage() {
 
                 {/* Saç Taraf: Sistem İşlemleri */}
                 <div className="space-y-6">
-                    {/* Sınıf Atlatma */}
+                    {/* Sinif Atlatma */}
                     <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
                         <CardHeader className="border-b border-slate-200 dark:border-slate-800">
-                            <CardTitle className="text-base font-semibold">Sınıf Atlatma</CardTitle>
-                            <CardDescription className="text-xs">Tüm Öğrencileri bir üst sınıfa taşı</CardDescription>
+                            <CardTitle className="text-base font-semibold">Sinif Atlatma</CardTitle>
+                            <CardDescription className="text-xs">Tum ogrencileri bir ust sinifa tasi</CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-6">
-                            <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium h-11 rounded-lg gap-2 shadow-sm" onClick={handlePromote} disabled>
-                                <ArrowUpCircle className="h-5 w-5" />
-                                Sınıf Atlama İşlemi
+                        <CardContent className="pt-6 space-y-3">
+                            <Button
+                                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium h-11 rounded-lg gap-2 shadow-sm"
+                                onClick={handlePromote}
+                                disabled={promoting || promotionPreviewLoading}
+                            >
+                                {promoting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Islem yapiliyor...
+                                    </>
+                                ) : (
+                                    <>
+                                        <ArrowUpCircle className="h-5 w-5" />
+                                        Sinif Atlatma Islemi
+                                    </>
+                                )}
                             </Button>
-                            <p className="text-xs text-slate-500 mt-2 text-center">Yakında aktif olacak</p>
+                            {promotionPreviewLoading ? (
+                                <p className="text-xs text-slate-500 text-center">Onizleme hesaplaniyor...</p>
+                            ) : promotionPreview ? (
+                                <div className="rounded-md border border-slate-200 dark:border-slate-700 p-3 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                                    <div>Tasinacak ogrenci: <span className="font-semibold">{promotionPreview.promotableStudentCount}</span></div>
+                                    <div>Arsivlenecek ogrenci: <span className="font-semibold">{promotionPreview.archiveStudentCount}</span></div>
+                                    <div>Arsivlenecek veli: <span className="font-semibold">{promotionPreview.estimatedArchivedParentCount}</span></div>
+                                    <div>Silinecek mentor grup: <span className="font-semibold">{promotionPreview.mentorGroupCount}</span></div>
+                                </div>
+                            ) : (
+                                <p className="text-xs text-slate-500 text-center">Onizleme verisi alinamadi.</p>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -803,7 +907,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Confirmation Dialog */}
-            <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
+            <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
@@ -812,11 +916,11 @@ export default function SettingsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>
+                        <AlertDialogCancel onClick={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}>
                             İptal
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDialog.onConfirm}>
-                            Onayla
+                        <AlertDialogAction onClick={confirmDialog.onConfirm} disabled={promoting || loading}>
+                            {promoting ? "Isleniyor..." : "Onayla"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

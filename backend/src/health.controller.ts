@@ -7,10 +7,10 @@ export class HealthController {
 
   @Get()
   getRoot() {
-    return { 
+    return {
       message: 'DeneTakip API is running',
       timestamp: new Date().toISOString(),
-      version: '1.0.0'
+      version: '1.0.0',
     };
   }
 
@@ -20,16 +20,16 @@ export class HealthController {
       // Test database connection with timeout
       const dbPromise = this.prisma.$queryRaw`SELECT 1`;
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Database timeout')), 3000)
+        setTimeout(() => reject(new Error('Database timeout')), 3000),
       );
-      
+
       await Promise.race([dbPromise, timeoutPromise]);
-      
+
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         database: 'connected',
-        uptime: process.uptime()
+        uptime: process.uptime(),
       };
     } catch (error) {
       console.error('Health check failed:', error.message);
@@ -38,7 +38,7 @@ export class HealthController {
         timestamp: new Date().toISOString(),
         database: 'disconnected',
         error: error.message,
-        uptime: process.uptime()
+        uptime: process.uptime(),
       };
     }
   }
@@ -49,17 +49,17 @@ export class HealthController {
       // More comprehensive readiness check with timeout
       const dbPromise = this.prisma.$queryRaw`SELECT 1`;
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Database timeout')), 5000)
+        setTimeout(() => reject(new Error('Database timeout')), 5000),
       );
-      
+
       await Promise.race([dbPromise, timeoutPromise]);
-      
+
       return {
         status: 'ready',
         timestamp: new Date().toISOString(),
         checks: {
-          database: 'ok'
-        }
+          database: 'ok',
+        },
       };
     } catch (error) {
       console.error('Readiness check failed:', error.message);
@@ -74,7 +74,7 @@ export class HealthController {
       status: 'alive',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     };
   }
 }

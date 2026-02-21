@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearUserData } from "@/lib/auth";
@@ -126,11 +126,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Student menu - only results
         if (role === 'STUDENT') {
             return [
-                { name: "Sonuçlarım", href: "/dashboard/student/results", icon: BarChart2 },
+                { name: "SonuÃ§larÄ±m", href: "/dashboard/student/results", icon: BarChart2 },
                 { name: "Deneme Takvimi", href: "/dashboard/student-calendar", icon: CalendarDays },
-                { name: "Çalışma Planlarım", href: "/dashboard/my-tasks", icon: BookOpenCheck },
-                { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
-                { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Ã‡alÄ±ÅŸma PlanlarÄ±m", href: "/dashboard/my-tasks", icon: BookOpenCheck },
+                { name: "BaÅŸarÄ±larÄ±m", href: "/dashboard/achievements", icon: Award },
+                { name: "Grup Ã‡alÄ±ÅŸmalarÄ±m", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -139,7 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Parent menu - only child results
         if (role === 'PARENT') {
             return [
-                { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
+                { name: "Ã‡ocuÄŸumun SonuÃ§larÄ±", href: "/dashboard/parent/results", icon: BarChart2 },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
@@ -148,12 +148,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Teacher menu - limited access (no users, no settings)
         if (role === 'TEACHER') {
             return [
-                { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
-                { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+                { name: "Genel BakÄ±ÅŸ", href: "/dashboard", icon: LayoutDashboard },
+                { name: "SÄ±navlar", href: "/dashboard/exams", icon: BookOpen },
                 { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-                { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
-                { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
-                { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
+                { name: "Ã–ÄŸrenciler", href: "/dashboard/students", icon: GraduationCap },
+                { name: "Ã‡alÄ±ÅŸma PlanlarÄ±", href: "/dashboard/study-plans", icon: BookOpenCheck },
+                { name: "Mentor GruplarÄ±", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
@@ -162,36 +162,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         // Admin menu - full access
         return [
-            { name: "Genel Bakış", href: "/dashboard", icon: LayoutDashboard },
-            { name: "Sınavlar", href: "/dashboard/exams", icon: BookOpen },
+            { name: "Genel BakÄ±ÅŸ", href: "/dashboard", icon: LayoutDashboard },
+            { name: "SÄ±navlar", href: "/dashboard/exams", icon: BookOpen },
             { name: "Deneme Takvimi", href: "/dashboard/exams/calendar", icon: CalendarDays },
-            { name: "Öğrenciler", href: "/dashboard/students", icon: GraduationCap },
-            { name: "Sınıflar", href: "/dashboard/classes", icon: School },
-            { name: "Çalışma Planları", href: "/dashboard/study-plans", icon: BookOpenCheck },
-            { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
-            { name: "Başarılar", href: "/dashboard/admin/achievements", icon: Award },
+            { name: "Ã–ÄŸrenciler", href: "/dashboard/students", icon: GraduationCap },
+            { name: "SÄ±nÄ±flar", href: "/dashboard/classes", icon: School },
+            { name: "Ã‡alÄ±ÅŸma PlanlarÄ±", href: "/dashboard/study-plans", icon: BookOpenCheck },
+            { name: "Mentor GruplarÄ±", href: "/dashboard/groups", icon: UsersRound },
+            { name: "BaÅŸarÄ±lar", href: "/dashboard/admin/achievements", icon: Award },
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
-            { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
+            { name: "KullanÄ±cÄ±lar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
     };
 
     const menuItems = getMenuItems();
 
+    const activeMenuHref = useMemo(() => {
+        if (!pathname) return "";
+
+        const matches = menuItems
+            .map((item) => item.href)
+            .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+            .sort((a, b) => b.length - a.length);
+
+        return matches[0] ?? "";
+    }, [menuItems, pathname]);
+
     const getRoleLabel = () => {
         if (!user) return "";
         
-        // Öğretmen için branş kontrolü
+        // Ã–ÄŸretmen iÃ§in branÅŸ kontrolÃ¼
         if (user.role === "TEACHER") {
-            return user.branch ? `${user.branch} Öğretmeni` : "Öğretmen";
+            return user.branch ? `${user.branch} Ã–ÄŸretmeni` : "Ã–ÄŸretmen";
         }
         
         const roleLabels: Record<string, string> = {
-            SCHOOL_ADMIN: "Okul Yöneticisi",
-            STUDENT: "Öğrenci",
+            SCHOOL_ADMIN: "Okul YÃ¶neticisi",
+            STUDENT: "Ã–ÄŸrenci",
             PARENT: "Veli",
-            SUPER_ADMIN: "Süper Admin"
+            SUPER_ADMIN: "SÃ¼per Admin"
         };
         return roleLabels[user.role] || user.role;
     };
@@ -275,7 +286,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {/* Navigation */}
                 <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
                     {menuItems.map((item) => {
-                        const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                        const isActive = activeMenuHref === item.href;
                         return (
                             <Link
                                 key={item.href}
@@ -300,7 +311,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex items-center gap-3 px-4 py-3 w-full rounded-2xl text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut className="h-5 w-5" />
-                        Çıkış Yap
+                        Ã‡Ä±kÄ±ÅŸ Yap
                     </button>
                 </div>
             </aside>

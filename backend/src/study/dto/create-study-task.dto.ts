@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsInt, IsOptional, Min, Max, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  IsOptional,
+  Min,
+  Max,
+  IsEnum,
+} from 'class-validator';
 import { StudyTaskStatus } from '@prisma/client';
 
 export class CreateStudyTaskDto {

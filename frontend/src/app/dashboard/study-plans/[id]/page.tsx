@@ -318,11 +318,16 @@ export default function StudyPlanDetailPage() {
       : plan.assignedBy
         ? `${plan.assignedBy.firstName} ${plan.assignedBy.lastName}`
         : 'Belirtilmedi';
+  const canPrint = Boolean(user);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-6 study-plan-page">
       {/* Header */}
-      <div className="flex items-start justify-between study-plan-actions">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between study-plan-actions">
         <div>
           <Button variant="ghost" onClick={() => router.push('/dashboard/study-plans')}>
             <ChevronLeft className="mr-2 h-4 w-4" />
@@ -337,30 +342,37 @@ export default function StudyPlanDetailPage() {
             ))}
           </div>
         </div>
-        {user?.role === 'TEACHER' && plan.status === 'DRAFT' && (
-          <Button>
-            <CheckCircle className="mr-2 h-4 w-4" />
-            Planı Aktifleştir
-          </Button>
-        )}
-        {user?.role === 'TEACHER' && plan.isTemplate && (
-          <Button variant="outline" onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}>  
-            <FileText className="mr-2 h-4 w-4" />
-            Şablonu Düzenle
-          </Button>
-        )}
-        {user?.role === 'TEACHER' && !plan.isTemplate && (
-          <Button variant="outline" onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}>  
-            <FileText className="mr-2 h-4 w-4" />
-            Planı Düzenle
-          </Button>
-        )}
-        {(user?.role === 'TEACHER' || user?.role === 'STUDENT') && (
-          <Button variant="outline" onClick={() => window.print()}>
-            <Printer className="mr-2 h-4 w-4" />
-            Yazdır
-          </Button>
-        )}
+        <div className="flex flex-wrap items-start gap-2 lg:justify-end">
+          {user?.role === 'TEACHER' && plan.status === 'DRAFT' && (
+            <Button>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Planı Aktifleştir
+            </Button>
+          )}
+          {user?.role === 'TEACHER' && plan.isTemplate && (
+            <Button variant="outline" onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Şablonu Düzenle
+            </Button>
+          )}
+          {user?.role === 'TEACHER' && !plan.isTemplate && (
+            <Button variant="outline" onClick={() => router.push(`/dashboard/study-plans/new?edit=${plan.id}`)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Planı Düzenle
+            </Button>
+          )}
+          {canPrint && (
+            <div className="flex flex-col items-start lg:items-end">
+              <Button variant="outline" onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" />
+                Yazdır
+              </Button>
+              <span className="mt-1 text-xs text-muted-foreground">
+                PDF için yazdır penceresinde "PDF olarak kaydet" seçin.
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Info Cards */}

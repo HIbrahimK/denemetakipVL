@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,18 +72,56 @@ interface SubjectReport {
   exams: SubjectExam[];
 }
 
+interface YearPeriodMetrics {
+  year: number;
+  month: number;
+  examCount: number;
+  participantCount: number;
+  averageNet: number;
+  averageScore: number;
+}
+
+interface YearComparisonReport {
+  examType: string;
+  gradeLevel: number;
+  month: number;
+  lessonName?: string;
+  current: YearPeriodMetrics;
+  previous: YearPeriodMetrics;
+  deltas: {
+    averageNet: number;
+    averageScore: number;
+    participantCount: number;
+  };
+}
+
+interface SubjectYearTrendReport {
+  examType: string;
+  lessonName: string;
+  gradeLevel?: number;
+  years: Array<{
+    year: number;
+    examCount: number;
+    participantCount: number;
+    averageNet: number;
+  }>;
+}
+
 export default function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [examType, setExamType] = useState<string>('TYT');
   const [gradeLevel, setGradeLevel] = useState<string>('');
   const [lessonName, setLessonName] = useState<string>('');
-  const [reportType, setReportType] = useState<'exam' | 'subject' | 'ranking-matrix'>('exam');
+  const [reportType, setReportType] = useState<'exam' | 'subject' | 'ranking-matrix' | 'year-comparison'>('exam');
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
+  const [comparisonMonth, setComparisonMonth] = useState<string>(String(new Date().getMonth() + 1));
+  const [comparisonYear, setComparisonYear] = useState<string>(String(new Date().getFullYear()));
 
   const [examReports, setExamReports] = useState<ExamReport[]>([]);
   const [subjectReport, setSubjectReport] = useState<SubjectReport | null>(null);
-  const [availableLessons, setAvailableLessons] = useState<string[]>([]);
+  const [yearComparisonReport, setYearComparisonReport] = useState<YearComparisonReport | null>(null);
+  const [subjectYearTrend, setSubjectYearTrend] = useState<SubjectYearTrendReport | null>(null);
 
   const examTypes = [
     { value: 'TYT', label: 'TYT' },
@@ -103,21 +141,35 @@ export default function ReportsPage() {
     { value: '12', label: '12. Sınıf' },
   ];
 
-  useEffect(() => {
-    // Fetch available lessons based on exam type
-    fetchAvailableLessons();
-  }, [examType]);
-
-  const fetchAvailableLessons = async () => {
-    // Sınav türüne göre dersleri ayarla
+  const monthOptions = [
+    { value: '1', label: 'Ocak' },
+    { value: '2', label: 'Subat' },
+    { value: '3', label: 'Mart' },
+    { value: '4', label: 'Nisan' },
+    { value: '5', label: 'Mayis' },
+    { value: '6', label: 'Haziran' },
+    { value: '7', label: 'Temmuz' },
+    { value: '8', label: 'Agustos' },
+    { value: '9', label: 'Eylul' },
+    { value: '10', label: 'Ekim' },
+    { value: '11', label: 'Kasim' },
+    { value: '12', label: 'Aralik' },
+  ];
+  const availableLessons = useMemo(() => {
     if (examType === 'LGS') {
-      setAvailableLessons(['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce', 'Din Kültürü']);
-    } else if (examType === 'TYT') {
-      setAvailableLessons(['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler']);
-    } else if (examType === 'AYT') {
-      setAvailableLessons(['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Edebiyat', 'Tarih', 'Coğrafya']);
+      return ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce', 'Din Kültürü'];
     }
-  };
+
+    if (examType === 'TYT') {
+      return ['Türkçe', 'Matematik', 'Fen Bilimleri', 'Sosyal Bilimler'];
+    }
+
+    if (examType === 'AYT') {
+      return ['Matematik', 'Fizik', 'Kimya', 'Biyoloji', 'Edebiyat', 'Tarih', 'Coğrafya'];
+    }
+
+    return [];
+  }, [examType]);
 
   const fetchExamReports = async () => {
     setLoading(true);
@@ -174,11 +226,66 @@ export default function ReportsPage() {
     }
   };
 
+  const fetchYearComparisonReport = async () => {
+    if (!gradeLevel) return;
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+
+      const yearComparisonUrl = `${API_BASE_URL}/reports/comparisons/year-over-year?examType=${examType}&gradeLevel=${gradeLevel}&month=${comparisonMonth}&year=${comparisonYear}${lessonName ? `&lessonName=${encodeURIComponent(lessonName)}` : ''}`;
+      const comparisonResponse = await fetch(yearComparisonUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!comparisonResponse.ok) {
+        throw new Error('Karsilastirma raporu alinamadi');
+      }
+
+      const comparisonData = await comparisonResponse.json();
+      setYearComparisonReport(comparisonData);
+
+      if (lessonName) {
+        const trendUrl = `${API_BASE_URL}/reports/comparisons/subject-year-trend?examType=${examType}&lessonName=${encodeURIComponent(lessonName)}&gradeLevel=${gradeLevel}&years=3&endYear=${comparisonYear}`;
+        const trendResponse = await fetch(trendUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (trendResponse.ok) {
+          const trendData = await trendResponse.json();
+          setSubjectYearTrend(trendData);
+        } else {
+          setSubjectYearTrend(null);
+        }
+      } else {
+        setSubjectYearTrend(null);
+      }
+    } catch (error) {
+      console.error('Error fetching year comparison report:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerateReport = () => {
     if (reportType === 'exam') {
       fetchExamReports();
-    } else {
+      return;
+    }
+
+    if (reportType === 'subject') {
       fetchSubjectReport();
+      return;
+    }
+
+    if (reportType === 'year-comparison') {
+      fetchYearComparisonReport();
     }
   };
 
@@ -191,8 +298,11 @@ export default function ReportsPage() {
       if (reportType === 'exam') {
         const endpoint = viewMode === 'summary' ? 'summary' : 'detailed';
         url = `${API_BASE_URL}/reports/exams/${endpoint}/${format}?examType=${examType}${gradeLevel ? `&gradeLevel=${gradeLevel}` : ''}`;
-      } else {
+      } else if (reportType === 'subject') {
         url = `${API_BASE_URL}/reports/subject/${format}?examType=${examType}&lessonName=${lessonName}${gradeLevel ? `&gradeLevel=${gradeLevel}` : ''}`;
+      } else {
+        setExportLoading(false);
+        return;
       }
 
       const response = await fetch(url, {
@@ -372,6 +482,35 @@ export default function ReportsPage() {
     }));
   }, [subjectReport]);
 
+  const yearComparisonChartData = useMemo(() => {
+    if (!yearComparisonReport) return [];
+
+    return [
+      {
+        label: `${yearComparisonReport.previous.year}`,
+        averageNet: yearComparisonReport.previous.averageNet,
+        averageScore: yearComparisonReport.previous.averageScore,
+        participantCount: yearComparisonReport.previous.participantCount,
+      },
+      {
+        label: `${yearComparisonReport.current.year}`,
+        averageNet: yearComparisonReport.current.averageNet,
+        averageScore: yearComparisonReport.current.averageScore,
+        participantCount: yearComparisonReport.current.participantCount,
+      },
+    ];
+  }, [yearComparisonReport]);
+
+  const subjectTrendChartData = useMemo(() => {
+    if (!subjectYearTrend?.years) return [];
+    return subjectYearTrend.years.map((yearItem) => ({
+      year: String(yearItem.year),
+      averageNet: yearItem.averageNet,
+      examCount: yearItem.examCount,
+      participantCount: yearItem.participantCount,
+    }));
+  }, [subjectYearTrend]);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -390,13 +529,14 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Rapor Türü</label>
-              <Select value={reportType} onValueChange={(value: 'exam' | 'subject' | 'ranking-matrix') => setReportType(value)}>
+              <Select value={reportType} onValueChange={(value: 'exam' | 'subject' | 'ranking-matrix' | 'year-comparison') => setReportType(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="exam">Sınav Raporu</SelectItem>
                   <SelectItem value="subject">Ders Bazlı Rapor</SelectItem>
+                  <SelectItem value="year-comparison">Yil Karsilastirma</SelectItem>
                   <SelectItem value="ranking-matrix">Öğrenci Sıralama Matrisi</SelectItem>
                 </SelectContent>
               </Select>
@@ -452,7 +592,64 @@ export default function ReportsPage() {
                 <label className="text-sm font-medium">Ders</label>
                 <Select value={lessonName} onValueChange={setLessonName}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seçiniz" />
+                    <SelectValue placeholder="Seciniz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLessons.map((lesson: string) => (
+                      <SelectItem key={lesson} value={lesson}>
+                        {lesson}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {reportType === 'year-comparison' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Karsilastirma Ayi</label>
+                <Select value={comparisonMonth} onValueChange={setComparisonMonth}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {reportType === 'year-comparison' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Karsilastirma Yili</label>
+                <Select value={comparisonYear} onValueChange={setComparisonYear}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 6 }).map((_, index) => {
+                      const yearValue = String(new Date().getFullYear() - index);
+                      return (
+                        <SelectItem key={yearValue} value={yearValue}>
+                          {yearValue}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {reportType === 'year-comparison' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Ders (Opsiyonel)</label>
+                <Select value={lessonName} onValueChange={setLessonName}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tum Dersler" />
                   </SelectTrigger>
                   <SelectContent>
                     {availableLessons.map((lesson: string) => (
@@ -467,7 +664,14 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleGenerateReport} disabled={loading || (reportType === 'subject' && !lessonName)}>
+            <Button
+              onClick={handleGenerateReport}
+              disabled={
+                loading ||
+                (reportType === 'subject' && !lessonName) ||
+                (reportType === 'year-comparison' && !gradeLevel)
+              }
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Rapor Oluştur
             </Button>
@@ -1158,9 +1362,101 @@ export default function ReportsPage() {
         </div>
       )}
 
+      {reportType === 'year-comparison' && yearComparisonReport && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Guncel Yil Ortalama Net</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">{yearComparisonReport.current.averageNet.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">{yearComparisonReport.current.year}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Onceki Yil Ortalama Net</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-600">{yearComparisonReport.previous.averageNet.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">{yearComparisonReport.previous.year}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Net Farki</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${yearComparisonReport.deltas.averageNet >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {yearComparisonReport.deltas.averageNet >= 0 ? '+' : ''}{yearComparisonReport.deltas.averageNet.toFixed(2)}
+                </div>
+                <p className="text-xs text-muted-foreground">Guncel - Onceki</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Katilim Farki</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${yearComparisonReport.deltas.participantCount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {yearComparisonReport.deltas.participantCount >= 0 ? '+' : ''}{yearComparisonReport.deltas.participantCount}
+                </div>
+                <p className="text-xs text-muted-foreground">Toplam ogrenci katilimi</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Yillar Arasi Karsilastirma</CardTitle>
+              <CardDescription>
+                {examType} - {gradeLevel ? `${gradeLevel}. Sinif` : 'Tum Siniflar'} - {monthOptions.find((m) => m.value === comparisonMonth)?.label || 'Secili Ay'}
+                {lessonName ? ` - ${lessonName}` : ''}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={yearComparisonChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="averageNet" fill="#3b82f6" name="Ortalama Net" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="averageScore" fill="#10b981" name="Ortalama Puan" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {subjectTrendChartData.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Son 3 Yil Ders Trendi</CardTitle>
+                <CardDescription>{lessonName} dersi ortalama net gelisimi</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={subjectTrendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="averageNet" stroke="#2563eb" strokeWidth={3} name="Ortalama Net" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {reportType === 'ranking-matrix' && (
         <RankingMatrixReport classId="" />
       )}
     </div>
   );
 }
+

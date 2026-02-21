@@ -10,7 +10,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SubjectsService } from './subjects.service';
-import { CreateSubjectDto, UpdateSubjectDto } from './dto';
+import {
+  CreateSubjectDto,
+  UpdateSubjectDto,
+  SeedSubjectPresetDto,
+} from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -63,7 +67,12 @@ export class SubjectsController {
     @Body('parentTopicId') parentTopicId?: string,
     @Body('order') order?: number,
   ) {
-    return this.subjectsService.createTopic(subjectId, name, parentTopicId, order);
+    return this.subjectsService.createTopic(
+      subjectId,
+      name,
+      parentTopicId,
+      order,
+    );
   }
 
   @Get('topics/all')
@@ -95,5 +104,11 @@ export class SubjectsController {
   @Roles('SUPER_ADMIN', 'SCHOOL_ADMIN')
   removeTopic(@Param('topicId') topicId: string) {
     return this.subjectsService.removeTopic(topicId);
+  }
+
+  @Post('seed-preset')
+  @Roles('SUPER_ADMIN', 'SCHOOL_ADMIN')
+  seedPreset(@Body() dto: SeedSubjectPresetDto) {
+    return this.subjectsService.seedPreset(dto.preset);
   }
 }

@@ -13,17 +13,18 @@ export class AchievementsService {
   constructor(private prisma: PrismaService) {}
 
   // Get all achievements for a school
-  async findAll(schoolId: string, includeInactive = false, examType?: ExamType) {
+  async findAll(
+    schoolId: string,
+    includeInactive = false,
+    examType?: ExamType,
+  ) {
     const achievements = await this.prisma.achievement.findMany({
       where: {
         schoolId,
         ...(includeInactive ? {} : { isActive: true }),
         ...(examType ? { examType } : {}),
       },
-      orderBy: [
-        { category: 'asc' },
-        { points: 'desc' },
-      ],
+      orderBy: [{ category: 'asc' }, { points: 'desc' }],
     });
 
     if (achievements.length === 0) {
@@ -34,7 +35,9 @@ export class AchievementsService {
       by: ['achievementId'],
       where: {
         unlockedAt: { not: null },
-        achievementId: { in: achievements.map((achievement) => achievement.id) },
+        achievementId: {
+          in: achievements.map((achievement) => achievement.id),
+        },
       },
       _count: {
         _all: true,
@@ -55,7 +58,7 @@ export class AchievementsService {
   async findStudentAchievements(studentId: string) {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
-      select: { 
+      select: {
         schoolId: true,
         class: {
           select: {
@@ -72,8 +75,8 @@ export class AchievementsService {
     if (!student) throw new NotFoundException('Student not found');
 
     // Determine allowed exam types based on student's grade level
-    let allowedExamTypes: (ExamType | null)[] = [null]; // null represents GENEL (general achievements)
-    
+    const allowedExamTypes: (ExamType | null)[] = [null]; // null represents GENEL (general achievements)
+
     // Extract grade level from grade name (e.g., "5. Sınıf" -> 5, "12. Sınıf" -> 12)
     const gradeName = student.class?.grade?.name;
     let gradeLevel: number | null = null;
@@ -83,7 +86,7 @@ export class AchievementsService {
         gradeLevel = parseInt(match[1], 10);
       }
     }
-    
+
     if (gradeLevel) {
       if (gradeLevel >= 5 && gradeLevel <= 8) {
         // LGS students: only GENEL and LGS
@@ -104,7 +107,7 @@ export class AchievementsService {
           studentId,
           unlockedAt: { not: null },
           achievement: {
-            OR: allowedExamTypes.map(type => ({ examType: type })),
+            OR: allowedExamTypes.map((type) => ({ examType: type })),
           },
         },
         include: {
@@ -117,7 +120,7 @@ export class AchievementsService {
         where: {
           schoolId: student.schoolId,
           isActive: true,
-          OR: allowedExamTypes.map(type => ({ examType: type })),
+          OR: allowedExamTypes.map((type) => ({ examType: type })),
           NOT: {
             studentAchievements: {
               some: {
@@ -127,10 +130,7 @@ export class AchievementsService {
             },
           },
         },
-        orderBy: [
-          { category: 'asc' },
-          { points: 'desc' },
-        ],
+        orderBy: [{ category: 'asc' }, { points: 'desc' }],
       }),
     ]);
 
@@ -195,18 +195,22 @@ export class AchievementsService {
   }
 
   // Update achievement
-  async update(id: string, schoolId: string, data: Partial<{
-    name: string;
-    description: string;
-    category: AchievementCategory;
-    type: string;
-    requirement: any;
-    iconName: string;
-    colorScheme: string;
-    points: number;
-    isActive: boolean;
-    examType: ExamType;
-  }>) {
+  async update(
+    id: string,
+    schoolId: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      category: AchievementCategory;
+      type: string;
+      requirement: any;
+      iconName: string;
+      colorScheme: string;
+      points: number;
+      isActive: boolean;
+      examType: ExamType;
+    }>,
+  ) {
     const achievement = await this.prisma.achievement.findFirst({
       where: { id, schoolId },
     });
@@ -315,7 +319,10 @@ export class AchievementsService {
     };
   }
 
-  async deleteAchievementBundle(schoolId: string, bundle: AchievementSeedBundle) {
+  async deleteAchievementBundle(
+    schoolId: string,
+    bundle: AchievementSeedBundle,
+  ) {
     if (bundle === 'CONSISTENCY') {
       const consistencyTypes = getBundleAchievements('CONSISTENCY').map(
         (achievement) => achievement.type,
@@ -457,27 +464,45 @@ export class AchievementsService {
     if (attempt.scores[0]?.rankSchool) {
       const schoolRank = attempt.scores[0].rankSchool;
       if (schoolRank === 1) {
-        const unlocked = await this.checkAndUnlock(studentId, `RANK_SCHOOL_1_${examType}`);
+        const unlocked = await this.checkAndUnlock(
+          studentId,
+          `RANK_SCHOOL_1_${examType}`,
+        );
         if (unlocked) unlockedAchievements.push(unlocked);
       } else if (schoolRank <= 3) {
-        const unlocked = await this.checkAndUnlock(studentId, `RANK_SCHOOL_3_${examType}`);
+        const unlocked = await this.checkAndUnlock(
+          studentId,
+          `RANK_SCHOOL_3_${examType}`,
+        );
         if (unlocked) unlockedAchievements.push(unlocked);
       } else if (schoolRank <= 5) {
-        const unlocked = await this.checkAndUnlock(studentId, `RANK_SCHOOL_5_${examType}`);
+        const unlocked = await this.checkAndUnlock(
+          studentId,
+          `RANK_SCHOOL_5_${examType}`,
+        );
         if (unlocked) unlockedAchievements.push(unlocked);
       } else if (schoolRank <= 10) {
-        const unlocked = await this.checkAndUnlock(studentId, `RANK_SCHOOL_10_${examType}`);
+        const unlocked = await this.checkAndUnlock(
+          studentId,
+          `RANK_SCHOOL_10_${examType}`,
+        );
         if (unlocked) unlockedAchievements.push(unlocked);
       }
     }
 
     // 3. Check District/City/National Rankings (if available)
     if (attempt.scores[0]?.rankDistrict === 1) {
-      const unlocked = await this.checkAndUnlock(studentId, `RANK_DISTRICT_1_${examType}`);
+      const unlocked = await this.checkAndUnlock(
+        studentId,
+        `RANK_DISTRICT_1_${examType}`,
+      );
       if (unlocked) unlockedAchievements.push(unlocked);
     }
     if (attempt.scores[0]?.rankCity === 1) {
-      const unlocked = await this.checkAndUnlock(studentId, `RANK_CITY_1_${examType}`);
+      const unlocked = await this.checkAndUnlock(
+        studentId,
+        `RANK_CITY_1_${examType}`,
+      );
       if (unlocked) unlockedAchievements.push(unlocked);
     }
 
@@ -504,15 +529,24 @@ export class AchievementsService {
       }
 
       // Check perfect/near-perfect scores
-      const totalNet = attempt.lessonResults.reduce((sum, lr) => sum + lr.net, 0);
+      const totalNet = attempt.lessonResults.reduce(
+        (sum, lr) => sum + lr.net,
+        0,
+      );
       if (totalNet >= 90) {
         const unlocked = await this.checkAndUnlock(studentId, 'PERFECT_LGS');
         if (unlocked) unlockedAchievements.push(unlocked);
       } else if (totalNet >= 89) {
-        const unlocked = await this.checkAndUnlock(studentId, 'NEAR_PERFECT_1_LGS');
+        const unlocked = await this.checkAndUnlock(
+          studentId,
+          'NEAR_PERFECT_1_LGS',
+        );
         if (unlocked) unlockedAchievements.push(unlocked);
       } else if (totalNet >= 88) {
-        const unlocked = await this.checkAndUnlock(studentId, 'NEAR_PERFECT_2_LGS');
+        const unlocked = await this.checkAndUnlock(
+          studentId,
+          'NEAR_PERFECT_2_LGS',
+        );
         if (unlocked) unlockedAchievements.push(unlocked);
       }
     }
@@ -521,7 +555,7 @@ export class AchievementsService {
     for (const lessonResult of attempt.lessonResults) {
       const lessonName = lessonResult.lesson.name;
       const maxQuestions = this.getMaxQuestionsForLesson(lessonName, examType);
-      
+
       if (maxQuestions && lessonResult.correct === maxQuestions) {
         const achievementType = `SUBJECT_${lessonName.toUpperCase().replace(/\s+/g, '_')}_${examType}`;
         const unlocked = await this.checkAndUnlock(studentId, achievementType);
@@ -532,13 +566,22 @@ export class AchievementsService {
     // 6. Check Exam Count Milestones
     const totalExamCount = attempt.student.examAttempts.length;
     if (totalExamCount >= 50) {
-      const unlocked = await this.checkAndUnlock(studentId, 'CONSISTENCY_50_EXAMS');
+      const unlocked = await this.checkAndUnlock(
+        studentId,
+        'CONSISTENCY_50_EXAMS',
+      );
       if (unlocked) unlockedAchievements.push(unlocked);
     } else if (totalExamCount >= 25) {
-      const unlocked = await this.checkAndUnlock(studentId, 'CONSISTENCY_25_EXAMS');
+      const unlocked = await this.checkAndUnlock(
+        studentId,
+        'CONSISTENCY_25_EXAMS',
+      );
       if (unlocked) unlockedAchievements.push(unlocked);
     } else if (totalExamCount >= 10) {
-      const unlocked = await this.checkAndUnlock(studentId, 'CONSISTENCY_10_EXAMS');
+      const unlocked = await this.checkAndUnlock(
+        studentId,
+        'CONSISTENCY_10_EXAMS',
+      );
       if (unlocked) unlockedAchievements.push(unlocked);
     }
 
@@ -546,21 +589,24 @@ export class AchievementsService {
   }
 
   // Helper: Get max questions for a lesson
-  private getMaxQuestionsForLesson(lessonName: string, examType: ExamType): number | null {
+  private getMaxQuestionsForLesson(
+    lessonName: string,
+    examType: ExamType,
+  ): number | null {
     const lessonQuestions: Record<string, Record<string, number>> = {
       LGS: {
-        'Matematik': 20,
-        'Türkçe': 20,
+        Matematik: 20,
+        Türkçe: 20,
         'Fen Bilimleri': 20,
         'T.C. İnkılap Tarihi': 10,
         'Din Kültürü': 10,
-        'İngilizce': 10,
+        İngilizce: 10,
       },
       TYT: {
-        'Matematik': 40,
-        'Türkçe': 40,
-        'Fen': 20,
-        'Sosyal': 20,
+        Matematik: 40,
+        Türkçe: 40,
+        Fen: 20,
+        Sosyal: 20,
       },
     };
 
@@ -631,7 +677,7 @@ export class AchievementsService {
       },
       {
         name: 'Okulda İlk 3',
-        description: 'Okulunda ilk 3\'e girdin',
+        description: "Okulunda ilk 3'e girdin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'RANK_SCHOOL_3',
         requirement: { rank: 3, scope: 'SCHOOL' },
@@ -643,7 +689,7 @@ export class AchievementsService {
       },
       {
         name: 'Okulda İlk 5',
-        description: 'Okulunda ilk 5\'e girdin',
+        description: "Okulunda ilk 5'e girdin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'RANK_SCHOOL_5',
         requirement: { rank: 5, scope: 'SCHOOL' },
@@ -655,7 +701,7 @@ export class AchievementsService {
       },
       {
         name: 'Okulda İlk 10',
-        description: 'Okulunda ilk 10\'a girdin',
+        description: "Okulunda ilk 10'a girdin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'RANK_SCHOOL_10',
         requirement: { rank: 10, scope: 'SCHOOL' },
@@ -679,7 +725,7 @@ export class AchievementsService {
       },
       {
         name: 'İlçede İlk 10',
-        description: 'İlçende ilk 10\'a girdin',
+        description: "İlçende ilk 10'a girdin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'RANK_DISTRICT_10',
         requirement: { rank: 10, scope: 'DISTRICT' },
@@ -693,7 +739,7 @@ export class AchievementsService {
       // Score Milestones - LGS
       {
         name: '400+ Puan',
-        description: 'LGS\'de 400 puanı geçtin',
+        description: "LGS'de 400 puanı geçtin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'SCORE_400',
         requirement: { score: 400 },
@@ -705,7 +751,7 @@ export class AchievementsService {
       },
       {
         name: '450+ Puan',
-        description: 'LGS\'de 450 puanı geçtin',
+        description: "LGS'de 450 puanı geçtin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'SCORE_450',
         requirement: { score: 450 },
@@ -717,7 +763,7 @@ export class AchievementsService {
       },
       {
         name: '480+ Puan',
-        description: 'LGS\'de 480 puanı geçtin',
+        description: "LGS'de 480 puanı geçtin",
         category: 'MILESTONE' as AchievementCategory,
         type: 'SCORE_480',
         requirement: { score: 480 },
@@ -795,7 +841,7 @@ export class AchievementsService {
       // TYT Achievements
       {
         name: 'TYT 120 Tam Puan',
-        description: 'TYT\'de 120 sorunun hepsini doğru yaptın',
+        description: "TYT'de 120 sorunun hepsini doğru yaptın",
         category: 'MILESTONE' as AchievementCategory,
         type: 'PERFECT_TYT_120',
         requirement: { correct: 120, total: 120 },
@@ -807,7 +853,7 @@ export class AchievementsService {
       },
       {
         name: 'TYT Matematik Ustası',
-        description: 'TYT Matematik\'te 40 sorunun hepsini doğru yaptın',
+        description: "TYT Matematik'te 40 sorunun hepsini doğru yaptın",
         category: 'MILESTONE' as AchievementCategory,
         type: 'FULL_MATH_TYT',
         requirement: { subject: 'Matematik', correct: 40 },
@@ -821,7 +867,7 @@ export class AchievementsService {
       // AYT Sayısal (MF)
       {
         name: 'AYT Matematik Ustası (MF)',
-        description: 'AYT Matematik\'te 40 sorunun hepsini doğru yaptın',
+        description: "AYT Matematik'te 40 sorunun hepsini doğru yaptın",
         category: 'MILESTONE' as AchievementCategory,
         type: 'FULL_MATH_AYT_MF',
         requirement: { subject: 'Matematik', correct: 40, field: 'MF' },
@@ -833,10 +879,14 @@ export class AchievementsService {
       },
       {
         name: 'AYT Fen Ustası (MF)',
-        description: 'AYT Fen Bilimleri\'nde 40 sorunun hepsini doğru yaptın',
+        description: "AYT Fen Bilimleri'nde 40 sorunun hepsini doğru yaptın",
         category: 'MILESTONE' as AchievementCategory,
         type: 'FULL_SCIENCE_AYT_MF',
-        requirement: { subjects: ['Fizik', 'Kimya', 'Biyoloji'], correct: 40, field: 'MF' },
+        requirement: {
+          subjects: ['Fizik', 'Kimya', 'Biyoloji'],
+          correct: 40,
+          field: 'MF',
+        },
         iconName: 'award',
         colorScheme: 'purple',
         points: 100,
@@ -845,7 +895,7 @@ export class AchievementsService {
       },
       {
         name: 'Sayısal Şampiyonu (MF)',
-        description: 'AYT Sayısal\'da 80 sorunun hepsini doğru yaptın',
+        description: "AYT Sayısal'da 80 sorunun hepsini doğru yaptın",
         category: 'MILESTONE' as AchievementCategory,
         type: 'PERFECT_AYT_MF_80',
         requirement: { correct: 80, total: 80, field: 'MF' },
@@ -859,7 +909,7 @@ export class AchievementsService {
       // AYT Sözel (TS)
       {
         name: 'Edebiyat Ustası (TS)',
-        description: 'AYT Edebiyat\'ta 24 sorunun hepsini doğru yaptın',
+        description: "AYT Edebiyat'ta 24 sorunun hepsini doğru yaptın",
         category: 'MILESTONE' as AchievementCategory,
         type: 'FULL_LIT_AYT_TS',
         requirement: { subject: 'Edebiyat', correct: 24, field: 'TS' },
@@ -885,7 +935,8 @@ export class AchievementsService {
       // AYT Eşit Ağırlık (TM)
       {
         name: 'Eşit Ağırlık Ustası (TM)',
-        description: 'AYT Eşit Ağırlık testlerinde 96 sorunun hepsini doğru yaptın',
+        description:
+          'AYT Eşit Ağırlık testlerinde 96 sorunun hepsini doğru yaptın',
         category: 'MILESTONE' as AchievementCategory,
         type: 'PERFECT_AYT_TM_96',
         requirement: { correct: 96, total: 96, field: 'TM' },

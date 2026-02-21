@@ -784,7 +784,11 @@ const aytAchievements: AchievementSeedDefinition[] = [
     description: 'AYT Fende 40ta 40',
     category: AchievementCategory.MILESTONE,
     type: 'FULL_SCIENCE_AYT_MF',
-    requirement: { field: 'MF', subjects: ['Fizik', 'Kimya', 'Biyoloji'], correct: 40 },
+    requirement: {
+      field: 'MF',
+      subjects: ['Fizik', 'Kimya', 'Biyoloji'],
+      correct: 40,
+    },
     iconName: 'award',
     colorScheme: 'purple',
     points: 180,

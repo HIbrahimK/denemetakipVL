@@ -1,61 +1,68 @@
-import { IsNotEmpty, IsString, IsArray, IsOptional, IsNumber, IsInt } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  IsOptional,
+  IsNumber,
+  IsInt,
+} from 'class-validator';
 
 export class CreateClassDto {
-    // Yeni format: gradeLevel ve section
-    @IsOptional()
-    @IsInt()
-    gradeLevel?: number;
+  // Yeni format: gradeLevel ve section
+  @IsOptional()
+  @IsInt()
+  gradeLevel?: number;
 
-    @IsOptional()
-    @IsString()
-    section?: string;
+  @IsOptional()
+  @IsString()
+  section?: string;
 
-    // Eski format: name ve gradeId (geriye dönük uyumluluk için)
-    @IsOptional()
-    @IsString()
-    name?: string;
+  // Eski format: name ve gradeId (geriye dönük uyumluluk için)
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsString()
-    gradeId?: string;
+  @IsOptional()
+  @IsString()
+  gradeId?: string;
 }
 
 export class UpdateClassDto {
-    // Yeni format: gradeLevel ve section
-    @IsOptional()
-    @IsInt()
-    gradeLevel?: number;
+  // Yeni format: gradeLevel ve section
+  @IsOptional()
+  @IsInt()
+  gradeLevel?: number;
 
-    @IsOptional()
-    @IsString()
-    section?: string;
+  @IsOptional()
+  @IsString()
+  section?: string;
 
-    // Eski format: name ve gradeId (geriye dönük uyumluluk için)
-    @IsOptional()
-    @IsString()
-    name?: string;
+  // Eski format: name ve gradeId (geriye dönük uyumluluk için)
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsString()
-    gradeId?: string;
+  @IsOptional()
+  @IsString()
+  gradeId?: string;
 }
 
 export class MergeClassesDto {
-    @IsNotEmpty()
-    @IsString()
-    sourceClassId: string;
+  @IsNotEmpty()
+  @IsString()
+  sourceClassId: string;
 
-    @IsNotEmpty()
-    @IsString()
-    targetClassId: string;
+  @IsNotEmpty()
+  @IsString()
+  targetClassId: string;
 }
 
 export class TransferStudentsDto {
-    @IsNotEmpty()
-    @IsString()
-    targetClassId: string;
+  @IsNotEmpty()
+  @IsString()
+  targetClassId: string;
 
-    @IsOptional()
-    @IsArray()
-    studentIds?: string[]; // Boşsa tüm öğrenciler aktarılır
+  @IsOptional()
+  @IsArray()
+  studentIds?: string[]; // Boşsa tüm öğrenciler aktarılır
 }
