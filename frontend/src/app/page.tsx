@@ -4,9 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * Root page — middleware handles the redirect,
- * this is a client-side fallback that shows a loading spinner
- * while redirecting to landing page or dashboard.
+ * Root page — middleware handles the redirect.
+ * Client-side fallback: auth → dashboard, no auth → school login.
+ * Landing page is a separate app (2eh.net / localhost:3002).
  */
 export default function Home() {
   const router = useRouter();
@@ -32,14 +32,12 @@ export default function Home() {
         }
         return;
       } catch {
-        // Invalid token, redirect to landing
+        // Invalid token
       }
     }
 
-    // No valid token → redirect to landing page
-    const landingUrl =
-      process.env.NEXT_PUBLIC_LANDING_URL || "http://localhost:3002";
-    window.location.href = landingUrl;
+    // No valid token → school login page
+    router.replace("/login/school");
   }, [router]);
 
   return (

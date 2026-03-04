@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Save, Trash2, Users, BookOpen, Calendar } from "lucide-react";
 
-export default function EditSchoolPage({ params }: { params: { id: string } }) {
+export default function EditSchoolPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: schoolId } = use(params);
   const router = useRouter();
-  const schoolId = params.id;
 
   const [formData, setFormData] = useState({
     schoolName: "Ankara Atatürk Lisesi",

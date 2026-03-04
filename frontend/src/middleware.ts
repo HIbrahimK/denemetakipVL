@@ -49,7 +49,8 @@ export function middleware(request: NextRequest) {
   }
 
   // ──────────────────────────────────────────────
-  // Root page "/" → Landing page or Dashboard
+  // Root page "/" → Login or Dashboard
+  // In production: 2eh.net → landing page (Nginx), *.2eh.net → this frontend
   // ──────────────────────────────────────────────
   if (pathname === '/') {
     if (user) {
@@ -63,9 +64,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
-    // Unauthenticated → redirect to landing page
-    const landingUrl = process.env.LANDING_URL || 'http://localhost:3002';
-    return NextResponse.redirect(landingUrl);
+    // Unauthenticated → redirect to school login page
+    return NextResponse.redirect(new URL('/login/school', request.url));
   }
 
   // ──────────────────────────────────────────────
