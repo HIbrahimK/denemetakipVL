@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Building2 } from "lucide-react";
 
@@ -95,7 +97,8 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
@@ -245,6 +248,7 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }

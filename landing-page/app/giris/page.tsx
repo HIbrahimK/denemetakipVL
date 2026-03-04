@@ -1,25 +1,65 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, Lock, Mail, Loader2, AlertCircle } from "lucide-react";
+import { API_URL } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const redirectPath = searchParams.get("redirect") || "/super-admin";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Authentication logic here
-    router.push("/super-admin");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_URL}/auth/login-school`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          rememberMe: formData.rememberMe,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.message || "Giriş başarısız");
+      }
+
+      const data = await res.json();
+
+      // Only SUPER_ADMIN can access this panel
+      if (data.user?.role !== "SUPER_ADMIN") {
+        setError("Bu panele sadece Süper Admin erişebilir");
+        setLoading(false);
+        return;
+      }
+
+      router.push(redirectPath);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,6 +85,12 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email Adresi</label>
                 <div className="relative">
@@ -110,8 +156,15 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full">
-                Giriş Yap
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Giriş yapılıyor...
+                  </>
+                ) : (
+                  "Giriş Yap"
+                )}
               </Button>
             </form>
 
@@ -127,7 +180,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          © 2024 Deneme Takip. Tüm hakları saklıdır.
+          © {new Date().getFullYear()} Deneme Takip. Tüm hakları saklıdır.
         </p>
       </div>
     </div>

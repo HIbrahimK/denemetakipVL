@@ -27,6 +27,12 @@
     "seed": "ts-node prisma/seed.ts",
     "seed:all": "powershell -ExecutionPolicy Bypass -File seed-all.ps1",
     "seed:all:linux": "bash seed-all.sh",
+    "seed:super-admin": "npx ts-node prisma/seed-super-admin.ts",
+    "seed:license-plans": "npx ts-node prisma/seed-license-plans.ts",
+    "seed:demo-school": "npx ts-node prisma/seed-demo-school.ts",
+    "seed:scal-school": "npx ts-node prisma/seed-scal-school.ts",
+    "seed:blog": "npx ts-node prisma/seed-blog-posts.ts",
+    "seed:schools": "npm run seed:license-plans && npm run seed:demo-school && npm run seed:scal-school",
     "seed:subjects": "npx ts-node prisma/seed-tyt-matematik.ts && npx ts-node prisma/seed-tyt-fizik.ts && npx ts-node prisma/seed-tyt-kimya.ts && npx ts-node prisma/seed-tyt-biyoloji.ts && npx ts-node prisma/seed-tyt-tarih.ts && npx ts-node prisma/seed-tyt-cografya.ts && npx ts-node prisma/seed-tyt-felsefe.ts && npx ts-node prisma/seed-tyt-din.ts && npx ts-node prisma/seed-tyt-turkce.ts && npx ts-node prisma/seed-tyt-geometri.ts && npx ts-node prisma/seed-ayt-matematik.ts && npx ts-node prisma/seed-ayt-fizik.ts && npx ts-node prisma/seed-ayt-kimya.ts && npx ts-node prisma/seed-ayt-biyoloji.ts && npx ts-node prisma/seed-ayt-edebiyat.ts && npx ts-node prisma/seed-ayt-tarih1.ts && npx ts-node prisma/seed-ayt-cografya1.ts && npx ts-node prisma/seed-ayt-felsefe.ts && npx ts-node prisma/seed-ayt-din.ts && npx ts-node prisma/seed-ayt-geometri.ts && npx ts-node prisma/seed-lgs-matematik.ts && npx ts-node prisma/seed-lgs-fen.ts && npx ts-node prisma/seed-lgs-turkce.ts && npx ts-node prisma/seed-lgs-inkilap.ts && npx ts-node prisma/seed-lgs-din.ts && npx ts-node prisma/seed-lgs-ingilizce.ts && npx ts-node prisma/seed-ydt-ingilizce.ts && npx ts-node prisma/seed-common-activities.ts && npx ts-node prisma/seed-special-subjects.ts && npx ts-node prisma/seed-lms.ts"
   },
   "dependencies": {

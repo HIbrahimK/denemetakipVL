@@ -1,32 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import { ArrowLeft, Save, Eye, Upload, X, Loader2, ImageIcon } from "lucide-react";
+import { adminApi } from "@/lib/api";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function NewBlogPostPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
     content: "",
     category: "Genel",
-    status: "draft",
     tags: "",
-    featuredImage: null as File | null,
+    featuredImage: "",
   });
 
-  const handleSave = () => {
-    // API call to save blog post
-    router.push("/super-admin/blog");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageSelect = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Sadece resim dosyaları yüklenebilir");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Dosya boyutu 5MB'dan küçük olmalıdır");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError(null);
   };
 
-  const handlePublish = () => {
-    // API call to publish blog post
-    router.push("/super-admin/blog");
+  const handleImageUpload = async (): Promise<string | null> => {
+    if (!imageFile) return formData.featuredImage || null;
+    try {
+      setUploading(true);
+      const result = await adminApi.uploadBlogImage(imageFile);
+      return result.url;
+    } catch (err: any) {
+      setError("Görsel yüklenirken hata: " + (err.message || ""));
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (status: "DRAFT" | "PUBLISHED") => {
+    if (!formData.title.trim()) {
+      setError("Başlık zorunludur");
+      return;
+    }
+    if (formData.content.trim().length < 10) {
+      setError("İçerik en az 10 karakter olmalıdır");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Upload image if selected
+      const featuredImage = await handleImageUpload();
+
+      const tags = formData.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      await adminApi.createBlogPost({
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt || undefined,
+        category: formData.category,
+        tags,
+        status,
+        featuredImage: featuredImage || undefined,
+        author: "Super Admin",
+      });
+
+      router.push("/super-admin/blog");
+    } catch (err: any) {
+      setError(err.message || "Blog yazısı kaydedilirken hata oluştu");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -46,16 +115,32 @@ export default function NewBlogPostPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            onClick={() => handleSubmit("DRAFT")}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Taslak Kaydet
           </Button>
-          <Button onClick={handlePublish}>
-            <Eye className="h-4 w-4 mr-2" />
+          <Button
+            onClick={() => handleSubmit("PUBLISHED")}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
             Yayınla
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <Button variant="ghost" size="sm" onClick={() => setError(null)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-6">
@@ -88,7 +173,7 @@ export default function NewBlogPostPage() {
               <div>
                 <label className="text-sm font-medium">İçerik *</label>
                 <textarea
-                  className="w-full px-3 py-2 border rounded-md h-96 resize-none"
+                  className="w-full px-3 py-2 border rounded-md h-96 resize-none font-mono text-sm"
                   placeholder="Blog yazısı içeriğini buraya yazın... (Markdown desteklenir)"
                   value={formData.content}
                   onChange={(e) =>
@@ -124,19 +209,6 @@ export default function NewBlogPostPage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Durum</label>
-                <select
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                >
-                  <option value="draft">Taslak</option>
-                  <option value="published">Yayınlanmış</option>
-                </select>
-              </div>
-              <div>
                 <label className="text-sm font-medium">Etiketler</label>
                 <Input
                   placeholder="Etiketleri virgülle ayırın"
@@ -154,11 +226,58 @@ export default function NewBlogPostPage() {
               <CardTitle>Kapak Görseli</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                <p className="text-muted-foreground text-sm">
-                  Görsel yüklemek için tıklayın veya sürükleyin
-                </p>
-              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageSelect(file);
+                }}
+              />
+
+              {imagePreview ? (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Kapak görseli"
+                    className="w-full h-40 object-cover rounded-lg"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleImageSelect(file);
+                  }}
+                >
+                  <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground text-sm">
+                    Görsel yüklemek için tıklayın veya sürükleyin
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Max 5MB - JPG, PNG, GIF, WebP
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

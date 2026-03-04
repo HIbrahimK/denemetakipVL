@@ -1,67 +1,154 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Eye, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Trash2, X, Loader2, ImageIcon } from "lucide-react";
+import { adminApi } from "@/lib/api";
 
-export default function EditBlogPostPage({ params }: { params: { id: string } }) {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+export default function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: postId } = use(params);
   const router = useRouter();
-  const postId = params.id;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    title: "YKS Sınavına Hazırlık: 3 Aylık Çalışma Planı",
-    excerpt:
-      "YKS sınavına son 3 ay kala etkili bir çalışma planı nasıl oluşturulur? Bu yazıda adım adım bir rehber sunuyoruz...",
-    content: `
-# YKS Sınavına Hazırlık: 3 Aylık Çalışma Planı
-
-YKS sınavına hazırlık süreci uzun ve zorlu bir yolculuktur. Son 3 ay ise bu yolculuğun en kritik dönemidir. İşte size etkili bir çalışma planı:
-
-## 1. Günlük Program Oluşturun
-
-Her gün için belirli saatlerde belirli konulara çalışın. TYT ve AYT dengesini iyi kurun.
-
-## 2. Deneme Sınavlarına Önem Verin
-
-Haftada en az 2-3 deneme çözün ve sonuçlarınızı analiz edin.
-
-## 3. Zayıf Konulara Odaklanın
-
-Güçlü olduğunuz konuları tekrar etmek yerine, zayıf olduğunuz alanlara odaklanın.
-
-## 4. Dinlenmeyi Unutmayın
-
-Kaliteli dinlenme, kaliteli çalışma demektir. Günde 7-8 saat uyku şart!
-
-Başarılar dileriz!
-    `.trim(),
-    category: "TYT-AYT",
-    status: "published",
-    tags: "YKS, TYT, AYT, Çalışma Planı, Sınav Hazırlık",
-    publishDate: "2024-01-15",
-    views: 1250,
+    title: "",
+    excerpt: "",
+    content: "",
+    category: "Genel",
+    status: "DRAFT",
+    tags: "",
+    featuredImage: "",
+    views: 0,
+    publishedAt: "",
   });
 
-  const handleSave = () => {
-    // API call to save blog post
-    router.push("/super-admin/blog");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        setLoading(true);
+        const post = await adminApi.getBlogPost(postId);
+        setFormData({
+          title: post.title || "",
+          excerpt: post.excerpt || "",
+          content: post.content || "",
+          category: post.category || "Genel",
+          status: post.status || "DRAFT",
+          tags: (post.tags || []).join(", "),
+          featuredImage: post.featuredImage || "",
+          views: post.views || 0,
+          publishedAt: post.publishedAt
+            ? new Date(post.publishedAt).toLocaleDateString("tr-TR")
+            : "",
+        });
+        if (post.featuredImage) {
+          setImagePreview(
+            post.featuredImage.startsWith("http")
+              ? post.featuredImage
+              : `${API_URL}${post.featuredImage}`
+          );
+        }
+      } catch (err: any) {
+        setError(err.message || "Blog yazısı yüklenirken hata oluştu");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
+  }, [postId]);
+
+  const handleImageSelect = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Sadece resim dosyaları yüklenebilir");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Dosya boyutu 5MB'dan küçük olmalıdır");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setError(null);
   };
 
-  const handlePublish = () => {
-    // API call to publish blog post
-    router.push("/super-admin/blog");
-  };
-
-  const handleDelete = () => {
-    if (confirm("Bu blog yazısını silmek istediğinize emin misiniz?")) {
-      // API call to delete blog post
-      router.push("/super-admin/blog");
+  const handleImageUpload = async (): Promise<string | undefined> => {
+    if (!imageFile) return formData.featuredImage || undefined;
+    try {
+      const result = await adminApi.uploadBlogImage(imageFile);
+      return result.url;
+    } catch (err: any) {
+      setError("Görsel yüklenirken hata: " + (err.message || ""));
+      return undefined;
     }
   };
+
+  const handleSubmit = async (status?: "DRAFT" | "PUBLISHED") => {
+    if (!formData.title.trim()) {
+      setError("Başlık zorunludur");
+      return;
+    }
+    if (formData.content.trim().length < 10) {
+      setError("İçerik en az 10 karakter olmalıdır");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const featuredImage = await handleImageUpload();
+      const tags = formData.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      await adminApi.updateBlogPost(postId, {
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt || undefined,
+        category: formData.category,
+        tags,
+        ...(status ? { status } : {}),
+        featuredImage: featuredImage || undefined,
+      });
+
+      router.push("/super-admin/blog");
+    } catch (err: any) {
+      setError(err.message || "Blog yazısı kaydedilirken hata oluştu");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Bu blog yazısını silmek istediğinize emin misiniz?")) return;
+    try {
+      await adminApi.deleteBlogPost(postId);
+      router.push("/super-admin/blog");
+    } catch (err: any) {
+      setError(err.message || "Silme işlemi başarısız");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -77,9 +164,8 @@ Başarılar dileriz!
           <div>
             <h1 className="text-2xl font-bold">Blog Yazısını Düzenle</h1>
             <div className="flex items-center gap-2">
-              <p className="text-muted-foreground">ID: {postId}</p>
-              <Badge variant={formData.status === "published" ? "default" : "secondary"}>
-                {formData.status === "published" ? "Yayında" : "Taslak"}
+              <Badge variant={formData.status === "PUBLISHED" ? "default" : "secondary"}>
+                {formData.status === "PUBLISHED" ? "Yayında" : "Taslak"}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {formData.views.toLocaleString("tr-TR")} görüntülenme
@@ -88,20 +174,36 @@ Başarılar dileriz!
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={handleDelete} disabled={saving}>
             <Trash2 className="h-4 w-4 mr-2" />
             Sil
           </Button>
-          <Button variant="outline" onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            onClick={() => handleSubmit()}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Kaydet
           </Button>
-          <Button onClick={handlePublish}>
-            <Eye className="h-4 w-4 mr-2" />
+          <Button
+            onClick={() => handleSubmit("PUBLISHED")}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Eye className="h-4 w-4 mr-2" />}
             Yayınla
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg flex items-center justify-between">
+          <span>{error}</span>
+          <Button variant="ghost" size="sm" onClick={() => setError(null)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-6">
@@ -178,8 +280,9 @@ Başarılar dileriz!
                     setFormData({ ...formData, status: e.target.value })
                   }
                 >
-                  <option value="draft">Taslak</option>
-                  <option value="published">Yayınlanmış</option>
+                  <option value="DRAFT">Taslak</option>
+                  <option value="PUBLISHED">Yayınlanmış</option>
+                  <option value="ARCHIVED">Arşivlenmiş</option>
                 </select>
               </div>
               <div>
@@ -192,17 +295,6 @@ Başarılar dileriz!
                   }
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium">Yayın Tarihi</label>
-                <input
-                  type="date"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={formData.publishDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, publishDate: e.target.value })
-                  }
-                />
-              </div>
             </CardContent>
           </Card>
 
@@ -211,11 +303,56 @@ Başarılar dileriz!
               <CardTitle>Kapak Görseli</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                <p className="text-muted-foreground text-sm">
-                  Görsel değiştirmek için tıklayın veya sürükleyin
-                </p>
-              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageSelect(file);
+                }}
+              />
+
+              {imagePreview ? (
+                <div className="relative">
+                  <img
+                    src={imagePreview}
+                    alt="Kapak görseli"
+                    className="w-full h-40 object-cover rounded-lg"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview(null);
+                      setFormData({ ...formData, featuredImage: "" });
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleImageSelect(file);
+                  }}
+                >
+                  <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-muted-foreground text-sm">
+                    Görsel değiştirmek için tıklayın veya sürükleyin
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -230,10 +367,12 @@ Başarılar dileriz!
                   {formData.views.toLocaleString("tr-TR")}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Yayınlanma</span>
-                <span className="font-semibold">{formData.publishDate}</span>
-              </div>
+              {formData.publishedAt && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Yayınlanma</span>
+                  <span className="font-semibold">{formData.publishedAt}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

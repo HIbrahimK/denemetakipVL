@@ -1,16 +1,59 @@
+"use client";
+
+import { useState, FormEvent } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Clock } from "lucide-react";
-
-export const metadata = {
-  title: "İletişim - Deneme Takip Sistemi",
-  description:
-    "Bize ulaşın. Deneme Takip Sistemi hakkında bilgi almak için iletişime geçin.",
-};
+import { Mail, Phone, MapPin, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "Genel Bilgi",
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess(false);
+
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.message) {
+      setError("Lütfen tüm zorunlu alanları doldurun.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await api.submitContactForm(formData);
+      setSuccess(true);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        subject: "Genel Bilgi",
+        message: "",
+      });
+    } catch (err: any) {
+      setError(err.data?.message || "Mesaj gönderilemedi. Lütfen daha sonra tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -39,39 +82,78 @@ export default function ContactPage() {
                   <h2 className="text-xl font-semibold font-heading mb-6">
                     İletişim Formu
                   </h2>
-                  <form className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+
+                  {success && (
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
                       <div>
-                        <label className="text-sm font-medium">Ad *</label>
+                        <p className="font-medium text-green-800">Mesajınız gönderildi!</p>
+                        <p className="text-sm text-green-700">En kısa sürede size dönüş yapılacaktır.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="firstName" className="text-sm font-medium">Ad *</label>
                         <input
+                          id="firstName"
+                          name="firstName"
                           type="text"
-                          className="w-full mt-1 px-3 py-2 border rounded-md"
+                          className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                           placeholder="Adınız"
+                          value={formData.firstName}
+                          onChange={handleChange}
                           required
+                          disabled={loading}
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Soyad *</label>
+                        <label htmlFor="lastName" className="text-sm font-medium">Soyad *</label>
                         <input
+                          id="lastName"
+                          name="lastName"
                           type="text"
-                          className="w-full mt-1 px-3 py-2 border rounded-md"
+                          className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                           placeholder="Soyadınız"
+                          value={formData.lastName}
+                          onChange={handleChange}
                           required
+                          disabled={loading}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Email *</label>
+                      <label htmlFor="email" className="text-sm font-medium">Email *</label>
                       <input
+                        id="email"
+                        name="email"
                         type="email"
-                        className="w-full mt-1 px-3 py-2 border rounded-md"
+                        className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
                         placeholder="email@example.com"
+                        value={formData.email}
+                        onChange={handleChange}
                         required
+                        disabled={loading}
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Konu *</label>
-                      <select className="w-full mt-1 px-3 py-2 border rounded-md">
+                      <label htmlFor="subject" className="text-sm font-medium">Konu *</label>
+                      <select
+                        id="subject"
+                        name="subject"
+                        className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                        value={formData.subject}
+                        onChange={handleChange}
+                        disabled={loading}
+                      >
                         <option>Genel Bilgi</option>
                         <option>Demo Talebi</option>
                         <option>Teknik Destek</option>
@@ -80,15 +162,27 @@ export default function ContactPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Mesaj *</label>
+                      <label htmlFor="message" className="text-sm font-medium">Mesaj *</label>
                       <textarea
-                        className="w-full mt-1 px-3 py-2 border rounded-md min-h-[120px]"
+                        id="message"
+                        name="message"
+                        className="w-full mt-1 px-3 py-2 border rounded-md min-h-[120px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition resize-y"
                         placeholder="Mesajınız..."
+                        value={formData.message}
+                        onChange={handleChange}
                         required
+                        disabled={loading}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Gönder
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Gönderiliyor...
+                        </>
+                      ) : (
+                        "Gönder"
+                      )}
                     </Button>
                   </form>
                 </CardContent>

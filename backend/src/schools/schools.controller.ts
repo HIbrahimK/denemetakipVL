@@ -9,13 +9,20 @@ import {
   UseGuards,
   Request,
   Patch,
+  Query,
   ForbiddenException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { SchoolsService } from './schools.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UpdateSchoolDto } from './dto/update-school.dto';
+import { CreateSchoolDto } from './dto/create-school.dto';
 import {
   CreateClassDto,
   UpdateClassDto,
@@ -27,23 +34,96 @@ import {
 export class SchoolsController {
   constructor(private schoolsService: SchoolsService) {}
 
+  // Public endpoint - resolve school by hostname (subdomain or custom domain)
+  @Get('resolve')
+  async resolveSchool(@Query('host') host: string) {
+    return this.schoolsService.resolveByHostname(host);
+  }
+
+  // Super Admin - list all schools with stats
+  @Get('all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async getAllSchools(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.schoolsService.getAllSchools({
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 20,
+      search,
+      status,
+    });
+  }
+
   // Public endpoint for getting default school (for non-logged-in users)
   @Get()
   async getDefaultSchool() {
     return this.schoolsService.getSchool();
   }
 
+  // Super Admin - upload school logo
+  @Post('upload-logo')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/public/logos',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `logo-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|svg|webp)$/)) {
+          return cb(new Error('Sadece resim dosyaları yüklenebilir'), false);
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    }),
+  )
+  async uploadLogo(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new ForbiddenException('Dosya yüklenemedi');
+    }
+    return {
+      url: `/uploads/logos/${file.filename}`,
+      filename: file.filename,
+    };
+  }
+
+  // Super Admin - create new school
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async createSchool(@Body() dto: CreateSchoolDto) {
+    return this.schoolsService.createSchool(dto);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT', 'PARENT')
+  @Roles('SCHOOL_ADMIN', 'TEACHER', 'STUDENT', 'PARENT', 'SUPER_ADMIN')
   async getSchool(@Request() req, @Param('id') id: string) {
     this.assertSchoolAccess(req, id);
     return this.schoolsService.getSchool(id);
   }
 
+  // Super Admin - get school stats
+  @Get(':id/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'SCHOOL_ADMIN')
+  async getSchoolStats(@Request() req, @Param('id') id: string) {
+    this.assertSchoolAccess(req, id);
+    return this.schoolsService.getSchoolStats(id);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SCHOOL_ADMIN')
+  @Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
   async updateSchool(
     @Request() req,
     @Param('id') id: string,
@@ -51,6 +131,25 @@ export class SchoolsController {
   ) {
     this.assertSchoolAccess(req, id);
     return this.schoolsService.updateSchool(id, dto);
+  }
+
+  // Super Admin - delete school (soft)
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async deleteSchool(@Param('id') id: string) {
+    return this.schoolsService.deleteSchool(id);
+  }
+
+  // Super Admin - update school license
+  @Patch(':id/license')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async updateSchoolLicense(
+    @Param('id') id: string,
+    @Body() body: { planId?: string; endDate?: string; status?: string; autoRenew?: boolean },
+  ) {
+    return this.schoolsService.updateSchoolLicense(id, body);
   }
 
   @Get(':id/promote/preview')

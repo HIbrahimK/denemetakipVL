@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,6 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import sharp from 'sharp';
+import * as bcrypt from 'bcrypt';
+import { CreateSchoolDto } from './dto/create-school.dto';
 
 const PWA_ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512] as const;
 const PWA_ICON_DIR = join(process.cwd(), 'uploads', 'public', 'pwa-icons');
@@ -14,6 +17,377 @@ const PWA_ICON_DIR = join(process.cwd(), 'uploads', 'public', 'pwa-icons');
 @Injectable()
 export class SchoolsService {
   constructor(private prisma: PrismaService) {}
+
+  // ─── Public: Resolve school by hostname ───────────────────────
+  async resolveByHostname(host: string) {
+    if (!host) {
+      throw new BadRequestException('host parametresi gerekli');
+    }
+
+    const rootDomain = process.env.ROOT_DOMAIN || '2eh.net';
+
+    let school: {
+      id: string;
+      name: string;
+      appShortName: string;
+      code: string;
+      subdomainAlias: string | null;
+      logoUrl: string | null;
+      domain: string | null;
+    } | null = null;
+
+    // Extract subdomain: "scal.2eh.net" → "scal"
+    if (host.endsWith(`.${rootDomain}`)) {
+      const subdomain = host.replace(`.${rootDomain}`, '').split(':')[0];
+      if (subdomain && subdomain !== 'www') {
+        school = await this.prisma.school.findUnique({
+          where: { subdomainAlias: subdomain },
+          select: {
+            id: true,
+            name: true,
+            appShortName: true,
+            code: true,
+            logoUrl: true,
+            subdomainAlias: true,
+            domain: true,
+          },
+        });
+      }
+    }
+
+    // If not found by subdomain, try custom domain
+    if (!school) {
+      const cleanHost = host.split(':')[0]; // Remove port
+      school = await this.prisma.school.findUnique({
+        where: { domain: cleanHost },
+        select: {
+          id: true,
+          name: true,
+          appShortName: true,
+          code: true,
+          logoUrl: true,
+          subdomainAlias: true,
+          domain: true,
+        },
+      });
+    }
+
+    if (!school) {
+      throw new NotFoundException('Okul bulunamadı');
+    }
+
+    return school;
+  }
+
+  // ─── Super Admin: Get all schools with stats ──────────────────
+  async getAllSchools(options: {
+    page: number;
+    limit: number;
+    search?: string;
+    status?: string;
+  }) {
+    const { page, limit, search, status } = options;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+        { subdomainAlias: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [schools, total] = await Promise.all([
+      this.prisma.school.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          licenses: {
+            where: { status: { in: ['ACTIVE', 'GRACE'] } },
+            include: { plan: true },
+            take: 1,
+            orderBy: { endDate: 'desc' },
+          },
+          _count: {
+            select: {
+              students: true,
+              users: true,
+              exams: true,
+            },
+          },
+        },
+      }),
+      this.prisma.school.count({ where }),
+    ]);
+
+    const schoolsWithStats = schools.map((s) => ({
+      id: s.id,
+      name: s.name,
+      appShortName: s.appShortName,
+      code: s.code,
+      subdomainAlias: s.subdomainAlias,
+      domain: s.domain,
+      logoUrl: s.logoUrl,
+      createdAt: s.createdAt,
+      studentCount: s._count.students,
+      userCount: s._count.users,
+      examCount: s._count.exams,
+      license: s.licenses[0]
+        ? {
+            id: s.licenses[0].id,
+            planName: s.licenses[0].plan.name,
+            status: s.licenses[0].status,
+            endDate: s.licenses[0].endDate,
+            autoRenew: s.licenses[0].autoRenew,
+          }
+        : null,
+    }));
+
+    return {
+      schools: schoolsWithStats,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // ─── Super Admin: Create new school with admin + license ──────
+  async createSchool(dto: CreateSchoolDto) {
+    // Check unique constraints
+    const existing = await this.prisma.school.findFirst({
+      where: {
+        OR: [
+          { code: dto.code },
+          ...(dto.subdomainAlias ? [{ subdomainAlias: dto.subdomainAlias }] : []),
+          ...(dto.domain ? [{ domain: dto.domain }] : []),
+        ],
+      },
+    });
+
+    if (existing) {
+      if (existing.code === dto.code)
+        throw new ConflictException('Bu okul kodu zaten kullanılıyor');
+      if (dto.subdomainAlias && existing.subdomainAlias === dto.subdomainAlias)
+        throw new ConflictException('Bu subdomain zaten kullanılıyor');
+      if (dto.domain && existing.domain === dto.domain)
+        throw new ConflictException('Bu domain zaten kullanılıyor');
+    }
+
+    // Check admin email uniqueness
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.adminEmail },
+    });
+    if (existingUser) {
+      throw new ConflictException('Bu email adresi zaten kullanılıyor');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.adminPassword, 10);
+
+    // Create school + admin + default grades + license in a transaction
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 1. Create school
+      const school = await tx.school.create({
+        data: {
+          name: dto.name,
+          code: dto.code,
+          appShortName: dto.appShortName || dto.name,
+          subdomainAlias: dto.subdomainAlias || null,
+          domain: dto.domain || null,
+          logoUrl: dto.logoUrl || null,
+          address: dto.address || null,
+          phone: dto.phone || null,
+          website: dto.website || null,
+        },
+      });
+
+      // 2. Create default grades (5-12)
+      const gradeNames = ['5', '6', '7', '8', '9', '10', '11', '12'];
+      for (const level of gradeNames) {
+        await tx.grade.create({
+          data: {
+            name: `${level}. Sınıf`,
+            schoolId: school.id,
+          },
+        });
+      }
+
+      // 3. Create admin user
+      const adminUser = await tx.user.create({
+        data: {
+          email: dto.adminEmail,
+          password: hashedPassword,
+          firstName: dto.adminFirstName,
+          lastName: dto.adminLastName,
+          role: 'SCHOOL_ADMIN',
+          schoolId: school.id,
+        },
+      });
+
+      // 4. Create license if plan specified
+      let license: (Awaited<ReturnType<typeof tx.schoolLicense.create>> & { plan: { name: string } }) | null = null;
+      if (dto.licensePlanId) {
+        license = await tx.schoolLicense.create({
+          data: {
+            schoolId: school.id,
+            planId: dto.licensePlanId,
+            startDate: dto.licenseStartDate
+              ? new Date(dto.licenseStartDate)
+              : new Date(),
+            endDate: dto.licenseEndDate
+              ? new Date(dto.licenseEndDate)
+              : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year default
+            autoRenew: dto.licenseAutoRenew || false,
+          },
+          include: { plan: true },
+        });
+      }
+
+      return { school, adminUser, license };
+    });
+
+    // Generate PWA icons if logo provided
+    if (dto.logoUrl) {
+      try {
+        await this.syncSchoolPwaIcons(result.school.id, dto.logoUrl);
+      } catch {
+        // Non-blocking - school created but icons failed
+      }
+    }
+
+    return {
+      school: result.school,
+      admin: {
+        id: result.adminUser.id,
+        email: result.adminUser.email,
+        firstName: result.adminUser.firstName,
+        lastName: result.adminUser.lastName,
+      },
+      license: result.license
+        ? {
+            id: result.license.id,
+            planName: result.license.plan.name,
+            status: result.license.status,
+            endDate: result.license.endDate,
+          }
+        : null,
+    };
+  }
+
+  // ─── Super Admin: Get school stats ────────────────────────────
+  async getSchoolStats(id: string) {
+    const school = await this.prisma.school.findUnique({
+      where: { id },
+      include: {
+        licenses: {
+          include: { plan: true },
+          orderBy: { endDate: 'desc' },
+          take: 1,
+        },
+        _count: {
+          select: {
+            students: true,
+            users: true,
+            exams: true,
+            messages: true,
+            studyPlans: true,
+            mentorGroups: true,
+          },
+        },
+      },
+    });
+
+    if (!school) {
+      throw new NotFoundException('Okul bulunamadı');
+    }
+
+    return {
+      id: school.id,
+      name: school.name,
+      appShortName: school.appShortName,
+      code: school.code,
+      subdomainAlias: school.subdomainAlias,
+      domain: school.domain,
+      logoUrl: school.logoUrl,
+      createdAt: school.createdAt,
+      stats: {
+        studentCount: school._count.students,
+        userCount: school._count.users,
+        examCount: school._count.exams,
+        messageCount: school._count.messages,
+        studyPlanCount: school._count.studyPlans,
+        groupCount: school._count.mentorGroups,
+      },
+      license: school.licenses[0]
+        ? {
+            id: school.licenses[0].id,
+            planName: school.licenses[0].plan.name,
+            planId: school.licenses[0].planId,
+            status: school.licenses[0].status,
+            startDate: school.licenses[0].startDate,
+            endDate: school.licenses[0].endDate,
+            autoRenew: school.licenses[0].autoRenew,
+            customPrice: school.licenses[0].customPrice,
+          }
+        : null,
+    };
+  }
+
+  // ─── Super Admin: Delete school (cascades) ────────────────────
+  async deleteSchool(id: string) {
+    const school = await this.prisma.school.findUnique({ where: { id } });
+    if (!school) {
+      throw new NotFoundException('Okul bulunamadı');
+    }
+
+    await this.prisma.school.delete({ where: { id } });
+    return { success: true, message: `${school.name} okulu silindi` };
+  }
+
+  // ─── Super Admin: Update school license ───────────────────────
+  async updateSchoolLicense(
+    schoolId: string,
+    body: { planId?: string; endDate?: string; status?: string; autoRenew?: boolean },
+  ) {
+    const license = await this.prisma.schoolLicense.findFirst({
+      where: { schoolId },
+      orderBy: { endDate: 'desc' },
+    });
+
+    if (!license) {
+      // Create new license
+      if (!body.planId) {
+        throw new BadRequestException('Lisans planı gerekli');
+      }
+      return this.prisma.schoolLicense.create({
+        data: {
+          schoolId,
+          planId: body.planId,
+          startDate: new Date(),
+          endDate: body.endDate ? new Date(body.endDate) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          autoRenew: body.autoRenew || false,
+          status: (body.status as any) || 'ACTIVE',
+        },
+        include: { plan: true },
+      });
+    }
+
+    // Update existing
+    const data: any = {};
+    if (body.planId) data.planId = body.planId;
+    if (body.endDate) data.endDate = new Date(body.endDate);
+    if (body.status) data.status = body.status;
+    if (body.autoRenew !== undefined) data.autoRenew = body.autoRenew;
+
+    return this.prisma.schoolLicense.update({
+      where: { id: license.id },
+      data,
+      include: { plan: true },
+    });
+  }
 
   async getSchool(id?: string) {
     if (!id) {

@@ -57,6 +57,13 @@ export class AuthService {
       throw new UnauthorizedException('Hesap aktif degil');
     }
 
+    // School scoping: if schoolId provided, verify user belongs to that school
+    if (loginDto.schoolId && user.role !== 'SUPER_ADMIN') {
+      if (user.schoolId !== loginDto.schoolId) {
+        throw new UnauthorizedException('Bu okula erişim yetkiniz yok');
+      }
+    }
+
     return this.generateToken(user);
   }
 
@@ -174,8 +181,15 @@ export class AuthService {
       throw new ForbiddenException('Bu rolü oluşturma yetkiniz yok');
     }
 
+    // SUPER_ADMIN users don't need a schoolId — use actor's school as fallback
+    const schoolId: string = registerDto.schoolId || actor.schoolId;
+
+    if (!schoolId) {
+      throw new BadRequestException('Okul belirtilmelidir');
+    }
+
     const school = await this.prisma.school.findUnique({
-      where: { id: registerDto.schoolId },
+      where: { id: schoolId },
       select: { id: true },
     });
 
@@ -189,7 +203,7 @@ export class AuthService {
       }
 
       const schoolClass = await this.prisma.class.findFirst({
-        where: { id: registerDto.classId, schoolId: registerDto.schoolId },
+        where: { id: registerDto.classId, schoolId: schoolId },
         select: { id: true },
       });
 
@@ -215,7 +229,7 @@ export class AuthService {
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
         role: registerDto.role,
-        schoolId: registerDto.schoolId,
+        schoolId: schoolId,
       },
       include: { school: true },
     });
@@ -225,7 +239,7 @@ export class AuthService {
       await this.prisma.student.create({
         data: {
           userId: user.id,
-          schoolId: registerDto.schoolId,
+          schoolId: schoolId,
           classId: registerDto.classId,
           studentNumber: registerDto.studentNumber,
           tcNo: registerDto.tcNo,

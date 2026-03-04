@@ -11,8 +11,8 @@ const plans = [
     price: "499",
     description: "Küçük okullar için ideal başlangıç paketi",
     features: [
-      "500 Öğrenciye kadar",
-      "10 Sınav/ay",
+      "100 Öğrenciye kadar",
+      "10 Öğretmen",
       "Temel raporlar",
       "Email destek",
       "SSL Sertifikası",
@@ -26,7 +26,7 @@ const plans = [
     price: "999",
     description: "Büyüyen okullar için kapsamlı çözüm",
     features: [
-      "Sınırsız öğrenci",
+      "500 Öğrenciye kadar",
       "Sınırsız sınav",
       "Gelişmiş raporlar",
       "WhatsApp destek",
@@ -43,7 +43,7 @@ const plans = [
     price: "Özel",
     description: "Okul zincirleri ve kurumsal çözümler",
     features: [
-      "Her şey + Özel geliştirme",
+      "Sınırsız öğrenci",
       "Özel domain",
       "7/24 Telefon desteği",
       "SLA Garantisi",

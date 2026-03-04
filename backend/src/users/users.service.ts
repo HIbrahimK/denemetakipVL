@@ -13,10 +13,13 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(schoolId: string, role?: Role, search?: string) {
+  async findAll(schoolId: string, role?: Role, search?: string, actorRole?: string) {
+    const isSuperAdmin = actorRole === 'SUPER_ADMIN';
+
     return this.prisma.user.findMany({
       where: {
-        schoolId,
+        // SUPER_ADMIN can see all users; others only see their school's users
+        ...(!isSuperAdmin && { schoolId }),
         ...(role && { role }),
         ...(search && {
           OR: [
@@ -25,11 +28,14 @@ export class UsersService {
             { email: { contains: search, mode: 'insensitive' } },
           ],
         }),
-        // Usually, we manage staff in this page, but we can manage everyone
-        NOT: {
-          role: { in: [Role.STUDENT, Role.PARENT] },
-        },
+        // SUPER_ADMIN listing: no role exclusion; school admins: exclude students/parents/super_admins
+        ...(!isSuperAdmin && {
+          NOT: {
+            role: { in: [Role.STUDENT, Role.PARENT, Role.SUPER_ADMIN] },
+          },
+        }),
       },
+      include: { school: { select: { id: true, name: true } } },
       orderBy: { firstName: 'asc' },
     });
   }
@@ -82,8 +88,13 @@ export class UsersService {
     });
   }
 
-  async remove(id: string, schoolId: string) {
-    await this.findOne(id, schoolId);
+  async remove(id: string, schoolId: string, actorRole?: string) {
+    if (actorRole === 'SUPER_ADMIN') {
+      const user = await this.prisma.user.findUnique({ where: { id } });
+      if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+    } else {
+      await this.findOne(id, schoolId);
+    }
     return this.prisma.user.delete({ where: { id } });
   }
 

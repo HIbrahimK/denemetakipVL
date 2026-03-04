@@ -21,6 +21,10 @@ export class LoginDto {
   @IsOptional()
   @IsBoolean()
   rememberMe?: boolean;
+
+  @IsOptional()
+  @IsString()
+  schoolId?: string;
 }
 
 export class StudentLoginDto {
@@ -35,6 +39,10 @@ export class StudentLoginDto {
   @IsOptional()
   @IsBoolean()
   rememberMe?: boolean;
+
+  @IsOptional()
+  @IsString()
+  schoolId?: string;
 }
 
 export class RegisterDto {
@@ -57,9 +65,9 @@ export class RegisterDto {
   @IsEnum(Role)
   role: Role;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  schoolId: string;
+  schoolId?: string;
 
   @IsOptional()
   @IsString()

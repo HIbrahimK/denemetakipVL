@@ -34,7 +34,7 @@ export class UsersController {
     @Query('role') role?: Role,
     @Query('search') search?: string,
   ) {
-    return this.usersService.findAll(req.user.schoolId, role, search);
+    return this.usersService.findAll(req.user.schoolId, role, search, req.user.role);
   }
 
   @Post()
@@ -56,7 +56,7 @@ export class UsersController {
   @Delete(':id')
   @ApiOperation({ summary: 'Kullanıcı sil' })
   remove(@Request() req, @Param('id') id: string) {
-    return this.usersService.remove(id, req.user.schoolId);
+    return this.usersService.remove(id, req.user.schoolId, req.user.role);
   }
 
   @Post(':id/change-password')

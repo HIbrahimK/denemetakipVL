@@ -20,7 +20,10 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { HealthController } from './health.controller';
 import { AchievementsModule } from './achievements/achievements.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ContactModule } from './contact/contact.module';
+import { BlogModule } from './blog/blog.module';
 import { APP_GUARD } from '@nestjs/core';
+import { LicenseGuard } from './auth/guards/license.guard';
 
 @Module({
   imports: [
@@ -49,12 +52,18 @@ import { APP_GUARD } from '@nestjs/core';
     SubjectsModule,
     AchievementsModule,
     NotificationsModule,
+    ContactModule,
+    BlogModule,
   ],
   controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: LicenseGuard,
     },
   ],
 })

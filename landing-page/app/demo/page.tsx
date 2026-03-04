@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -10,15 +13,55 @@ import {
   School,
   TrendingUp,
   ArrowRight,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-
-export const metadata = {
-  title: "Demo Talebi - Deneme Takip Sistemi",
-  description:
-    "Deneme Takip Sistemi'ni ücretsiz deneyin. 14 gün ücretsiz demo hesabı oluşturun.",
-};
+import { api } from "@/lib/api";
 
 export default function DemoPage() {
+  const [formData, setFormData] = useState({
+    schoolName: "",
+    contactName: "",
+    email: "",
+    phone: "",
+    studentCount: "0-100",
+    city: "İstanbul",
+    notes: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await api.submitDemoRequest(formData);
+      setSuccess(true);
+      setFormData({
+        schoolName: "",
+        contactName: "",
+        email: "",
+        phone: "",
+        studentCount: "0-100",
+        city: "İstanbul",
+        notes: "",
+      });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Bir hata oluştu. Lütfen tekrar deneyin.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -48,80 +91,179 @@ export default function DemoPage() {
                   <CardTitle className="font-heading">Demo Başvurusu</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium">Okul Adı *</label>
-                      <input
-                        type="text"
-                        className="w-full mt-1 px-3 py-2 border rounded-md"
-                        placeholder="Örn: Ankara Atatürk Lisesi"
-                        required
-                      />
+                  {success ? (
+                    <div className="text-center py-8">
+                      <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        Başvurunuz Alındı!
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Demo talebiniz başarıyla iletildi. Ekibimiz en kısa
+                        sürede sizinle iletişime geçecektir.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSuccess(false)}
+                      >
+                        Yeni Başvuru
+                      </Button>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  ) : (
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      {error && (
+                        <div className="flex items-center gap-2 p-3 bg-destructive/10 text-destructive rounded-md text-sm">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          {error}
+                        </div>
+                      )}
                       <div>
-                        <label className="text-sm font-medium">
-                          Yetkili Adı *
+                        <label htmlFor="schoolName" className="text-sm font-medium">
+                          Okul Adı *
                         </label>
                         <input
+                          id="schoolName"
+                          name="schoolName"
                           type="text"
-                          className="w-full mt-1 px-3 py-2 border rounded-md"
-                          placeholder="Ad Soyad"
+                          value={formData.schoolName}
+                          onChange={handleChange}
+                          className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="Örn: Ankara Atatürk Lisesi"
                           required
+                          disabled={loading}
                         />
                       </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="contactName" className="text-sm font-medium">
+                            Yetkili Adı *
+                          </label>
+                          <input
+                            id="contactName"
+                            name="contactName"
+                            type="text"
+                            value={formData.contactName}
+                            onChange={handleChange}
+                            className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="Ad Soyad"
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="email" className="text-sm font-medium">
+                            Email *
+                          </label>
+                          <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="email@okul.edu.tr"
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
                       <div>
-                        <label className="text-sm font-medium">
-                          Email *
+                        <label htmlFor="phone" className="text-sm font-medium">
+                          Telefon *
                         </label>
                         <input
-                          type="email"
-                          className="w-full mt-1 px-3 py-2 border rounded-md"
-                          placeholder="email@okul.edu.tr"
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="05XX XXX XX XX"
                           required
+                          disabled={loading}
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Telefon *</label>
-                      <input
-                        type="tel"
-                        className="w-full mt-1 px-3 py-2 border rounded-md"
-                        placeholder="05XX XXX XX XX"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="studentCount" className="text-sm font-medium">
+                            Öğrenci Sayısı
+                          </label>
+                          <select
+                            id="studentCount"
+                            name="studentCount"
+                            value={formData.studentCount}
+                            onChange={handleChange}
+                            className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            disabled={loading}
+                          >
+                            <option value="0-100">0-100</option>
+                            <option value="100-500">100-500</option>
+                            <option value="500-1000">500-1000</option>
+                            <option value="1000+">1000+</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label htmlFor="city" className="text-sm font-medium">
+                            Şehir
+                          </label>
+                          <select
+                            id="city"
+                            name="city"
+                            value={formData.city}
+                            onChange={handleChange}
+                            className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            disabled={loading}
+                          >
+                            <option value="İstanbul">İstanbul</option>
+                            <option value="Ankara">Ankara</option>
+                            <option value="İzmir">İzmir</option>
+                            <option value="Bursa">Bursa</option>
+                            <option value="Antalya">Antalya</option>
+                            <option value="Adana">Adana</option>
+                            <option value="Konya">Konya</option>
+                            <option value="Gaziantep">Gaziantep</option>
+                            <option value="Diğer">Diğer</option>
+                          </select>
+                        </div>
+                      </div>
                       <div>
-                        <label className="text-sm font-medium">
-                          Öğrenci Sayısı
+                        <label htmlFor="notes" className="text-sm font-medium">
+                          Notlar (İsteğe bağlı)
                         </label>
-                        <select className="w-full mt-1 px-3 py-2 border rounded-md">
-                          <option>0-100</option>
-                          <option>100-500</option>
-                          <option>500-1000</option>
-                          <option>1000+</option>
-                        </select>
+                        <textarea
+                          id="notes"
+                          name="notes"
+                          value={formData.notes}
+                          onChange={handleChange}
+                          rows={3}
+                          className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                          placeholder="Eklemek istediğiniz bilgiler..."
+                          disabled={loading}
+                        />
                       </div>
-                      <div>
-                        <label className="text-sm font-medium">Şehir</label>
-                        <select className="w-full mt-1 px-3 py-2 border rounded-md">
-                          <option>İstanbul</option>
-                          <option>Ankara</option>
-                          <option>İzmir</option>
-                          <option>Diğer</option>
-                        </select>
-                      </div>
-                    </div>
-                    <Button type="submit" className="w-full" size="lg">
-                      Demo Hesabı Oluştur
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Başvurunuz incelendikten sonra 24 saat içinde
-                      dönüş yapılacaktır.
-                    </p>
-                  </form>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        size="lg"
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Gönderiliyor...
+                          </>
+                        ) : (
+                          <>
+                            Demo Hesabı Oluştur
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Başvurunuz incelendikten sonra 24 saat içinde dönüş
+                        yapılacaktır.
+                      </p>
+                    </form>
+                  )}
                 </CardContent>
               </Card>
 

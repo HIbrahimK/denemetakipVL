@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
@@ -93,7 +95,8 @@ const additionalFeatures = [
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
       {/* Hero */}
       <section className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
@@ -188,6 +191,7 @@ export default function FeaturesPage() {
           </Button>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }

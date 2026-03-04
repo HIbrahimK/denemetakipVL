@@ -1,8 +1,0 @@
-{
-  "/blog/page": "app/blog/page.js",
-  "/giris/page": "app/giris/page.js",
-  "/super-admin/okullar/page": "app/super-admin/okullar/page.js",
-  "/super-admin/page": "app/super-admin/page.js",
-  "/super-admin/okullar/yeni/page": "app/super-admin/okullar/yeni/page.js",
-  "/super-admin/kullanicilar/page": "app/super-admin/kullanicilar/page.js"
-}

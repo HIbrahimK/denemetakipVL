@@ -598,6 +598,7 @@ model School {
   pushSubscriptions         PushSubscription[]
   notificationCampaigns     NotificationCampaign[]
   userNotificationSettings  UserNotificationSetting[]
+  licenses                  SchoolLicense[]
 }
 
 model Student {
@@ -1172,4 +1173,125 @@ enum NotificationDeliveryStatus {
   SENT
   FAILED
   SKIPPED
+}
+
+enum LicenseStatus {
+  ACTIVE
+  GRACE
+  EXPIRED
+  SUSPENDED
+}
+
+model LicensePlan {
+  id            String          @id @default(uuid())
+  name          String          @unique
+  maxStudents   Int             // -1 = sınırsız
+  maxUsers      Int             // -1 = sınırsız
+  maxStorage    Int             // MB cinsinden, -1 = sınırsız
+  monthlyPrice  Float
+  yearlyPrice   Float
+  features      Json            @default("{}")
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  licenses      SchoolLicense[]
+}
+
+model SchoolLicense {
+  id          String        @id @default(uuid())
+  schoolId    String
+  school      School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        LicensePlan   @relation(fields: [planId], references: [id])
+  status      LicenseStatus @default(ACTIVE)
+  startDate   DateTime
+  endDate     DateTime
+  autoRenew   Boolean       @default(false)
+  customPrice Float?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([schoolId])
+  @@index([status])
+  @@index([endDate])
+}
+
+// ==========================================
+// Contact & Demo Request Models
+// ==========================================
+
+enum ContactStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+model ContactMessage {
+  id        String        @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String
+  subject   String
+  message   String
+  status    ContactStatus @default(NEW)
+  repliedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum DemoRequestStatus {
+  PENDING
+  CONTACTED
+  APPROVED
+  REJECTED
+}
+
+model DemoRequest {
+  id           String            @id @default(uuid())
+  schoolName   String
+  contactName  String
+  email        String
+  phone        String
+  studentCount String?
+  city         String?
+  notes        String?
+  status       DemoRequestStatus @default(PENDING)
+  contactedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Blog System ───────────────────────────────────
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model BlogPost {
+  id            String         @id @default(uuid())
+  title         String
+  slug          String         @unique
+  excerpt       String?
+  content       String
+  category      String         @default("Genel")
+  tags          String[]
+  status        BlogPostStatus @default(DRAFT)
+  featuredImage String?
+  author        String
+  views         Int            @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+  @@index([slug])
+  @@index([publishedAt])
 }

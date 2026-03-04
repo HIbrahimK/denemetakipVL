@@ -117,17 +117,24 @@ export class AuthController {
 
   private setAuthCookie(res: Response, token: string, rememberMe?: boolean) {
     const isProd = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN; // e.g. '.2eh.net'
     // rememberMe true ise 30 gün, false/undefined ise 7 gün
     const maxAge = rememberMe
       ? 30 * 24 * 60 * 60 * 1000
       : 7 * 24 * 60 * 60 * 1000;
 
-    res.cookie('token', token, {
+    const cookieOptions: any = {
       httpOnly: true,
       sameSite: 'lax',
       secure: isProd,
       maxAge,
       path: '/',
-    });
+    };
+
+    if (cookieDomain) {
+      cookieOptions.domain = cookieDomain;
+    }
+
+    res.cookie('token', token, cookieOptions);
   }
 }
