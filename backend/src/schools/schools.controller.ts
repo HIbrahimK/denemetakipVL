@@ -23,6 +23,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UpdateSchoolDto } from './dto/update-school.dto';
 import { CreateSchoolDto } from './dto/create-school.dto';
+import { BackupType } from '@prisma/client';
 import {
   CreateClassDto,
   UpdateClassDto,
@@ -261,17 +262,25 @@ export class SchoolsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
   @Post(':id/backup')
-  async backupData(@Request() req, @Param('id') id: string) {
+  async backupData(
+    @Request() req,
+    @Param('id') id: string,
+    @Body('note') note?: string,
+  ) {
     this.assertSchoolAccess(req, id);
-    return this.schoolsService.backupData(id);
+    return this.schoolsService.backupData(id, BackupType.MANUAL, note);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SCHOOL_ADMIN', 'SUPER_ADMIN')
   @Get(':id/backups')
-  async getBackups(@Request() req, @Param('id') id: string) {
+  async getBackups(
+    @Request() req,
+    @Param('id') id: string,
+    @Query('type') type?: BackupType,
+  ) {
     this.assertSchoolAccess(req, id);
-    return this.schoolsService.getBackups(id);
+    return this.schoolsService.getBackups(id, type);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -320,6 +329,14 @@ export class SchoolsController {
   ) {
     this.assertSchoolAccess(req, id);
     return this.schoolsService.restoreFromFile(id, backupData);
+  }
+
+  // ─── Super Admin: All backups across schools ────────────────────
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @Get('admin/backups')
+  async getAllBackups(@Query('type') type?: BackupType) {
+    return this.schoolsService.getAllBackups(type);
   }
 
   private assertSchoolAccess(req: any, schoolId: string) {

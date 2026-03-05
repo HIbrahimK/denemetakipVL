@@ -961,18 +961,19 @@ export default function SettingsPage() {
                                             <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
                                                 <tr>
                                                     <th className="px-3 py-2 text-left font-bold text-slate-600 dark:text-slate-400">Tarih</th>
+                                                    <th className="px-3 py-2 text-left font-bold text-slate-600 dark:text-slate-400">Tür</th>
                                                     <th className="px-3 py-2 text-right font-bold text-slate-600 dark:text-slate-400">İşlem</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                                 {backups.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={2} className="px-3 py-8 text-center text-slate-400">
+                                                        <td colSpan={3} className="px-3 py-8 text-center text-slate-400">
                                                             Henüz yedek bulunmuyor.
                                                         </td>
                                                     </tr>
                                                 ) : (
-                                                    backups.map((b) => (
+                                                    backups.map((b: any) => (
                                                         <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                                                             <td className="px-3 py-2">
                                                                 <div className="font-medium text-slate-700 dark:text-slate-300">
@@ -981,6 +982,16 @@ export default function SettingsPage() {
                                                                 <div className="text-[10px] text-slate-400">
                                                                     {new Date(b.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                                                                 </div>
+                                                            </td>
+                                                            <td className="px-3 py-2">
+                                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                                                    b.type === 'AUTO' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                                    b.type === 'GRADE_PROMOTION' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                                                                    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                                                }`}>
+                                                                    {b.type === 'AUTO' ? 'Otomatik' : b.type === 'GRADE_PROMOTION' ? 'Sınıf Atlama' : 'Manuel'}
+                                                                </span>
+                                                                {b.note && <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[100px]">{b.note}</div>}
                                                             </td>
                                                             <td className="px-3 py-2 text-right">
                                                                 <div className="flex justify-end gap-1">

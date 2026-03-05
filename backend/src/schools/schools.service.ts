@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,8 @@ import { join } from 'path';
 import sharp from 'sharp';
 import * as bcrypt from 'bcrypt';
 import { CreateSchoolDto } from './dto/create-school.dto';
+import { BackupType } from '@prisma/client';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 const PWA_ICON_SIZES = [72, 96, 128, 144, 152, 192, 384, 512] as const;
 const PWA_ICON_DIR = join(process.cwd(), 'uploads', 'public', 'pwa-icons');
@@ -672,7 +675,7 @@ export class SchoolsService {
   }
 
   async promoteGrades(id: string) {
-    const backupResult = await this.backupData(id);
+    const backupResult = await this.backupData(id, BackupType.GRADE_PROMOTION, 'Sınıf atlama öncesi otomatik yedek');
     const archivedLevels = new Set([8, 12]);
     const promotableLevels = new Set([5, 6, 7, 9, 10, 11]);
     const archivedAt = new Date();
@@ -1355,16 +1358,32 @@ export class SchoolsService {
     }
   }
 
-  async getBackups(schoolId: string) {
+  async getBackups(schoolId: string, type?: BackupType) {
     return this.prisma.backup.findMany({
-      where: { schoolId },
+      where: { schoolId, ...(type && { type }) },
+      select: { id: true, filename: true, size: true, schoolId: true, type: true, note: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async backupData(id: string) {
+  async getAllBackups(type?: BackupType) {
+    return this.prisma.backup.findMany({
+      where: type ? { type } : {},
+      select: {
+        id: true, filename: true, size: true, schoolId: true, type: true, note: true, createdAt: true,
+        school: { select: { id: true, name: true, code: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async backupData(id: string, type: BackupType = BackupType.MANUAL, note?: string) {
+    // Enforce limits before creating new backup
+    await this.enforceBackupLimits(id, type);
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `backup-${id}-${timestamp}.json`;
+    const typePrefix = type === BackupType.AUTO ? 'auto' : type === BackupType.GRADE_PROMOTION ? 'promotion' : 'manual';
+    const filename = `backup-${typePrefix}-${id.slice(0, 8)}-${timestamp}.json`;
 
     try {
       console.log('Starting comprehensive backup for school:', id);
@@ -1639,6 +1658,8 @@ export class SchoolsService {
           filename,
           size,
           schoolId: id,
+          type,
+          note: note || null,
           data: backupJson,
         },
       });
@@ -1737,8 +1758,67 @@ export class SchoolsService {
       throw new Error('Yedek dosyası eksik veya bozuk');
     }
 
+    // Verify backup belongs to this school (security check)
+    if (backupData.metadata?.schoolId && backupData.metadata.schoolId !== id) {
+      throw new ForbiddenException('Bu yedek dosyası farklı bir okula ait. Sadece kendi okulunuzun yedeğini geri yükleyebilirsiniz.');
+    }
+
     // Restore using the main restore logic
     return this.performRestore(id, backupData);
+  }
+
+  /**
+   * Enforce backup limits:
+   * - MANUAL: max 10, delete oldest when exceeded
+   * - AUTO: keep last 3 days, delete older ones
+   * - GRADE_PROMOTION: no limit
+   */
+  private async enforceBackupLimits(schoolId: string, type: BackupType) {
+    if (type === BackupType.MANUAL) {
+      const manualBackups = await this.prisma.backup.findMany({
+        where: { schoolId, type: BackupType.MANUAL },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      });
+      // Keep max 10 manual backups — delete oldest if at limit
+      if (manualBackups.length >= 10) {
+        const toDelete = manualBackups.slice(9).map((b) => b.id);
+        await this.prisma.backup.deleteMany({ where: { id: { in: toDelete } } });
+      }
+    } else if (type === BackupType.AUTO) {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      // Delete auto backups older than 3 days
+      await this.prisma.backup.deleteMany({
+        where: { schoolId, type: BackupType.AUTO, createdAt: { lt: threeDaysAgo } },
+      });
+    }
+  }
+
+  /**
+   * Daily automatic backup for all active schools
+   * Runs every day at 03:00 AM
+   */
+  @Cron('0 3 * * *')
+  async runDailyAutoBackups() {
+    console.log('[CRON] Starting daily auto backups...');
+    const schools = await this.prisma.school.findMany({
+      select: { id: true, name: true },
+    });
+
+    let success = 0;
+    let failed = 0;
+    for (const school of schools) {
+      try {
+        await this.backupData(school.id, BackupType.AUTO, 'Günlük otomatik yedek');
+        success++;
+        console.log(`[CRON] Auto backup OK: ${school.name}`);
+      } catch (error) {
+        failed++;
+        console.error(`[CRON] Auto backup FAILED: ${school.name}`, error.message);
+      }
+    }
+    console.log(`[CRON] Daily backups complete: ${success} OK, ${failed} failed`);
   }
 
   /**

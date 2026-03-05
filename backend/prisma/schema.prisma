@@ -49,16 +49,25 @@ model StudentAchievement {
   @@index([schoolId])
 }
 
+enum BackupType {
+  MANUAL
+  AUTO
+  GRADE_PROMOTION
+}
+
 model Backup {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   filename  String
   size      Int
   schoolId  String
-  createdAt DateTime @default(now())
+  type      BackupType @default(MANUAL)
+  note      String?
+  createdAt DateTime   @default(now())
   data      String?
-  school    School   @relation(fields: [schoolId], references: [id])
+  school    School     @relation(fields: [schoolId], references: [id])
 
   @@index([schoolId])
+  @@index([type])
 }
 
 model Class {

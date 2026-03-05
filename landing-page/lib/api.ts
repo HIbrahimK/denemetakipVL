@@ -310,6 +310,26 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ newPassword }),
     }),
+
+  // ── Backups ─────────────────────────────────
+
+  getAllBackups: (params?: { type?: string }) =>
+    request("/schools/admin/backups", { params }),
+
+  getSchoolBackups: (schoolId: string, params?: { type?: string }) =>
+    request(`/schools/${schoolId}/backups`, { params }),
+
+  createSchoolBackup: (schoolId: string, note?: string) =>
+    request(`/schools/${schoolId}/backup`, { method: "POST", body: JSON.stringify({ note }) }),
+
+  downloadBackup: (schoolId: string, backupId: string) =>
+    request(`/schools/${schoolId}/backups/${backupId}/download`),
+
+  restoreBackup: (schoolId: string, backupId: string) =>
+    request(`/schools/${schoolId}/restore`, { method: "POST", body: JSON.stringify({ backupId }) }),
+
+  deleteBackup: (schoolId: string, backupId: string) =>
+    request(`/schools/${schoolId}/backups/${backupId}`, { method: "DELETE" }),
 };
 
 export { ApiError };
