@@ -31,4 +31,8 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   branch?: string;
+
+  @IsString()
+  @IsOptional()
+  schoolId?: string;
 }

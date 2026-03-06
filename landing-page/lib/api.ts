@@ -111,6 +111,12 @@ export const api = {
   resolveSchool: (host: string) =>
     request(`/schools/resolve`, { params: { host } }),
 
+  // Public plans for pricing section
+  getPublicPlans: () => request("/schools/public-plans"),
+
+  // Public site settings (contact info)
+  getPublicSettings: () => request("/schools/public-settings"),
+
   // Blog (public)
   getBlogPosts: (params?: { page?: string; limit?: string; category?: string }) =>
     request<{
@@ -235,7 +241,19 @@ export const adminApi = {
   getContactStats: () => request("/admin/contact-stats"),
 
   // License Plans
-  getLicensePlans: () => request("/schools/resolve", { params: { host: "" } }),
+  getLicensePlans: () => request("/schools/license-plans"),
+
+  updateLicensePlan: (id: string, data: any) =>
+    request(`/schools/license-plans/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  createLicensePlan: (data: any) =>
+    request("/schools/license-plans", { method: "POST", body: JSON.stringify(data) }),
+
+  // Site Settings
+  getSiteSettings: () => request("/schools/site-settings"),
+
+  updateSiteSettings: (data: any) =>
+    request("/schools/site-settings", { method: "PATCH", body: JSON.stringify(data) }),
 
   // ── Blog ──────────────────────────────────
 
@@ -287,7 +305,7 @@ export const adminApi = {
 
   // ── Users ─────────────────────────────────
 
-  getUsers: (params?: { role?: string; search?: string }) =>
+  getUsers: (params?: { role?: string; search?: string; schoolId?: string }) =>
     request("/users", { params }),
 
   createUser: (data: {
@@ -297,12 +315,8 @@ export const adminApi = {
     lastName: string;
     role: string;
     schoolId?: string;
-  }) => {
-    // Remove empty schoolId so backend can use actor's school
-    const body = { ...data };
-    if (!body.schoolId) delete body.schoolId;
-    return request("/auth/register", { method: "POST", body: JSON.stringify(body) });
-  },
+  }) =>
+    request("/auth/register", { method: "POST", body: JSON.stringify(data) }),
 
   updateUser: (id: string, data: any) =>
     request(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),

@@ -426,6 +426,78 @@ export class SchoolsService {
     return { success: true, message: `${school.name} okulu ve tüm verileri silindi` };
   }
 
+  // ─── Super Admin: List all license plans ──────────────────────
+  async getLicensePlans() {
+    return this.prisma.licensePlan.findMany({
+      where: { isActive: true },
+      orderBy: { monthlyPrice: 'asc' },
+    });
+  }
+
+  // ─── Super Admin: Update a license plan ───────────────────────
+  async updateLicensePlan(planId: string, body: any) {
+    return this.prisma.licensePlan.update({
+      where: { id: planId },
+      data: {
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.maxStudents !== undefined && { maxStudents: body.maxStudents }),
+        ...(body.maxUsers !== undefined && { maxUsers: body.maxUsers }),
+        ...(body.maxStorage !== undefined && { maxStorage: body.maxStorage }),
+        ...(body.monthlyPrice !== undefined && { monthlyPrice: body.monthlyPrice }),
+        ...(body.yearlyPrice !== undefined && { yearlyPrice: body.yearlyPrice }),
+        ...(body.features !== undefined && { features: body.features }),
+        ...(body.isActive !== undefined && { isActive: body.isActive }),
+      },
+    });
+  }
+
+  // ─── Super Admin: Create a license plan ───────────────────────
+  async createLicensePlan(body: any) {
+    return this.prisma.licensePlan.create({
+      data: {
+        name: body.name,
+        maxStudents: body.maxStudents ?? 100,
+        maxUsers: body.maxUsers ?? 10,
+        maxStorage: body.maxStorage ?? 1024,
+        monthlyPrice: body.monthlyPrice ?? 0,
+        yearlyPrice: body.yearlyPrice ?? 0,
+        features: body.features ?? {},
+        isActive: body.isActive ?? true,
+      },
+    });
+  }
+
+  // ─── Site Settings ────────────────────────────────────────────
+  async getSiteSettings() {
+    const settings = await this.prisma.siteSettings.findUnique({
+      where: { id: 'default' },
+    });
+    return settings?.data || {};
+  }
+
+  async getPublicSiteSettings() {
+    const settings = await this.prisma.siteSettings.findUnique({
+      where: { id: 'default' },
+    });
+    const data = (settings?.data || {}) as Record<string, any>;
+    // Only expose public-safe fields
+    return {
+      contactEmail: data.contactEmail || '',
+      contactPhone: data.contactPhone || '',
+      contactAddress: data.contactAddress || '',
+      whatsapp: data.whatsapp || '',
+      socialMedia: data.socialMedia || {},
+    };
+  }
+
+  async updateSiteSettings(body: any) {
+    return this.prisma.siteSettings.upsert({
+      where: { id: 'default' },
+      create: { id: 'default', data: body },
+      update: { data: body },
+    });
+  }
+
   // ─── Super Admin: Update school license ───────────────────────
   async updateSchoolLicense(
     schoolId: string,

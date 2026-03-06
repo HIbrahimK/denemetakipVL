@@ -18,8 +18,8 @@ export class UsersService {
 
     return this.prisma.user.findMany({
       where: {
-        // SUPER_ADMIN can see all users; others only see their school's users
-        ...(!isSuperAdmin && { schoolId }),
+        // SUPER_ADMIN with schoolId: filter by that school; SUPER_ADMIN without: all users
+        ...(isSuperAdmin ? (schoolId ? { schoolId } : {}) : { schoolId }),
         ...(role && { role }),
         ...(search && {
           OR: [
@@ -40,10 +40,9 @@ export class UsersService {
     });
   }
 
-  async findOne(id: string, schoolId: string) {
-    const user = await this.prisma.user.findFirst({
-      where: { id, schoolId },
-    });
+  async findOne(id: string, schoolId: string, actorRole?: string) {
+    const where = actorRole === 'SUPER_ADMIN' ? { id } : { id, schoolId };
+    const user = await this.prisma.user.findFirst({ where });
     if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
     return user;
   }
@@ -66,8 +65,8 @@ export class UsersService {
     });
   }
 
-  async update(id: string, schoolId: string, dto: UpdateUserDto) {
-    await this.findOne(id, schoolId);
+  async update(id: string, schoolId: string, dto: UpdateUserDto, actorRole?: string) {
+    await this.findOne(id, schoolId, actorRole);
 
     if (dto.email) {
       const existing = await this.prisma.user.findFirst({
@@ -98,8 +97,8 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } });
   }
 
-  async changePassword(id: string, schoolId: string, newPassword: string) {
-    await this.findOne(id, schoolId);
+  async changePassword(id: string, schoolId: string, newPassword: string, actorRole?: string) {
+    await this.findOne(id, schoolId, actorRole);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     return this.prisma.user.update({
       where: { id },

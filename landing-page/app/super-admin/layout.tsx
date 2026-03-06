@@ -16,6 +16,7 @@ import {
   X,
   FileText,
   Database,
+  CreditCard,
 } from "lucide-react";
 import { API_URL } from "@/lib/auth";
 
@@ -24,6 +25,7 @@ const sidebarLinks = [
   { href: "/super-admin/okullar", label: "Okullar", icon: School },
   { href: "/super-admin/kullanicilar", label: "Kullanıcılar", icon: Users },
   { href: "/super-admin/yedekleme", label: "Yedekleme", icon: Database },
+  { href: "/super-admin/ucretlendirme", label: "Ücretlendirme", icon: CreditCard },
   { href: "/super-admin/ticketler", label: "Ticketler", icon: Ticket },
   { href: "/super-admin/yapilacaklar", label: "Yapılacaklar", icon: CheckSquare },
   { href: "/super-admin/blog", label: "Blog Yönetimi", icon: FileText },

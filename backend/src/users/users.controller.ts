@@ -33,14 +33,23 @@ export class UsersController {
     @Request() req,
     @Query('role') role?: Role,
     @Query('search') search?: string,
+    @Query('schoolId') schoolId?: string,
   ) {
-    return this.usersService.findAll(req.user.schoolId, role, search, req.user.role);
+    // SUPER_ADMIN can filter by any schoolId
+    const targetSchoolId = req.user.role === 'SUPER_ADMIN' && schoolId
+      ? schoolId
+      : req.user.schoolId;
+    return this.usersService.findAll(targetSchoolId, role, search, req.user.role);
   }
 
   @Post()
   @ApiOperation({ summary: 'Yeni kullanıcı ekle' })
   create(@Request() req, @Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(req.user.schoolId, createUserDto);
+    // SUPER_ADMIN can specify schoolId in body for creating school admins
+    const targetSchoolId = req.user.role === 'SUPER_ADMIN' && createUserDto.schoolId
+      ? createUserDto.schoolId
+      : req.user.schoolId;
+    return this.usersService.create(targetSchoolId, createUserDto);
   }
 
   @Put(':id')
@@ -50,7 +59,7 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(id, req.user.schoolId, updateUserDto);
+    return this.usersService.update(id, req.user.schoolId, updateUserDto, req.user.role);
   }
 
   @Delete(':id')
@@ -66,7 +75,7 @@ export class UsersController {
     @Param('id') id: string,
     @Body('newPassword') newPassword: string,
   ) {
-    return this.usersService.changePassword(id, req.user.schoolId, newPassword);
+    return this.usersService.changePassword(id, req.user.schoolId, newPassword, req.user.role);
   }
 }
 

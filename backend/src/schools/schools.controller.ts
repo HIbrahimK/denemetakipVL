@@ -65,6 +65,61 @@ export class SchoolsController {
     return this.schoolsService.getSchool();
   }
 
+  // Super Admin - list license plans
+  @Get('license-plans')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async getLicensePlans() {
+    return this.schoolsService.getLicensePlans();
+  }
+
+  // Public - list active plans for landing page pricing
+  @Get('public-plans')
+  async getPublicPlans() {
+    return this.schoolsService.getLicensePlans();
+  }
+
+  // Super Admin - update a license plan
+  @Patch('license-plans/:planId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async updateLicensePlan(
+    @Param('planId') planId: string,
+    @Body() body: any,
+  ) {
+    return this.schoolsService.updateLicensePlan(planId, body);
+  }
+
+  // Super Admin - create a license plan
+  @Post('license-plans')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async createLicensePlan(@Body() body: any) {
+    return this.schoolsService.createLicensePlan(body);
+  }
+
+  // Super Admin - get site settings
+  @Get('site-settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async getSiteSettings() {
+    return this.schoolsService.getSiteSettings();
+  }
+
+  // Public - get public site settings (contact info for landing page)
+  @Get('public-settings')
+  async getPublicSiteSettings() {
+    return this.schoolsService.getPublicSiteSettings();
+  }
+
+  // Super Admin - update site settings
+  @Patch('site-settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async updateSiteSettings(@Body() body: any) {
+    return this.schoolsService.updateSiteSettings(body);
+  }
+
   // Super Admin - upload school logo
   @Post('upload-logo')
   @UseGuards(JwtAuthGuard, RolesGuard)
