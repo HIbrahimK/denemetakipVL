@@ -325,10 +325,23 @@ export class MessagesService {
           // Sadece öğretmen ve yöneticilere email gönder
           role: { in: ['TEACHER', 'SCHOOL_ADMIN', 'SUPER_ADMIN'] },
         },
+        include: {
+          school: { select: { subdomainAlias: true, domain: true } },
+        },
       });
+
+      const rootDomain = process.env.ROOT_DOMAIN || '2eh.net';
 
       for (const recipient of recipients) {
         if (!recipient.email) continue;
+
+        // Build frontend URL dynamically based on school's subdomain
+        let frontendUrl = process.env.FRONTEND_URL || `https://${rootDomain}`;
+        if (recipient.school?.subdomainAlias) {
+          frontendUrl = `https://${recipient.school.subdomainAlias}.${rootDomain}`;
+        } else if (recipient.school?.domain) {
+          frontendUrl = `https://${recipient.school.domain}`;
+        }
 
         try {
           await this.emailService.sendEmail(
@@ -338,7 +351,7 @@ export class MessagesService {
               <h2>${message.subject}</h2>
               <p><strong>From:</strong> ${message.sender.firstName} ${message.sender.lastName}</p>
               <p>${message.body}</p>
-              <p><a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/messages/${message.id}">View Message</a></p>
+              <p><a href="${frontendUrl}/dashboard/messages/${message.id}">View Message</a></p>
             `,
           );
         } catch (error) {
