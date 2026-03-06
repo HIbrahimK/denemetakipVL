@@ -1,13 +1,36 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+const ROOT_DOMAIN = process.env.ROOT_DOMAIN || '2eh.net';
+const LANDING_INTERNAL_URL = process.env.LANDING_INTERNAL_URL || '';
+
 /**
  * Frontend middleware:
- * 1. Root "/" → redirect to landing page (unauthenticated) or dashboard (authenticated)
- * 2. Dashboard routes → enforce authentication + role-based access
+ * 1. Root domain (2eh.net) → proxy to landing page (internal)
+ * 2. Subdomains → school dashboard with auth + role-based access
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = (request.headers.get('host') || '').split(':')[0];
+
+  // ══════════════════════════════════════════════════════════
+  // Root domain (2eh.net) → Proxy ALL requests to landing page
+  // This runs BEFORE the static asset skip so landing's _next/static works too
+  // ══════════════════════════════════════════════════════════
+  const isRootDomain =
+    hostname === ROOT_DOMAIN ||
+    hostname === `www.${ROOT_DOMAIN}` ||
+    hostname.endsWith('.ondigitalocean.app');
+
+  if (isRootDomain && LANDING_INTERNAL_URL) {
+    return NextResponse.rewrite(
+      new URL(pathname + request.nextUrl.search, LANDING_INTERNAL_URL),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // Subdomains → School frontend
+  // ══════════════════════════════════════════════════════════
 
   // Skip middleware for static/public assets
   if (
