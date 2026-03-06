@@ -37,15 +37,32 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS for frontend
+  // Enable CORS for frontend (supports wildcard entries like https://*.2eh.net)
   const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  // Separate exact origins and wildcard patterns
+  const exactOrigins = new Set<string>();
+  const wildcardPatterns: RegExp[] = [];
+  for (const entry of corsOrigins) {
+    if (entry.includes('*')) {
+      // Convert wildcard pattern to regex: https://*.2eh.net → /^https:\/\/[a-z0-9-]+\.2eh\.net$/
+      const escaped = entry.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace('\\*', '[a-z0-9-]+');
+      wildcardPatterns.push(new RegExp(`^${escaped}$`, 'i'));
+    } else {
+      exactOrigins.add(entry);
+    }
+  }
+
   app.enableCors({
     origin: (origin, callback) => {
-      if (!origin || corsOrigins.includes(origin)) {
+      if (!origin || exactOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      // Check wildcard patterns (e.g., https://*.2eh.net)
+      if (wildcardPatterns.some((pattern) => pattern.test(origin))) {
         return callback(null, true);
       }
       return callback(null, false);

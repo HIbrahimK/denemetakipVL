@@ -346,8 +346,84 @@ export class SchoolsService {
       throw new NotFoundException('Okul bulunamadı');
     }
 
-    await this.prisma.school.delete({ where: { id } });
-    return { success: true, message: `${school.name} okulu silindi` };
+    // Delete all related records in order (child → parent) within a transaction
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Delete leaf-level records first
+      await tx.studyRecommendation.deleteMany({ where: { schoolId: id } });
+      await tx.studySession.deleteMany({ where: { schoolId: id } });
+      await tx.studyTask.deleteMany({ where: { schoolId: id } });
+      await tx.studyPlanAssignment.deleteMany({ where: { schoolId: id } });
+      await tx.studyPlan.deleteMany({ where: { schoolId: id } });
+      await tx.studyPlanTemplate.deleteMany({ where: { schoolId: id } });
+
+      // 2. Delete notification/push records
+      await tx.pushSubscription.deleteMany({ where: { schoolId: id } });
+      await tx.notificationCampaign.deleteMany({ where: { schoolId: id } });
+      await tx.userNotificationSetting.deleteMany({ where: { schoolId: id } });
+
+      // 3. Delete achievements  
+      await tx.studentAchievement.deleteMany({ where: { schoolId: id } });
+      await tx.achievement.deleteMany({ where: { schoolId: id } });
+
+      // 4. Delete group-related records
+      await tx.groupPost.deleteMany({ where: { schoolId: id } });
+      await tx.groupGoal.deleteMany({ where: { schoolId: id } });
+      await tx.groupMembership.deleteMany({ where: { schoolId: id } });
+      await tx.groupTeacher.deleteMany({ where: { schoolId: id } });
+      await tx.mentorGroup.deleteMany({ where: { schoolId: id } });
+
+      // 5. Delete exam-related records
+      await tx.examLessonResult.deleteMany({ where: { schoolId: id } });
+      await tx.examScore.deleteMany({ where: { schoolId: id } });
+      await tx.examAttempt.deleteMany({ where: { schoolId: id } });
+      await tx.exam.deleteMany({ where: { schoolId: id } });
+
+      // 6. Delete message-related records  
+      // First delete message recipients (they reference messages & users)
+      const schoolMessages = await tx.message.findMany({ where: { schoolId: id }, select: { id: true } });
+      const messageIds = schoolMessages.map((m) => m.id);
+      if (messageIds.length > 0) {
+        await tx.messageRecipient.deleteMany({ where: { messageId: { in: messageIds } } });
+        await tx.messageAttachment.deleteMany({ where: { messageId: { in: messageIds } } });
+      }
+      await tx.message.deleteMany({ where: { schoolId: id } });
+
+      // 7. Delete performance summaries
+      await tx.studentPerformanceSummary.deleteMany({ where: { schoolId: id } });
+
+      // 8. Delete students (before classes/grades/users)
+      await tx.student.deleteMany({ where: { schoolId: id } });
+
+      // 9. Delete classes
+      await tx.class.deleteMany({ where: { schoolId: id } });
+
+      // 10. Delete grades  
+      await tx.grade.deleteMany({ where: { schoolId: id } });
+
+      // 11. Delete lessons
+      await tx.lesson.deleteMany({ where: { schoolId: id } });
+
+      // 12. Delete licenses
+      await tx.schoolLicense.deleteMany({ where: { schoolId: id } });
+
+      // 13. Delete backups
+      await tx.backup.deleteMany({ where: { schoolId: id } });
+
+      // 14. Delete users (last before school, since many things reference userId)
+      await tx.user.deleteMany({ where: { schoolId: id } });
+
+      // 15. Finally delete the school itself
+      await tx.school.delete({ where: { id } });
+    });
+
+    // Cleanup PWA icons
+    try {
+      await this.syncSchoolPwaIcons(id, null);
+    } catch {
+      // Non-blocking
+    }
+
+    return { success: true, message: `${school.name} okulu ve tüm verileri silindi` };
   }
 
   // ─── Super Admin: Update school license ───────────────────────

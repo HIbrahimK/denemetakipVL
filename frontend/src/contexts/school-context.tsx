@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { API_BASE_URL } from '@/lib/auth';
@@ -69,9 +69,10 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
           }
         }
       } else {
-        // No user logged in, check if there's a default school
+        // No user logged in, determine school from hostname
         try {
-          const response = await fetch(`${API_BASE_URL}/schools`, {
+          const host = window.location.hostname;
+          const response = await fetch(`${API_BASE_URL}/schools/resolve?host=${host}`, {
             headers: { 'Content-Type': 'application/json' }
           });
           
@@ -87,7 +88,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
           }
         } catch (error) {
           // Silent fail - use defaults
-          console.log('No default school found, using defaults');
+          console.log('No specific school found for hostname, using defaults');
         }
       }
     } catch (error) {

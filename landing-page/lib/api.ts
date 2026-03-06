@@ -183,7 +183,12 @@ export const adminApi = {
     return response.json();
   },
 
+  getSchool: (id: string) => request(`/schools/${id}`),
+
   getSchoolStats: (id: string) => request(`/schools/${id}/stats`),
+
+  updateSchool: (id: string, data: any) =>
+    request(`/schools/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
 
   deleteSchool: (id: string) =>
     request(`/schools/${id}`, { method: "DELETE" }),

@@ -1,43 +1,152 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Trash2, Users, BookOpen, Calendar } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Users, BookOpen, Calendar, Loader2 } from "lucide-react";
+import { adminApi } from "@/lib/api";
+
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "2eh.net";
+
+interface SchoolStats {
+  id: string;
+  name: string;
+  appShortName: string;
+  code: string;
+  subdomainAlias: string | null;
+  domain: string | null;
+  logoUrl: string | null;
+  createdAt: string;
+  stats: {
+    studentCount: number;
+    userCount: number;
+    examCount: number;
+    messageCount: number;
+    studyPlanCount: number;
+    groupCount: number;
+  };
+  license: {
+    id: string;
+    planName: string;
+    planId: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+    autoRenew: boolean;
+    customPrice: number | null;
+  } | null;
+}
 
 export default function EditSchoolPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: schoolId } = use(params);
   const router = useRouter();
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [schoolData, setSchoolData] = useState<SchoolStats | null>(null);
+
   const [formData, setFormData] = useState({
-    schoolName: "Ankara Atatürk Lisesi",
-    schoolCode: "AAL",
-    subdomain: "aal",
-    customDomain: "www.ataturklisesi.edu.tr",
-    adminName: "Ahmet Yılmaz",
-    adminEmail: "admin@ataturklisesi.edu.tr",
-    adminPhone: "0532 123 45 67",
-    primaryColor: "#3b82f6",
-    secondaryColor: "#1e40af",
-    plan: "profesyonel",
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    status: "active",
+    name: "",
+    code: "",
+    appShortName: "",
+    subdomainAlias: "",
+    domain: "",
+    logoUrl: "",
+    address: "",
+    phone: "",
+    website: "",
   });
 
-  const handleSave = () => {
-    // API call to update school
-    router.push("/super-admin/okullar");
-  };
+  useEffect(() => {
+    loadSchool();
+  }, [schoolId]);
 
-  const handleDelete = () => {
-    if (confirm("Bu okulu silmek istediğinize emin misiniz?")) {
-      // API call to delete school
-      router.push("/super-admin/okullar");
+  const loadSchool = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await adminApi.getSchoolStats(schoolId);
+      setSchoolData(data);
+      setFormData({
+        name: data.name || "",
+        code: data.code || "",
+        appShortName: data.appShortName || "",
+        subdomainAlias: data.subdomainAlias || "",
+        domain: data.domain || "",
+        logoUrl: data.logoUrl || "",
+        address: data.address || "",
+        phone: data.phone || "",
+        website: data.website || "",
+      });
+    } catch (err: any) {
+      setError(err.message || "Okul bilgileri yüklenemedi");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      await adminApi.updateSchool(schoolId, {
+        name: formData.name,
+        code: formData.code,
+        appShortName: formData.appShortName,
+        subdomainAlias: formData.subdomainAlias || null,
+        domain: formData.domain || null,
+        logoUrl: formData.logoUrl || null,
+        address: formData.address || null,
+        phone: formData.phone || null,
+        website: formData.website || null,
+      });
+      router.push("/super-admin/okullar");
+    } catch (err: any) {
+      setError(err.message || "Okul güncellenemedi");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Bu okulu ve tüm verilerini kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) {
+      return;
+    }
+    try {
+      setDeleting(true);
+      setError(null);
+      await adminApi.deleteSchool(schoolId);
+      router.push("/super-admin/okullar");
+    } catch (err: any) {
+      setError(err.message || "Okul silinemedi");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-3 text-muted-foreground">Okul bilgileri yükleniyor...</span>
+      </div>
+    );
+  }
+
+  if (!schoolData) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-red-500">{error || "Okul bulunamadı"}</p>
+        <Button variant="outline" className="mt-4" onClick={() => router.push("/super-admin/okullar")}>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Geri Dön
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -52,20 +161,26 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
           </Button>
           <div>
             <h1 className="text-2xl font-bold">Okul Düzenle</h1>
-            <p className="text-muted-foreground">{formData.schoolName}</p>
+            <p className="text-muted-foreground">{schoolData.name}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="destructive" onClick={handleDelete}>
-            <Trash2 className="h-4 w-4 mr-2" />
+          <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+            {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
             Sil
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
             Kaydet
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          {error}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
@@ -77,7 +192,7 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Öğrenci</p>
-                <p className="text-2xl font-bold">1,250</p>
+                <p className="text-2xl font-bold">{schoolData.stats.studentCount.toLocaleString("tr-TR")}</p>
               </div>
             </div>
           </CardContent>
@@ -89,8 +204,8 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
                 <BookOpen className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Öğretmen</p>
-                <p className="text-2xl font-bold">45</p>
+                <p className="text-sm text-muted-foreground">Kullanıcı</p>
+                <p className="text-2xl font-bold">{schoolData.stats.userCount.toLocaleString("tr-TR")}</p>
               </div>
             </div>
           </CardContent>
@@ -103,7 +218,7 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Deneme Sayısı</p>
-                <p className="text-2xl font-bold">28</p>
+                <p className="text-2xl font-bold">{schoolData.stats.examCount.toLocaleString("tr-TR")}</p>
               </div>
             </div>
           </CardContent>
@@ -122,10 +237,8 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
               <input
                 type="text"
                 className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.schoolName}
-                onChange={(e) =>
-                  setFormData({ ...formData, schoolName: e.target.value })
-                }
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -134,25 +247,18 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
                 <input
                   type="text"
                   className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={formData.schoolCode}
-                  onChange={(e) =>
-                    setFormData({ ...formData, schoolCode: e.target.value })
-                  }
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Durum</label>
-                <select
+                <label className="text-sm font-medium">Kısa Ad</label>
+                <input
+                  type="text"
                   className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                >
-                  <option value="active">Aktif</option>
-                  <option value="suspended">Askıda</option>
-                  <option value="inactive">Pasif</option>
-                </select>
+                  value={formData.appShortName}
+                  onChange={(e) => setFormData({ ...formData, appShortName: e.target.value })}
+                />
               </div>
             </div>
             <div>
@@ -161,13 +267,11 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
                 <input
                   type="text"
                   className="flex-1 mt-1 px-3 py-2 border rounded-l-md"
-                  value={formData.subdomain}
-                  onChange={(e) =>
-                    setFormData({ ...formData, subdomain: e.target.value })
-                  }
+                  value={formData.subdomainAlias}
+                  onChange={(e) => setFormData({ ...formData, subdomainAlias: e.target.value })}
                 />
                 <span className="mt-1 px-3 py-2 border border-l-0 rounded-r-md bg-muted text-sm">
-                  .denemetakip.net
+                  .{ROOT_DOMAIN}
                 </span>
               </div>
             </div>
@@ -176,41 +280,27 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
               <input
                 type="text"
                 className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.customDomain}
-                onChange={(e) =>
-                  setFormData({ ...formData, customDomain: e.target.value })
-                }
+                placeholder="www.example.com"
+                value={formData.domain}
+                onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Yetkili Bilgileri */}
+        {/* İletişim */}
         <Card>
           <CardHeader>
-            <CardTitle>Yetkili Bilgileri</CardTitle>
+            <CardTitle>İletişim Bilgileri</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Yetkili Adı</label>
+              <label className="text-sm font-medium">Adres</label>
               <input
                 type="text"
                 className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.adminName}
-                onChange={(e) =>
-                  setFormData({ ...formData, adminName: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <input
-                type="email"
-                className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.adminEmail}
-                onChange={(e) =>
-                  setFormData({ ...formData, adminEmail: e.target.value })
-                }
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
             </div>
             <div>
@@ -218,107 +308,54 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
               <input
                 type="tel"
                 className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.adminPhone}
-                onChange={(e) =>
-                  setFormData({ ...formData, adminPhone: e.target.value })
-                }
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Web Sitesi</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Tema Ayarları */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Tema Ayarları</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Logo</label>
-              <div className="mt-1 border-2 border-dashed rounded-lg p-6 text-center">
-                <p className="text-muted-foreground">Logo değiştirmek için tıklayın</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Ana Renk</label>
-                <input
-                  type="color"
-                  className="w-full mt-1 h-10 rounded"
-                  value={formData.primaryColor}
-                  onChange={(e) =>
-                    setFormData({ ...formData, primaryColor: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">İkincil Renk</label>
-                <input
-                  type="color"
-                  className="w-full mt-1 h-10 rounded"
-                  value={formData.secondaryColor}
-                  onChange={(e) =>
-                    setFormData({ ...formData, secondaryColor: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Lisans Bilgileri */}
-        <Card>
+        <Card className="col-span-2">
           <CardHeader>
             <CardTitle>Lisans Bilgileri</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Plan</label>
-              <select
-                className="w-full mt-1 px-3 py-2 border rounded-md"
-                value={formData.plan}
-                onChange={(e) =>
-                  setFormData({ ...formData, plan: e.target.value })
-                }
-              >
-                <option value="baslangic">Başlangıç - ₺499/ay</option>
-                <option value="profesyonel">Profesyonel - ₺999/ay</option>
-                <option value="kurumsal">Kurumsal - Özel</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Başlangıç Tarihi</label>
-                <input
-                  type="date"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startDate: e.target.value })
-                  }
-                />
+          <CardContent>
+            {schoolData.license ? (
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">Plan</p>
+                  <p className="font-semibold">{schoolData.license.planName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Durum</p>
+                  <Badge variant={schoolData.license.status === "ACTIVE" ? "default" : "secondary"}>
+                    {schoolData.license.status === "ACTIVE" ? "Aktif" : schoolData.license.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Bitiş Tarihi</p>
+                  <p className="font-semibold">
+                    {new Date(schoolData.license.endDate).toLocaleDateString("tr-TR")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Otomatik Yenileme</p>
+                  <p className="font-semibold">{schoolData.license.autoRenew ? "Evet" : "Hayır"}</p>
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">Bitiş Tarihi</label>
-                <input
-                  type="date"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  value={formData.endDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endDate: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="pt-4">
-              <Badge
-                variant={
-                  formData.status === "active" ? "default" : "secondary"
-                }
-              >
-                {formData.status === "active" ? "Aktif" : "Pasif"}
-              </Badge>
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Lisans bilgisi bulunmuyor.</p>
+            )}
           </CardContent>
         </Card>
       </div>

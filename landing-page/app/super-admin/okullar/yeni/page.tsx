@@ -42,6 +42,7 @@ export default function NewSchoolWizardPage() {
   const [logoUploading, setLogoUploading] = useState(false);
   const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string | null>(null);
   const [domainMode, setDomainMode] = useState<"subdomain" | "custom">("subdomain");
+  const [rootDomain, setRootDomain] = useState(process.env.NEXT_PUBLIC_ROOT_DOMAIN || "2eh.net");
   const [formData, setFormData] = useState({
     schoolName: "",
     schoolCode: "",
@@ -181,13 +182,12 @@ export default function NewSchoolWizardPage() {
 
   const getSchoolAccessUrl = () => {
     if (domainMode === "custom" && formData.customDomain) {
-      return `http://${formData.customDomain}`;
+      return `https://${formData.customDomain}`;
     }
     if (formData.subdomain) {
-      // Local testing: use localhost:3000 since subdomains won't work locally without hosts file
-      return `http://localhost:3000`;
+      return `https://${formData.subdomain}.${rootDomain}`;
     }
-    return "http://localhost:3000";
+    return `https://${rootDomain}`;
   };
 
   const getSchoolDomainDisplay = () => {
@@ -195,7 +195,7 @@ export default function NewSchoolWizardPage() {
       return formData.customDomain;
     }
     if (formData.subdomain) {
-      return `${formData.subdomain}.denemetakip.net`;
+      return `${formData.subdomain}.${rootDomain}`;
     }
     return "-";
   };
@@ -325,21 +325,19 @@ export default function NewSchoolWizardPage() {
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4 mt-4 border border-blue-200">
-              <h3 className="font-semibold text-blue-800 mb-2">🧪 Yerel Test Rehberi</h3>
+              <h3 className="font-semibold text-blue-800 mb-2">🔗 Erişim Bilgileri</h3>
               <div className="text-sm text-blue-700 space-y-2">
                 <p>
-                  Yerelde subdomain desteği olmadığı için okula{" "}
-                  <code className="bg-blue-100 px-1 rounded">localhost:3000</code> üzerinden
-                  erişebilirsiniz:
+                  Okula aşağıdaki adresten erişebilirsiniz:
                 </p>
                 <ol className="list-decimal list-inside space-y-1 ml-2">
                   <li>
                     <a
-                      href="http://localhost:3000/login/school"
+                      href={`https://${domainDisplay}/login/school`}
                       target="_blank"
                       className="text-blue-600 hover:underline inline-flex items-center gap-1"
                     >
-                      localhost:3000/login/school <ExternalLink className="h-3 w-3" />
+                      {domainDisplay}/login/school <ExternalLink className="h-3 w-3" />
                     </a>
                     {" "}adresine gidin
                   </li>
@@ -349,11 +347,7 @@ export default function NewSchoolWizardPage() {
                   <li>Şifre: <strong>{formData.adminPassword}</strong></li>
                 </ol>
                 <div className="mt-3 p-2 bg-blue-100 rounded text-xs">
-                  <strong>Production/Staging:</strong> {domainDisplay} üzerinden direkt erişim sağlanır.
-                  <br />
-                  <strong>Yerelde subdomain test:</strong>{" "}
-                  <code>C:\Windows\System32\drivers\etc\hosts</code> dosyasına{" "}
-                  <code>127.0.0.1 {formData.subdomain || formData.customDomain || "okul"}.denemetakip.net</code> ekleyin.
+                  <strong>Not:</strong> Sunucuda <code>{domainDisplay}</code> subdomainini oluşturmanız gerekebilir.
                 </div>
               </div>
             </div>
@@ -522,12 +516,18 @@ export default function NewSchoolWizardPage() {
                         onChange={handleChange}
                         disabled={loading}
                       />
-                      <span className="px-3 py-2 border border-l-0 rounded-r-md bg-muted text-sm flex items-center">
-                        .denemetakip.net
-                      </span>
+                      <span className="px-1 py-2 border border-l-0 bg-muted text-sm flex items-center">.</span>
+                      <select
+                        value={rootDomain}
+                        onChange={(e) => setRootDomain(e.target.value)}
+                        className="px-2 py-2 border border-l-0 rounded-r-md bg-muted text-sm focus:outline-none"
+                      >
+                        <option value="2eh.net">2eh.net</option>
+                        <option value="denemetakip.net">denemetakip.net</option>
+                      </select>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Erişim: {formData.subdomain ? `${formData.subdomain}.denemetakip.net` : "okul-kodu.denemetakip.net"}
+                      Erişim: {formData.subdomain ? `${formData.subdomain}.${rootDomain}` : `okul-kodu.${rootDomain}`}
                     </p>
                   </div>
                 ) : (

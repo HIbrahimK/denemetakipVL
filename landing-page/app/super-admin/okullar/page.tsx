@@ -97,10 +97,12 @@ export default function SchoolsManagementPage() {
     }
   };
 
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "2eh.net";
+
   const getSubdomain = (school: SchoolItem) => {
     if (school.domain) return school.domain;
-    if (school.subdomainAlias) return `${school.subdomainAlias}.denemetakip.net`;
-    return `${school.code.toLowerCase()}.denemetakip.net`;
+    if (school.subdomainAlias) return `${school.subdomainAlias}.${rootDomain}`;
+    return `${school.code.toLowerCase()}.${rootDomain}`;
   };
 
   const getLicenseStatusLabel = (status?: string) => {
