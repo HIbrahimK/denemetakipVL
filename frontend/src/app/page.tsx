@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SchoolLogo from "@/components/school-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSchool } from "@/contexts/school-context";
 
 export default function Home() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
+  const { schoolNotFound, isLoading } = useSchool();
 
   useEffect(() => {
     const token = document.cookie
@@ -36,10 +38,51 @@ export default function Home() {
     setChecked(true);
   }, [router]);
 
-  if (!checked) {
+  if (!checked || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0f172a]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // Unregistered subdomain → show "school not found" with demo request link
+  if (schoolNotFound) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-[#0f172a] dark:via-[#0f172a] dark:to-[#1e1b4b]">
+        <header className="w-full flex items-center justify-end px-6 py-4">
+          <ThemeToggle />
+        </header>
+        <main className="flex-1 flex items-center justify-center px-4">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="mx-auto w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <svg className="h-10 w-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Okul Bulunamadı
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400">
+              Bu adres ile eşleşen kayıtlı bir okul bulunamadı. 
+              Okulunuz için bir hesap oluşturmak isterseniz demo talep edebilirsiniz.
+            </p>
+            <div className="flex flex-col gap-3">
+              <a
+                href="https://2eh.net"
+                className="inline-flex items-center justify-center py-3 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all"
+              >
+                Ana Sayfaya Git
+              </a>
+              <a
+                href="https://2eh.net/#iletisim"
+                className="inline-flex items-center justify-center py-3 px-6 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold transition-all"
+              >
+                Demo Talep Et
+              </a>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

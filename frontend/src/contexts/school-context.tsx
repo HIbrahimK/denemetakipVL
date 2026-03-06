@@ -14,6 +14,7 @@ interface SchoolContextType {
   schoolAppName: string;
   schoolLogo: string;
   isLoading: boolean;
+  schoolNotFound: boolean;
   refreshSchoolData: () => void;
 }
 
@@ -26,6 +27,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
     logoUrl: "/LOGO.png"
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [schoolNotFound, setSchoolNotFound] = useState(false);
 
   const fetchSchoolData = async () => {
     try {
@@ -85,6 +87,18 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
                 logoUrl: data.logoUrl || "/LOGO.png"
               });
             }
+            setSchoolNotFound(false);
+          } else if (response.status === 404) {
+            // Subdomain is not registered — redirect to landing page
+            const rootDomain = '2eh.net';
+            const hostname = window.location.hostname;
+            if (hostname !== rootDomain && hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')) {
+              setSchoolNotFound(true);
+              // Redirect to landing page after a short delay to show the "not found" UI
+              setTimeout(() => {
+                window.location.href = `https://${rootDomain}`;
+              }, 3000);
+            }
           }
         } catch (error) {
           // Silent fail - use defaults
@@ -130,6 +144,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         schoolAppName: schoolData.appShortName || schoolData.name,
         schoolLogo: schoolData.logoUrl,
         isLoading,
+        schoolNotFound,
         refreshSchoolData: fetchSchoolData
       }}
     >
