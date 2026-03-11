@@ -31,7 +31,7 @@ import {
     ResponsiveContainer
 } from "recharts";
 
-type ExamType = 'TYT' | 'AYT' | 'LGS';
+type ExamType = 'TYT' | 'AYT' | 'LGS' | 'OZEL';
 type ProgressRange = 'LAST_5' | 'LAST_10' | 'ALL';
 
 interface LessonResult {
@@ -113,6 +113,13 @@ function StudentResultsContent() {
     const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
     const [progressRange, setProgressRange] = useState<ProgressRange>('LAST_10');
     const [includePreviousYear, setIncludePreviousYear] = useState(false);
+    const normalizeExamType = (type?: string | null): ExamType => {
+        const value = (type || '').toUpperCase();
+        if (value === 'TYT' || value === 'AYT' || value === 'LGS' || value === 'OZEL') {
+            return value;
+        }
+        return 'OZEL';
+    };
     const formatTooltipValue = (value: number | string | undefined) =>
         typeof value === 'number' || typeof value === 'string'
             ? Number(value).toFixed(2)
@@ -146,7 +153,22 @@ function StudentResultsContent() {
                 if (!result?.studentInfo || !Array.isArray(result?.examHistory)) {
                     throw new Error('Geçersiz yanıt alındı.');
                 }
-                setData(result);
+
+                const normalizedData: StudentData = {
+                    ...result,
+                    examHistory: result.examHistory.map((exam: ExamAttempt) => ({
+                        ...exam,
+                        examType: normalizeExamType(exam.examType),
+                    })),
+                    missedExams: Array.isArray(result.missedExams)
+                        ? result.missedExams.map((exam: MissedExam) => ({
+                            ...exam,
+                            type: normalizeExamType(exam.type),
+                        }))
+                        : [],
+                };
+
+                setData(normalizedData);
             } catch (err) {
                 if (err instanceof Error && err.name === 'AbortError') {
                     setError('İstek zaman aşımına uğradı. Lütfen tekrar deneyin.');
@@ -162,29 +184,31 @@ function StudentResultsContent() {
         fetchData();
     }, [studentId, router]);
 
-    // Determine available exam types based on grade
+    // Determine available exam types from actual exam data first.
     const availableExamTypes = useMemo(() => {
-        if (!data || !data.studentInfo || !data.studentInfo.gradeName) return [];
-        const grade = data.studentInfo.gradeName;
-        
-        // 5-8: LGS
-        if (['5', '6', '7', '8'].some(g => grade.includes(g))) {
-            return ['LGS'];
+        if (!data) return [];
+
+        const discovered = Array.from(
+            new Set(data.examHistory.map((exam) => normalizeExamType(exam.examType))),
+        );
+
+        if (discovered.length > 0) {
+            return discovered as ExamType[];
         }
-        // 9-10: TYT
-        if (['9', '10'].some(g => grade.includes(g))) {
-            return ['TYT'];
-        }
-        // 11-12: TYT & AYT
-        if (['11', '12'].some(g => grade.includes(g))) {
-            return ['TYT', 'AYT'];
-        }
+
+        // Fallback for brand new students with no attempts yet.
+        const grade = data.studentInfo?.gradeName || '';
+        if (['5', '6', '7', '8'].some(g => grade.includes(g))) return ['LGS'];
+        if (['9', '10'].some(g => grade.includes(g))) return ['TYT'];
+        if (['11', '12'].some(g => grade.includes(g))) return ['TYT', 'AYT'];
         return ['TYT'];
     }, [data]);
 
     // Set initial exam type based on available types
     useEffect(() => {
-        if (availableExamTypes.length > 0 && selectedExamType === 'ALL') {
+        if (availableExamTypes.length === 0) return;
+
+        if (selectedExamType === 'ALL' || !availableExamTypes.includes(selectedExamType as ExamType)) {
             setSelectedExamType(availableExamTypes[0] as ExamType);
         }
     }, [availableExamTypes, selectedExamType]);

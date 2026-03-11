@@ -540,6 +540,9 @@ export class StudentsService {
           },
         },
         examAttempts: {
+          where: {
+            schoolId,
+          },
           include: {
             exam: {
               include: {
