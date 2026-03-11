@@ -204,7 +204,6 @@ export class SupportService {
         status: nextStatus,
         updatedById: user.id,
         lastReplyAt: new Date(),
-        closedAt: nextStatus === 'CLOSED' ? new Date() : null,
       },
       include: {
         school: {
