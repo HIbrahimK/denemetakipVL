@@ -88,6 +88,7 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
     subdomainAlias: "",
     domain: "",
     logoUrl: "",
+    city: "",
     address: "",
     phone: "",
     website: "",
@@ -145,8 +146,9 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
         subdomainAlias: data.subdomainAlias || "",
         domain: data.domain || "",
         logoUrl: data.logoUrl || "",
-        address: data.address || "",
-        phone: data.phone || "",
+        city: (data as any).city || "",
+        address: (data as any).address || "",
+        phone: (data as any).phone || "",
         website: data.website || "",
       });
       if (data.license) {
@@ -193,12 +195,13 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
         name: formData.name,
         code: formData.code,
         appShortName: formData.appShortName,
-        subdomainAlias: formData.subdomainAlias || null,
-        domain: formData.domain || null,
-        logoUrl: formData.logoUrl || null,
-        address: formData.address || null,
-        phone: formData.phone || null,
-        website: formData.website || null,
+        subdomainAlias: formData.subdomainAlias || undefined,
+        domain: formData.domain || undefined,
+        logoUrl: formData.logoUrl || undefined,
+        city: formData.city || undefined,
+        address: formData.address || undefined,
+        phone: formData.phone || undefined,
+        website: formData.website || undefined,
       });
       showMessage("Okul bilgileri güncellendi", "success");
     } catch (err: any) {
@@ -420,21 +423,149 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
         </Card>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b flex gap-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab.icon} {tab.label}
-          </button>
-        ))}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Okul Bilgileri */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Okul Bilgileri</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Okul Adı</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Okul Kodu</label>
+                <input
+                  type="text"
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Kısa Ad</label>
+                <input
+                  type="text"
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  value={formData.appShortName}
+                  onChange={(e) => setFormData({ ...formData, appShortName: e.target.value })}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Subdomain</label>
+              <div className="flex">
+                <input
+                  type="text"
+                  className="flex-1 mt-1 px-3 py-2 border rounded-l-md"
+                  value={formData.subdomainAlias}
+                  onChange={(e) => setFormData({ ...formData, subdomainAlias: e.target.value })}
+                />
+                <span className="mt-1 px-3 py-2 border border-l-0 rounded-r-md bg-muted text-sm">
+                  .{ROOT_DOMAIN}
+                </span>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Özel Domain</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                placeholder="www.example.com"
+                value={formData.domain}
+                onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* İletişim */}
+        <Card>
+          <CardHeader>
+            <CardTitle>İletişim Bilgileri</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Şehir</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                placeholder="Örn: Ankara"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Adres</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Telefon</label>
+              <input
+                type="tel"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Web Sitesi</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                value={formData.website}
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lisans Bilgileri */}
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>Lisans Bilgileri</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {schoolData.license ? (
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">Plan</p>
+                  <p className="font-semibold">{schoolData.license.planName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Durum</p>
+                  <Badge variant={schoolData.license.status === "ACTIVE" ? "default" : "secondary"}>
+                    {schoolData.license.status === "ACTIVE" ? "Aktif" : schoolData.license.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Bitiş Tarihi</p>
+                  <p className="font-semibold">
+                    {new Date(schoolData.license.endDate).toLocaleDateString("tr-TR")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Otomatik Yenileme</p>
+                  <p className="font-semibold">{schoolData.license.autoRenew ? "Evet" : "Hayır"}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Lisans bilgisi bulunmuyor.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* ── Tab: Okul Bilgileri ── */}

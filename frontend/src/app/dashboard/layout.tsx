@@ -25,7 +25,8 @@ import {
     BookOpenCheck,
     Target,
     UsersRound,
-    Award
+    Award,
+    HelpCircle
 } from "lucide-react";
 import { API_BASE_URL } from '@/lib/auth';
 import { Button } from "@/components/ui/button";
@@ -132,6 +133,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Başarılarım", href: "/dashboard/achievements", icon: Award },
                 { name: "Grup Çalışmalarım", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+                { name: "Yardım Merkezi", href: "/dashboard/support", icon: HelpCircle },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -141,6 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return [
                 { name: "Çocuğumun Sonuçları", href: "/dashboard/parent/results", icon: BarChart2 },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+                { name: "Yardım Merkezi", href: "/dashboard/support", icon: HelpCircle },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -156,6 +159,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { name: "Mentor Grupları", href: "/dashboard/groups", icon: UsersRound },
                 { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
                 { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
+                { name: "Yardım Merkezi", href: "/dashboard/support", icon: HelpCircle },
                 { name: "Profilim", href: "/dashboard/profile", icon: UserCircle },
             ];
         }
@@ -173,6 +177,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             { name: "Raporlar", href: "/dashboard/reports", icon: FileSpreadsheet },
             { name: "Mesajlar", href: "/dashboard/messages", icon: MessageSquare },
             { name: "Bildirimler", href: "/dashboard/notifications", icon: Bell },
+            { name: "Yardım Merkezi", href: "/dashboard/support", icon: HelpCircle },
             { name: "Kullanıcılar", href: "/dashboard/users", icon: Users },
             { name: "Ayarlar", href: "/dashboard/settings", icon: Settings },
         ];
@@ -220,9 +225,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || 'User'}`;
     };
 
-    const handleLogout = () => {
-        clearUserData();
-        window.location.href = '/';
+    const handleLogout = async () => {
+        await clearUserData();
+        window.location.replace('/login/school');
     };
 
     return (

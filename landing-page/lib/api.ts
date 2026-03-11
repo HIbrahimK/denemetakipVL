@@ -83,6 +83,9 @@ export const api = {
     email: string;
     subject: string;
     message: string;
+    targetInbox?: string;
+    category?: string;
+    sourcePage?: string;
   }) =>
     request<{ success: boolean; message: string; id: string }>("/contact", {
       method: "POST",
@@ -98,6 +101,9 @@ export const api = {
     studentCount?: string;
     city?: string;
     notes?: string;
+    targetInbox?: string;
+    category?: string;
+    sourcePage?: string;
   }) =>
     request<{ success: boolean; message: string; id: string }>(
       "/demo-requests",
@@ -116,6 +122,36 @@ export const api = {
 
   // Public site settings (contact info)
   getPublicSettings: () => request("/schools/public-settings"),
+
+  getLicensePlans: () =>
+    request<
+      Array<{
+        id: string;
+        name: string;
+        maxStudents: number;
+        maxUsers: number;
+        maxStorage: number;
+        monthlyPrice: number;
+        yearlyPrice: number;
+        features: string[];
+        popular: boolean;
+      }>
+    >("/schools/public-plans"),
+
+  getPublicSchoolList: () =>
+    request<{
+      schools: Array<{
+        id: string;
+        name: string;
+        appShortName: string;
+        city: string | null;
+        logoUrl: string | null;
+        subdomainAlias: string | null;
+        website: string | null;
+        planName: string | null;
+      }>;
+      uniqueCities: string[];
+    }>("/schools/public-list"),
 
   // Blog (public)
   getBlogPosts: (params?: { page?: string; limit?: string; category?: string }) =>
@@ -239,6 +275,58 @@ export const adminApi = {
 
   // Stats
   getContactStats: () => request("/admin/contact-stats"),
+
+  getMailCenter: (params?: {
+    page?: string;
+    limit?: string;
+    category?: string;
+    targetInbox?: string;
+    itemType?: string;
+  }) => request("/admin/mail-center", { params }),
+
+  getMailCenterStats: () => request("/admin/mail-center/stats"),
+
+  getAdminSupportTickets: (params?: { status?: string }) =>
+    request("/support/tickets/admin", { params }),
+
+  getSchoolSupportTickets: () => request("/support/tickets/my-school"),
+
+  createSupportTicket: (data: {
+    subject: string;
+    description: string;
+    priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  }) =>
+    request("/support/tickets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  replySupportTicket: (id: string, message: string) =>
+    request(`/support/tickets/${id}/replies`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
+
+  updateSupportTicketStatus: (
+    id: string,
+    status: "OPEN" | "IN_PROGRESS" | "ANSWERED" | "CLOSED"
+  ) =>
+    request(`/support/tickets/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+
+  getAccessLogs: (params?: {
+    page?: string;
+    limit?: string;
+    schoolId?: string;
+    userId?: string;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => request("/admin/access-logs", { params }),
+
+  getAccessLogStats: () => request("/admin/access-logs/stats"),
 
   // License Plans
   getLicensePlans: () => request("/schools/license-plans"),

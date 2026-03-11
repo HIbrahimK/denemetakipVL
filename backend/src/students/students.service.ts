@@ -526,9 +526,23 @@ export class StudentsService {
       }
     }
 
+    // For SUPER_ADMIN (schoolId may be null), look up student's actual schoolId
+    let effectiveSchoolId = schoolId;
+    if (!effectiveSchoolId) {
+      const studentLookup = await this.prisma.student.findUnique({
+        where: { id: studentId },
+        select: { schoolId: true },
+      });
+      if (!studentLookup) throw new NotFoundException('Ogrenci bulunamadi');
+      effectiveSchoolId = studentLookup.schoolId;
+    }
+
     // Get student with class info to determine grade level
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
+    const student = await this.prisma.student.findFirst({
+      where: {
+        id: studentId,
+        schoolId: effectiveSchoolId,
+      },
       include: {
         user: true,
         class: {
@@ -537,6 +551,9 @@ export class StudentsService {
           },
         },
         examAttempts: {
+          where: {
+            schoolId: effectiveSchoolId,
+          },
           include: {
             exam: {
               include: {
@@ -575,13 +592,15 @@ export class StudentsService {
     const activePeriodEnd = now < activePeriod.endDate ? now : activePeriod.endDate;
 
     // Get all exams for this school and grade level to find missed exams
+    // Include exams with no gradeLevel (applies to all grades) or matching grade
     const allSchoolExams = await this.prisma.exam.findMany({
       where: {
-        schoolId,
+        schoolId: effectiveSchoolId,
         isArchived: false,
         isPublished: true,
-        // Only get exams for the same grade level
-        gradeLevel: gradeLevel > 0 ? gradeLevel : undefined,
+        ...(gradeLevel > 0
+          ? { OR: [{ gradeLevel }, { gradeLevel: 0 }] }
+          : {}),
         date: {
           gte: activePeriod.startDate,
           lte: activePeriodEnd,
@@ -626,7 +645,7 @@ export class StudentsService {
       const allExamAttempts = await this.prisma.examAttempt.findMany({
         where: {
           examId: { in: examIds },
-          exam: { schoolId },
+          exam: { schoolId: effectiveSchoolId },
         },
         include: {
           student: {

@@ -1,70 +1,60 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Users, ExternalLink } from "lucide-react";
+import { Search, MapPin, ExternalLink, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
-export const metadata = {
-  title: "Okullar - Deneme Takip Sistemi",
-  description:
-    "Deneme Takip Sistemi'ni kullanan okullar. 50+ okul bize güveniyor.",
-};
-
-const schools = [
-  {
-    name: "Ankara Atatürk Lisesi",
-    city: "Ankara",
-    type: "Devlet",
-    students: 500,
-    quote:
-      "Sistem sayesinde öğrenci takibi çok kolaylaştı. Veli iletişimi harika.",
-    website: "#",
-  },
-  {
-    name: "İstanbul Fen Lisesi",
-    city: "İstanbul",
-    type: "Devlet",
-    students: 450,
-    quote:
-      "Excel ile toplu veri yükleme özelliği zamanımızdan çok tasarruf sağlıyor.",
-    website: "#",
-  },
-  {
-    name: "İzmir Anadolu Lisesi",
-    city: "İzmir",
-    type: "Devlet",
-    students: 400,
-    quote: "Çalışma planları ile öğrenci motivasyonu arttı.",
-    website: "#",
-  },
-  {
-    name: "Bursa İmam Hatip Lisesi",
-    city: "Bursa",
-    type: "Devlet",
-    students: 350,
-    quote: "Teknik destek ekibi çok hızlı ve ilgili.",
-    website: "#",
-  },
-  {
-    name: "Adana Fen Lisesi",
-    city: "Adana",
-    type: "Devlet",
-    students: 300,
-    quote: "TYT-AYT takibi artık çok kolay.",
-    website: "#",
-  },
-  {
-    name: "Antalya Anadolu Lisesi",
-    city: "Antalya",
-    type: "Devlet",
-    students: 280,
-    quote: "Veliler çok memnun, şeffaflık arttı.",
-    website: "#",
-  },
-];
+interface PublicSchool {
+  id: string;
+  name: string;
+  appShortName: string;
+  city: string | null;
+  logoUrl: string | null;
+  subdomainAlias: string | null;
+  website: string | null;
+  planName: string | null;
+}
 
 export default function SchoolsPage() {
+  const [schools, setSchools] = useState<PublicSchool[]>([]);
+  const [uniqueCities, setUniqueCities] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
+  useEffect(() => {
+    api.getPublicSchoolList()
+      .then((data) => {
+        setSchools(data.schools);
+        setUniqueCities(data.uniqueCities);
+      })
+      .catch(() => {
+        // fallback: show empty state, no hardcoded data
+        setSchools([]);
+        setUniqueCities([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => {
+    return schools.filter((s) => {
+      const matchesSearch =
+        !search ||
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        (s.city && s.city.toLowerCase().includes(search.toLowerCase()));
+      const matchesCity = !selectedCity || s.city === selectedCity;
+      return matchesSearch && matchesCity;
+    });
+  }, [schools, search, selectedCity]);
+
+  const cityCount = uniqueCities.length || 0;
+  const schoolCount = schools.length;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -77,13 +67,17 @@ export default function SchoolsPage() {
                 Bizi <span className="text-primary">Tercih Eden</span> Okullar
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                50+ okul ve binlerce öğretmen bize güveniyor.
+                {schoolCount > 0
+                  ? `${schoolCount}+ okul ve binlerce öğretmen bize güveniyor.`
+                  : "Okullar bize güveniyor."}
               </p>
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-8 mt-8">
                 <div>
-                  <p className="text-3xl font-bold text-primary">50+</p>
+                  <p className="text-3xl font-bold text-primary">
+                    {schoolCount > 0 ? `${schoolCount}+` : "—"}
+                  </p>
                   <p className="text-sm text-muted-foreground">Okul</p>
                 </div>
                 <div>
@@ -91,7 +85,9 @@ export default function SchoolsPage() {
                   <p className="text-sm text-muted-foreground">Öğrenci</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-primary">81</p>
+                  <p className="text-3xl font-bold text-primary">
+                    {cityCount > 0 ? cityCount : "—"}
+                  </p>
                   <p className="text-sm text-muted-foreground">Şehir</p>
                 </div>
               </div>
@@ -109,79 +105,104 @@ export default function SchoolsPage() {
                 <Input
                   placeholder="Okul ara..."
                   className="pl-10"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <select className="px-4 py-2 border rounded-md">
-                <option>Tüm Şehirler</option>
-                <option>Ankara</option>
-                <option>İstanbul</option>
-                <option>İzmir</option>
-              </select>
-              <select className="px-4 py-2 border rounded-md">
-                <option>Tüm Tipler</option>
-                <option>Devlet</option>
-                <option>Özel</option>
+              <select
+                className="px-4 py-2 border rounded-md bg-background"
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+              >
+                <option value="">Tüm Şehirler</option>
+                {uniqueCities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Schools Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {schools.map((school) => (
-                <Card key={school.name} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-lg font-bold text-primary">
-                          {school.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{school.name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{school.city}</span>
-                          <span>•</span>
-                          <span>{school.type}</span>
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                {schools.length === 0
+                  ? "Henüz kayıtlı okul bulunmuyor."
+                  : "Aramanızla eşleşen okul bulunamadı."}
+              </div>
+            ) : (
+              /* Schools Grid */
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                {filtered.map((school) => {
+                  const href =
+                    school.website ||
+                    (school.subdomainAlias
+                      ? `https://${school.subdomainAlias}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "2eh.net"}`
+                      : undefined);
+                  return (
+                    <Card key={school.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          {school.logoUrl ? (
+                            <img
+                              src={school.logoUrl}
+                              alt={school.name}
+                              className="h-12 w-12 rounded-lg object-contain bg-muted shrink-0"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                              <span className="text-lg font-bold text-primary">
+                                {school.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold truncate">{school.name}</h3>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                              {school.city && (
+                                <>
+                                  <MapPin className="h-3 w-3 shrink-0" />
+                                  <span>{school.city}</span>
+                                </>
+                              )}
+                              {school.planName && (
+                                <>
+                                  {school.city && <span>•</span>}
+                                  <span className="truncate">{school.planName}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 mt-4 text-sm">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span>{school.students} Öğrenci</span>
-                    </div>
+                        {href && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full mt-4"
+                            onClick={() => window.open(href, "_blank", "noopener,noreferrer")}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Siteyi Ziyaret Et
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
 
-                    <blockquote className="mt-4 text-sm text-muted-foreground italic border-l-2 border-primary/20 pl-4">
-                      "{school.quote}"
-                    </blockquote>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-4"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Siteyi Ziyaret Et
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Pagination */}
-            <div className="flex justify-center gap-2 mt-8">
-              <Button variant="outline" size="sm" disabled>
-                Önceki
-              </Button>
-              <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
-                1
-              </Button>
-              <Button variant="outline" size="sm">2</Button>
-              <Button variant="outline" size="sm">3</Button>
-              <Button variant="outline" size="sm">
-                Sonraki
-              </Button>
-            </div>
+            {/* Result count */}
+            {!loading && filtered.length > 0 && (
+              <p className="text-center text-sm text-muted-foreground mt-8">
+                {filtered.length} okul gösteriliyor
+                {selectedCity || search ? ` (${schools.length} okuldan)` : ""}
+              </p>
+            )}
           </div>
         </section>
       </main>

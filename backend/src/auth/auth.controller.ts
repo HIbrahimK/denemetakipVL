@@ -111,7 +111,11 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('token', { path: '/' });
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieDomain = process.env.COOKIE_DOMAIN;
+    const clearOptions: any = { path: '/', httpOnly: true, secure: isProd };
+    if (cookieDomain) clearOptions.domain = cookieDomain;
+    res.clearCookie('token', clearOptions);
     return { success: true };
   }
 

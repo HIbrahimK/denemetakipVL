@@ -43,7 +43,12 @@ export default function DemoPage() {
     setLoading(true);
     setError("");
     try {
-      await api.submitDemoRequest(formData);
+      await api.submitDemoRequest({
+        ...formData,
+        targetInbox: "info@denemetakip.net",
+        category: "DEMO_REQUEST",
+        sourcePage: "/demo",
+      });
       setSuccess(true);
       setFormData({
         schoolName: "",

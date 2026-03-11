@@ -22,7 +22,10 @@ import { AchievementsModule } from './achievements/achievements.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ContactModule } from './contact/contact.module';
 import { BlogModule } from './blog/blog.module';
-import { APP_GUARD } from '@nestjs/core';
+import { SupportModule } from './support/support.module';
+import { AccessLogsModule } from './access-logs/access-logs.module';
+import { AccessLogsInterceptor } from './access-logs/access-logs.interceptor';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { LicenseGuard } from './auth/guards/license.guard';
 
 @Module({
@@ -54,6 +57,8 @@ import { LicenseGuard } from './auth/guards/license.guard';
     NotificationsModule,
     ContactModule,
     BlogModule,
+    SupportModule,
+    AccessLogsModule,
   ],
   controllers: [HealthController],
   providers: [
@@ -64,6 +69,10 @@ import { LicenseGuard } from './auth/guards/license.guard';
     {
       provide: APP_GUARD,
       useClass: LicenseGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AccessLogsInterceptor,
     },
   ],
 })

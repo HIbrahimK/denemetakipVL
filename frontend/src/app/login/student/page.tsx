@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2, GraduationCap, AlertCircle, User } from "lucide-rea
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { setUserData, API_BASE_URL } from "@/lib/auth";
+import { resolveSchoolIdFromHost } from "@/lib/school-resolve";
 import SchoolLogo from "@/components/school-logo";
 
 export default function StudentLoginPage() {
@@ -26,10 +27,11 @@ export default function StudentLoginPage() {
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
         try {
+            const schoolId = await resolveSchoolIdFromHost(controller.signal);
             const res = await fetch(`${API_BASE_URL}/auth/login-student`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ studentNumber, password }),
+                body: JSON.stringify({ studentNumber, password, schoolId }),
                 credentials: 'include',
                 signal: controller.signal,
             });

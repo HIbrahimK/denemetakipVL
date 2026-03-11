@@ -121,4 +121,30 @@ export class ContactController {
   async getStats() {
     return this.contactService.getStats();
   }
+
+  @Get('admin/mail-center')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async getMailCenter(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('category') category?: string,
+    @Query('targetInbox') targetInbox?: string,
+    @Query('itemType') itemType?: string,
+  ) {
+    return this.contactService.getMailCenter({
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 20,
+      category,
+      targetInbox,
+      itemType,
+    });
+  }
+
+  @Get('admin/mail-center/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async getMailCenterStats() {
+    return this.contactService.getMailCenterStats();
+  }
 }

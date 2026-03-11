@@ -471,6 +471,7 @@ export default function BackupManagementPage() {
             <li>• <strong>Otomatik yedekler:</strong> Her gün saat 03:00&apos;te tüm okullar için alınır. 3 günden eski olanlar otomatik silinir.</li>
             <li>• <strong>Sınıf atlama yedekleri:</strong> Sınıf atlama işlemi öncesi otomatik alınır, limit yoktur.</li>
             <li>• <strong>Geri yükleme:</strong> Sadece aynı okula ait yedekler geri yüklenebilir.</li>
+            <li>• <strong>Kapsam:</strong> Okul bazlı ders-konu kataloğu, destek ticketları ve kullanım logları aynı okul yedeğine dahildir.</li>
           </ul>
         </CardContent>
       </Card>

@@ -85,9 +85,11 @@ export class MessagesService {
         status,
         senderId: userId,
         schoolId,
+        recipientIds: createMessageDto.recipientIds || undefined,
         targetRoles: createMessageDto.targetRoles || undefined,
         targetGradeId: createMessageDto.targetGradeId,
         targetClassId: createMessageDto.targetClassId,
+        targetClassIds: createMessageDto.targetClassIds || undefined,
         scheduledFor: createMessageDto.scheduledFor
           ? new Date(createMessageDto.scheduledFor)
           : null,
@@ -182,8 +184,22 @@ export class MessagesService {
 
     // Determine recipients based on message type
     let recipientIds: string[] = [];
+    const effectiveTargetClassIds =
+      targetClassIds && targetClassIds.length > 0
+        ? targetClassIds
+        : Array.isArray(message.targetClassIds)
+          ? message.targetClassIds.filter(
+              (classId): classId is string => typeof classId === 'string',
+            )
+          : [];
 
-    if (message.type === MessageType.DIRECT) {
+    if (
+      message.type === MessageType.BROADCAST &&
+      directRecipientIds &&
+      directRecipientIds.length > 0
+    ) {
+      recipientIds = directRecipientIds;
+    } else if (message.type === MessageType.DIRECT) {
       // Direct messages - use provided recipient IDs
       if (!directRecipientIds || directRecipientIds.length === 0) {
         throw new BadRequestException(
@@ -196,10 +212,10 @@ export class MessagesService {
       const targetRoles = (message.targetRoles as string[]) || [];
 
       // Çoklu şube seçimi varsa
-      if (targetClassIds && targetClassIds.length > 0) {
+      if (effectiveTargetClassIds.length > 0) {
         const classes = await this.prisma.class.findMany({
           where: {
-            id: { in: targetClassIds },
+            id: { in: effectiveTargetClassIds },
             schoolId,
           },
           include: {
@@ -913,10 +929,134 @@ export class MessagesService {
     messageId: string,
     schoolId: string,
   ): Promise<string[]> {
-    // This is a helper method to retrieve recipient IDs
-    // For direct messages, we'll need to query them separately
-    // For now, returning empty array to be populated by sendMessageToRecipients logic
-    return [];
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+      include: {
+        targetGrade: {
+          include: {
+            classes: {
+              include: {
+                students: {
+                  include: {
+                    user: true,
+                    parent: {
+                      include: {
+                        user: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        targetClass: {
+          include: {
+            students: {
+              include: {
+                user: true,
+                parent: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!message || message.schoolId !== schoolId) {
+      throw new NotFoundException('Message not found');
+    }
+
+    if (message.type === MessageType.DIRECT) {
+      return Array.isArray(message.recipientIds)
+        ? message.recipientIds.filter((recipientId): recipientId is string => typeof recipientId === 'string')
+        : [];
+    }
+
+    let recipientIds: string[] = [];
+    const targetRoles = Array.isArray(message.targetRoles)
+      ? message.targetRoles.filter((role): role is string => typeof role === 'string')
+      : [];
+    const targetClassIds = Array.isArray(message.targetClassIds)
+      ? message.targetClassIds.filter((classId): classId is string => typeof classId === 'string')
+      : [];
+
+    if (targetClassIds.length > 0) {
+      const classes = await this.prisma.class.findMany({
+        where: {
+          id: { in: targetClassIds },
+          schoolId,
+        },
+        include: {
+          students: {
+            include: {
+              user: true,
+              parent: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      classes.forEach((cls) => {
+        cls.students.forEach((student) => {
+          if (targetRoles.length === 0 || targetRoles.includes(Role.STUDENT)) {
+            recipientIds.push(student.userId);
+          }
+          if (
+            (targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) &&
+            student.parent
+          ) {
+            recipientIds.push(student.parent.userId);
+          }
+        });
+      });
+    } else if (message.targetClassId && message.targetClass) {
+      message.targetClass.students.forEach((student) => {
+        if (targetRoles.length === 0 || targetRoles.includes(Role.STUDENT)) {
+          recipientIds.push(student.userId);
+        }
+        if (
+          (targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) &&
+          student.parent
+        ) {
+          recipientIds.push(student.parent.userId);
+        }
+      });
+    } else if (message.targetGradeId && message.targetGrade) {
+      message.targetGrade.classes.forEach((cls) => {
+        cls.students.forEach((student) => {
+          if (targetRoles.length === 0 || targetRoles.includes(Role.STUDENT)) {
+            recipientIds.push(student.userId);
+          }
+          if (
+            (targetRoles.length === 0 || targetRoles.includes(Role.PARENT)) &&
+            student.parent
+          ) {
+            recipientIds.push(student.parent.userId);
+          }
+        });
+      });
+    } else if (targetRoles.length > 0) {
+      const users = await this.prisma.user.findMany({
+        where: {
+          schoolId,
+          role: { in: targetRoles as Role[] },
+          isActive: true,
+        },
+        select: { id: true },
+      });
+      recipientIds = users.map((user) => user.id);
+    }
+
+    return [...new Set(recipientIds)];
   }
 
   async exportDeliveryReport(

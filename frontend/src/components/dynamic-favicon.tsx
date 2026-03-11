@@ -7,23 +7,26 @@ export default function DynamicFavicon() {
     const { schoolName, schoolLogo } = useSchool();
 
     useEffect(() => {
+        let currentFaviconUrl: string | null = null;
+        let currentAppleUrl: string | null = null;
+        let cancelled = false;
+
+        const upsertLink = (rel: string, href: string, type = "image/png") => {
+            let link = document.querySelector(`link[rel='${rel}']`) as HTMLLinkElement | null;
+            if (!link) {
+                link = document.createElement("link");
+                link.rel = rel;
+                document.head.appendChild(link);
+            }
+            link.type = type;
+            link.href = href;
+        };
+
         const updateFavicon = async () => {
             const pageTitle = `${schoolName} - Deneme Takip`;
 
             // Update page title
             document.title = pageTitle;
-
-            // Remove existing favicons safely
-            const existingLinks = document.querySelectorAll("link[rel*='icon']");
-            existingLinks.forEach(link => {
-                try {
-                    if (link.parentNode) {
-                        link.parentNode.removeChild(link);
-                    }
-                } catch (e) {
-                    // Ignore removal errors
-                }
-            });
 
             // Create favicon from logo
             try {
@@ -50,23 +53,13 @@ export default function DynamicFavicon() {
 
                 // Convert canvas to blob
                 canvas.toBlob((blob) => {
-                    if (!blob) return;
+                    if (!blob || cancelled) return;
 
                     const faviconUrl = URL.createObjectURL(blob);
+                    currentFaviconUrl = faviconUrl;
 
-                    // Add new favicon
-                    const link = document.createElement('link');
-                    link.rel = 'icon';
-                    link.type = 'image/png';
-                    link.href = faviconUrl;
-                    document.head.appendChild(link);
-
-                    // Add shortcut icon
-                    const shortcutLink = document.createElement('link');
-                    shortcutLink.rel = 'shortcut icon';
-                    shortcutLink.type = 'image/png';
-                    shortcutLink.href = faviconUrl;
-                    document.head.appendChild(shortcutLink);
+                    upsertLink("icon", faviconUrl);
+                    upsertLink("shortcut icon", faviconUrl);
 
                     // Create larger icon for apple-touch-icon
                     const appleCanvas = document.createElement('canvas');
@@ -78,27 +71,31 @@ export default function DynamicFavicon() {
                     appleCtx.drawImage(img, 0, 0, 180, 180);
 
                     appleCanvas.toBlob((appleBlob) => {
-                        if (!appleBlob) return;
+                        if (!appleBlob || cancelled) return;
                         const appleFaviconUrl = URL.createObjectURL(appleBlob);
-                        
-                        const appleLink = document.createElement('link');
-                        appleLink.rel = 'apple-touch-icon';
-                        appleLink.href = appleFaviconUrl;
-                        document.head.appendChild(appleLink);
+                        currentAppleUrl = appleFaviconUrl;
+                        upsertLink("apple-touch-icon", appleFaviconUrl);
                     }, 'image/png');
                 }, 'image/png');
             } catch (error) {
                 console.error('Failed to create favicon:', error);
                 // Fallback to direct logo usage
-                const link = document.createElement('link');
-                link.rel = 'icon';
-                link.type = 'image/png';
-                link.href = schoolLogo;
-                document.head.appendChild(link);
+                upsertLink("icon", schoolLogo);
+                upsertLink("shortcut icon", schoolLogo);
             }
         };
 
         updateFavicon();
+
+        return () => {
+            cancelled = true;
+            if (currentFaviconUrl) {
+                URL.revokeObjectURL(currentFaviconUrl);
+            }
+            if (currentAppleUrl) {
+                URL.revokeObjectURL(currentAppleUrl);
+            }
+        };
     }, [schoolName, schoolLogo]);
 
     return null;

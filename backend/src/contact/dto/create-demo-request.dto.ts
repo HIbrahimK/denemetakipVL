@@ -28,4 +28,16 @@ export class CreateDemoRequestDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  targetInbox?: string;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @IsString()
+  @IsOptional()
+  sourcePage?: string;
 }

@@ -394,9 +394,11 @@ model Message {
   type              MessageType         @default(DIRECT)
   category          MessageCategory     @default(GENERAL)
   status            MessageStatus       @default(SENT)
+  recipientIds      Json?
   targetRoles       Json?
   targetGradeId     String?
   targetClassId     String?
+  targetClassIds    Json?
   scheduledFor      DateTime?
   sentAt            DateTime?
   requiresApproval  Boolean             @default(false)
@@ -562,6 +564,7 @@ model School {
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   address                   String?
+  city                      String?
   isParentLoginActive       Boolean                     @default(true)
   phone                     String?
   studentLoginType          String                      @default("studentNumber")
@@ -600,6 +603,8 @@ model School {
   studyRecommendations      StudyRecommendation[]
   studySessions             StudySession[]
   studyTasks                StudyTask[]
+  subjects                  Subject[]
+  topics                    Topic[]
   users                     User[]
   achievements              Achievement[]
   studentAchievements       StudentAchievement[]
@@ -608,6 +613,8 @@ model School {
   notificationCampaigns     NotificationCampaign[]
   userNotificationSettings  UserNotificationSetting[]
   licenses                  SchoolLicense[]
+  supportTickets            SupportTicket[]
+  accessLogs                UserAccessLog[]
 }
 
 model Student {
@@ -851,6 +858,7 @@ model StudyTask {
 
 model Subject {
   id          String   @id @default(uuid())
+  schoolId    String?
   name        String
   examType    String
   gradeLevels Int[]
@@ -860,7 +868,9 @@ model Subject {
   createdAt   DateTime @default(now())
   updatedAt          DateTime             @updatedAt
   topics      Topic[]
+  school      School?  @relation(fields: [schoolId], references: [id])
 
+  @@index([schoolId])
   @@index([examType])
   @@index([isActive])
 }
@@ -881,6 +891,7 @@ model TemplateRating {
 
 model Topic {
   id                  String                @id @default(uuid())
+  schoolId            String?
   name                String
   parentTopicId       String?
   order               Int                   @default(0)
@@ -893,9 +904,11 @@ model Topic {
   parentTopic         Topic?                @relation("TopicToTopic", fields: [parentTopicId], references: [id])
   childTopics         Topic[]               @relation("TopicToTopic")
   subject             Subject?              @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school              School?               @relation(fields: [schoolId], references: [id])
   topicResources      TopicResource[]
 
   @@index([parentTopicId])
+  @@index([schoolId])
   @@index([subjectId])
 }
 
@@ -949,6 +962,10 @@ model User {
   notificationsCreated NotificationCampaign[] @relation("NotificationCampaignCreatedBy")
   notificationDeliveries NotificationDelivery[]
   notificationSetting  UserNotificationSetting?
+  supportTicketsCreated SupportTicket[]       @relation("SupportTicketCreatedBy")
+  supportTicketsUpdated SupportTicket[]       @relation("SupportTicketUpdatedBy")
+  supportTicketReplies  SupportTicketReply[]
+  accessLogs            UserAccessLog[]
 }
 
 model PushSubscription {
@@ -1249,12 +1266,18 @@ model ContactMessage {
   email     String
   subject   String
   message   String
+  targetInbox String      @default("info@denemetakip.net")
+  category    String      @default("GENERAL_INFO")
+  sourceChannel String    @default("CONTACT_FORM")
+  sourcePage   String?
   status    ContactStatus @default(NEW)
   repliedAt DateTime?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   @@index([status])
+  @@index([targetInbox, createdAt])
+  @@index([category, createdAt])
   @@index([createdAt])
 }
 
@@ -1274,12 +1297,91 @@ model DemoRequest {
   studentCount String?
   city         String?
   notes        String?
+  targetInbox  String            @default("info@denemetakip.net")
+  category     String            @default("DEMO_REQUEST")
+  sourceChannel String           @default("DEMO_FORM")
+  sourcePage    String?
   status       DemoRequestStatus @default(PENDING)
   contactedAt  DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
 
   @@index([status])
+  @@index([targetInbox, createdAt])
+  @@index([category, createdAt])
+  @@index([createdAt])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  ANSWERED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id          String               @id @default(uuid())
+  schoolId    String
+  createdById String
+  updatedById String?
+  subject     String
+  description String
+  priority    SupportTicketPriority @default(MEDIUM)
+  status      SupportTicketStatus   @default(OPEN)
+  closedAt    DateTime?
+  lastReplyAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  school    School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdBy User                @relation("SupportTicketCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  updatedBy User?               @relation("SupportTicketUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  replies   SupportTicketReply[]
+
+  @@index([schoolId, status, updatedAt])
+  @@index([createdById, createdAt])
+}
+
+model SupportTicketReply {
+  id        String   @id @default(uuid())
+  ticketId  String
+  senderId  String
+  message   String
+  createdAt DateTime @default(now())
+
+  ticket  SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender  User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+model UserAccessLog {
+  id          String   @id @default(uuid())
+  schoolId    String
+  userId      String
+  method      String
+  path        String
+  route       String?
+  area        String?
+  ipAddress   String?
+  userAgent   String?
+  statusCode  Int
+  createdAt   DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, createdAt])
+  @@index([userId, createdAt])
+  @@index([path, createdAt])
   @@index([createdAt])
 }
 

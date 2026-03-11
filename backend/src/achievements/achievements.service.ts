@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AchievementCategory,
@@ -19,6 +23,56 @@ export class AchievementsService {
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
   ) {}
+
+  private async getAccessibleStudent(
+    studentId: string,
+    schoolId: string,
+    requesterUserId: string,
+    requesterRole: string,
+  ) {
+    const student = await this.prisma.student.findFirst({
+      where: {
+        id: studentId,
+        schoolId,
+      },
+      select: {
+        id: true,
+        schoolId: true,
+        userId: true,
+        parentId: true,
+        class: {
+          select: {
+            grade: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (requesterRole === 'STUDENT' && student.userId !== requesterUserId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    if (requesterRole === 'PARENT') {
+      const parent = await this.prisma.parent.findFirst({
+        where: { userId: requesterUserId },
+        select: { id: true },
+      });
+
+      if (!parent || parent.id !== student.parentId) {
+        throw new ForbiddenException('Access denied');
+      }
+    }
+
+    return student;
+  }
 
   // Get all achievements for a school
   async findAll(
@@ -63,24 +117,18 @@ export class AchievementsService {
   }
 
   // Get student's achievements
-  async findStudentAchievements(studentId: string) {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
-      select: {
-        schoolId: true,
-        class: {
-          select: {
-            grade: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!student) throw new NotFoundException('Student not found');
+  async findStudentAchievements(
+    studentId: string,
+    schoolId: string,
+    requesterUserId: string,
+    requesterRole: string,
+  ) {
+    const student = await this.getAccessibleStudent(
+      studentId,
+      schoolId,
+      requesterUserId,
+      requesterRole,
+    );
 
     // Determine allowed exam types based on student's grade level
     const allowedExamTypes: (ExamType | null)[] = [null]; // null represents GENEL (general achievements)
@@ -363,21 +411,64 @@ export class AchievementsService {
   }
 
   // Check and unlock achievement for student
-  async checkAndUnlock(studentId: string, achievementType: string) {
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
-      select: {
-        schoolId: true,
-        userId: true,
-        parent: {
-          select: {
-            userId: true,
+  async checkAndUnlock(
+    studentId: string,
+    achievementType: string,
+    requester?: {
+      schoolId: string;
+      userId: string;
+      role: string;
+    },
+  ) {
+    const student = requester
+      ? await this.prisma.student.findFirst({
+          where: {
+            id: studentId,
+            schoolId: requester.schoolId,
           },
-        },
-      },
-    });
+          select: {
+            schoolId: true,
+            userId: true,
+            parentId: true,
+            parent: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        })
+      : await this.prisma.student.findUnique({
+          where: { id: studentId },
+          select: {
+            schoolId: true,
+            userId: true,
+            parentId: true,
+            parent: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        });
 
     if (!student) return null;
+
+    if (requester) {
+      if (requester.role === 'STUDENT' && student.userId !== requester.userId) {
+        throw new ForbiddenException('Access denied');
+      }
+
+      if (requester.role === 'PARENT') {
+        const parent = await this.prisma.parent.findFirst({
+          where: { userId: requester.userId },
+          select: { id: true },
+        });
+
+        if (!parent || parent.id !== student.parentId) {
+          throw new ForbiddenException('Access denied');
+        }
+      }
+    }
 
     const achievement = await this.prisma.achievement.findFirst({
       where: {

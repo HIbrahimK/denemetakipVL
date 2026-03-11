@@ -9,6 +9,30 @@ interface SchoolData {
   logoUrl: string;
 }
 
+const DEFAULT_LOGO = "/LOGO.png";
+
+function normalizeLogoUrl(logoUrl?: string | null) {
+  if (!logoUrl) return DEFAULT_LOGO;
+
+  if (
+    logoUrl.startsWith('http://') ||
+    logoUrl.startsWith('https://') ||
+    logoUrl.startsWith('data:')
+  ) {
+    return logoUrl;
+  }
+
+  try {
+    const apiOrigin = new URL(API_BASE_URL).origin;
+    if (logoUrl.startsWith('/')) {
+      return `${apiOrigin}${logoUrl}`;
+    }
+    return `${apiOrigin}/${logoUrl}`;
+  } catch {
+    return logoUrl;
+  }
+}
+
 interface SchoolContextType {
   schoolName: string;
   schoolAppName: string;
@@ -24,7 +48,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
   const [schoolData, setSchoolData] = useState<SchoolData>({
     name: "DenemeTakip.net",
     appShortName: "Deneme Takip Sistemi",
-    logoUrl: "/LOGO.png"
+    logoUrl: DEFAULT_LOGO
   });
   const [isLoading, setIsLoading] = useState(true);
   const [schoolNotFound, setSchoolNotFound] = useState(false);
@@ -38,11 +62,12 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         const user = JSON.parse(userStr);
         
         // If school data is in user object, use it
-        if (user.school) {
+        // Only use cached school data if it belongs to the current user's school
+        if (user.school && user.school.id === user.schoolId) {
           setSchoolData({
             name: user.school.name || "DenemeTakip.net",
             appShortName: user.school.appShortName || "Deneme Takip Sistemi",
-            logoUrl: user.school.logoUrl || "/LOGO.png"
+            logoUrl: normalizeLogoUrl(user.school.logoUrl)
           });
           setIsLoading(false);
           return;
@@ -60,13 +85,13 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             const newSchoolData = {
               name: data.name || "DenemeTakip.net",
               appShortName: data.appShortName || "Deneme Takip Sistemi",
-              logoUrl: data.logoUrl || "/LOGO.png"
+              logoUrl: normalizeLogoUrl(data.logoUrl)
             };
             
             setSchoolData(newSchoolData);
             
-            // Update localStorage with school data
-            user.school = newSchoolData;
+            // Update localStorage with school data (include id for cache validation)
+            user.school = { id: user.schoolId, ...newSchoolData };
             localStorage.setItem('user', JSON.stringify(user));
           }
         }
@@ -84,7 +109,7 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
               setSchoolData({
                 name: data.name || "DenemeTakip.net",
                 appShortName: data.appShortName || "Deneme Takip Sistemi",
-                logoUrl: data.logoUrl || "/LOGO.png"
+                logoUrl: normalizeLogoUrl(data.logoUrl)
               });
             }
             setSchoolNotFound(false);

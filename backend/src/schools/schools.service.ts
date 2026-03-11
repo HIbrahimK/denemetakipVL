@@ -134,6 +134,7 @@ export class SchoolsService {
       subdomainAlias: s.subdomainAlias,
       domain: s.domain,
       logoUrl: s.logoUrl,
+      city: s.city,
       createdAt: s.createdAt,
       studentCount: s._count.students,
       userCount: s._count.users,
@@ -155,6 +156,72 @@ export class SchoolsService {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getPublicLicensePlans() {
+    const plans = await this.prisma.licensePlan.findMany({
+      where: { isActive: true },
+      orderBy: [{ monthlyPrice: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    return plans.map((plan, index) => ({
+      id: plan.id,
+      name: plan.name,
+      maxStudents: plan.maxStudents,
+      maxUsers: plan.maxUsers,
+      maxStorage: plan.maxStorage,
+      monthlyPrice: plan.monthlyPrice,
+      yearlyPrice: plan.yearlyPrice,
+      features: Array.isArray(plan.features)
+        ? plan.features
+        : Object.values((plan.features as Record<string, string>) || {}),
+      popular: index === 1,
+    }));
+  }
+
+  async getPublicSchoolList() {
+    const schools = await this.prisma.school.findMany({
+      select: {
+        id: true,
+        name: true,
+        appShortName: true,
+        city: true,
+        logoUrl: true,
+        subdomainAlias: true,
+        website: true,
+        licenses: {
+          where: { status: 'ACTIVE' },
+          take: 1,
+          select: {
+            plan: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    const uniqueCities = [
+      ...new Set(
+        schools
+          .map((s) => s.city)
+          .filter((c): c is string => Boolean(c))
+          .sort(),
+      ),
+    ];
+
+    return {
+      schools: schools.map((s) => ({
+        id: s.id,
+        name: s.name,
+        appShortName: s.appShortName,
+        city: s.city ?? null,
+        logoUrl: s.logoUrl ?? null,
+        subdomainAlias: s.subdomainAlias ?? null,
+        website: s.website ?? null,
+        planName: s.licenses[0]?.plan?.name ?? null,
+      })),
+      uniqueCities,
     };
   }
 
@@ -315,6 +382,7 @@ export class SchoolsService {
       subdomainAlias: school.subdomainAlias,
       domain: school.domain,
       logoUrl: school.logoUrl,
+      city: school.city,
       createdAt: school.createdAt,
       stats: {
         studentCount: school._count.students,
@@ -1543,10 +1611,12 @@ export class SchoolsService {
         users,
         exams,
         lessons,
+        subjectData,
         messageData,
         studyData,
         groupData,
         achievementData,
+        supportData,
         performanceData,
         examCalendarSettings,
       ] = await Promise.all([
@@ -1606,7 +1676,17 @@ export class SchoolsService {
           where: { schoolId: id },
         }),
 
-        // 6. Message System (complete)
+        // 6. Subject / Topic catalog (school-scoped)
+        Promise.all([
+          this.prisma.subject.findMany({
+            where: { schoolId: id },
+          }),
+          this.prisma.topic.findMany({
+            where: { schoolId: id },
+          }),
+        ]),
+
+        // 7. Message System (complete)
         Promise.all([
           this.prisma.message.findMany({
             where: { schoolId: id },
@@ -1627,7 +1707,7 @@ export class SchoolsService {
           }),
         ]),
 
-        // 7. Study Plans & Tasks (complete)
+        // 8. Study Plans & Tasks (complete)
         Promise.all([
           this.prisma.studyPlan.findMany({
             where: { schoolId: id },
@@ -1656,7 +1736,7 @@ export class SchoolsService {
           }),
         ]),
 
-        // 8. Group/Mentor System (complete)
+        // 9. Group/Mentor System (complete)
         Promise.all([
           this.prisma.mentorGroup.findMany({
             where: { schoolId: id },
@@ -1691,7 +1771,7 @@ export class SchoolsService {
           }),
         ]),
 
-        // 9. Achievement System
+        // 10. Achievement System
         Promise.all([
           this.prisma.achievement.findMany({
             where: { schoolId: id },
@@ -1701,12 +1781,25 @@ export class SchoolsService {
           }),
         ]),
 
-        // 10. Performance Data
+        // 11. Support & Usage Logs
+        Promise.all([
+          this.prisma.supportTicket.findMany({
+            where: { schoolId: id },
+            include: {
+              replies: true,
+            },
+          }),
+          this.prisma.userAccessLog.findMany({
+            where: { schoolId: id },
+          }),
+        ]),
+
+        // 12. Performance Data
         this.prisma.studentPerformanceSummary.findMany({
           where: { schoolId: id },
         }),
 
-        // 11. Exam Calendar Settings
+        // 13. Exam Calendar Settings
         this.prisma.examCalendarSettings.findUnique({
           where: { schoolId: id },
         }),
@@ -1725,10 +1818,14 @@ export class SchoolsService {
             'users',
             'exams',
             'lessons',
+            'subjects',
+            'topics',
             'messages',
             'studyPlans',
             'groups',
             'achievements',
+            'supportTickets',
+            'accessLogs',
             'performance',
             'examCalendarSettings',
           ],
@@ -1739,6 +1836,8 @@ export class SchoolsService {
           grades,
           users,
           lessons,
+          subjects: subjectData[0],
+          topics: subjectData[1],
           examCalendarSettings,
 
           // Exam System
@@ -1786,6 +1885,13 @@ export class SchoolsService {
           achievements: achievementData[0],
           studentAchievements: achievementData[1],
 
+          // Support & Usage Logs
+          supportTickets: supportData[0],
+          supportTicketReplies: supportData[0].flatMap(
+            (ticket) => ticket.replies || [],
+          ),
+          accessLogs: supportData[1],
+
           // Performance Data
           studentPerformanceSummaries: performanceData,
         },
@@ -1821,10 +1927,14 @@ export class SchoolsService {
           totalRecords: {
             users: users.length,
             exams: exams.length,
+            subjects: subjectData[0].length,
+            topics: subjectData[1].length,
             messages: messageData[0].length,
             studyPlans: studyData[0].length,
             groups: groupData[0].length,
             achievements: achievementData[0].length,
+            supportTickets: supportData[0].length,
+            accessLogs: supportData[1].length,
           },
         },
       };
@@ -2007,6 +2117,13 @@ export class SchoolsService {
           await tx.studentAchievement.deleteMany({ where: { schoolId } });
           await tx.achievement.deleteMany({ where: { schoolId } });
 
+          await tx.supportTicketReply.deleteMany({
+            where: { ticket: { schoolId } },
+          });
+          await tx.supportTicket.deleteMany({ where: { schoolId } });
+
+          await tx.userAccessLog.deleteMany({ where: { schoolId } });
+
           await tx.messageReply.deleteMany({
             where: { message: { schoolId } },
           });
@@ -2042,6 +2159,9 @@ export class SchoolsService {
           await tx.examAttempt.deleteMany({ where: { schoolId } });
           await tx.exam.deleteMany({ where: { schoolId } });
           await tx.examCalendarSettings.deleteMany({ where: { schoolId } });
+
+          await tx.topic.deleteMany({ where: { schoolId } });
+          await tx.subject.deleteMany({ where: { schoolId } });
 
           await tx.lesson.deleteMany({ where: { schoolId } });
 
@@ -2204,6 +2324,45 @@ export class SchoolsService {
                   name: lesson.name,
                   examType: lesson.examType,
                   schoolId: lesson.schoolId,
+                },
+              });
+            }
+          }
+
+          if (data.subjects?.length) {
+            console.log(`Restoring ${data.subjects.length} subjects...`);
+            for (const subject of data.subjects) {
+              await tx.subject.create({
+                data: {
+                  id: subject.id,
+                  schoolId: subject.schoolId,
+                  name: subject.name,
+                  examType: subject.examType,
+                  gradeLevels: subject.gradeLevels,
+                  order: subject.order,
+                  type: subject.type,
+                  isActive: subject.isActive,
+                  createdAt: subject.createdAt,
+                  updatedAt: subject.updatedAt,
+                },
+              });
+            }
+          }
+
+          if (data.topics?.length) {
+            console.log(`Restoring ${data.topics.length} topics...`);
+            for (const topic of data.topics) {
+              await tx.topic.create({
+                data: {
+                  id: topic.id,
+                  schoolId: topic.schoolId,
+                  name: topic.name,
+                  parentTopicId: topic.parentTopicId,
+                  order: topic.order,
+                  isSpecialActivity: topic.isSpecialActivity,
+                  createdAt: topic.createdAt,
+                  updatedAt: topic.updatedAt,
+                  subjectId: topic.subjectId,
                 },
               });
             }
@@ -2873,6 +3032,63 @@ export class SchoolsService {
             }
           }
 
+          if (data.supportTickets?.length) {
+            console.log(`Restoring ${data.supportTickets.length} support tickets...`);
+            for (const ticket of data.supportTickets) {
+              await tx.supportTicket.create({
+                data: {
+                  id: ticket.id,
+                  schoolId: ticket.schoolId,
+                  createdById: ticket.createdById,
+                  updatedById: ticket.updatedById,
+                  subject: ticket.subject,
+                  description: ticket.description,
+                  priority: ticket.priority,
+                  status: ticket.status,
+                  closedAt: ticket.closedAt,
+                  lastReplyAt: ticket.lastReplyAt,
+                  createdAt: ticket.createdAt,
+                  updatedAt: ticket.updatedAt,
+                },
+              });
+            }
+          }
+
+          if (data.supportTicketReplies?.length) {
+            for (const reply of data.supportTicketReplies) {
+              await tx.supportTicketReply.create({
+                data: {
+                  id: reply.id,
+                  ticketId: reply.ticketId,
+                  senderId: reply.senderId,
+                  message: reply.message,
+                  createdAt: reply.createdAt,
+                },
+              });
+            }
+          }
+
+          if (data.accessLogs?.length) {
+            console.log(`Restoring ${data.accessLogs.length} access logs...`);
+            for (const log of data.accessLogs) {
+              await tx.userAccessLog.create({
+                data: {
+                  id: log.id,
+                  schoolId: log.schoolId,
+                  userId: log.userId,
+                  method: log.method,
+                  path: log.path,
+                  route: log.route,
+                  area: log.area,
+                  ipAddress: log.ipAddress,
+                  userAgent: log.userAgent,
+                  statusCode: log.statusCode,
+                  createdAt: log.createdAt,
+                },
+              });
+            }
+          }
+
           console.log('Step 3: Restore completed successfully!');
         },
         {
@@ -2891,10 +3107,14 @@ export class SchoolsService {
               (g) => g.classes?.flatMap((c) => c.students || []) || [],
             ).length || 0,
           exams: data.exams?.length || 0,
+          subjects: data.subjects?.length || 0,
+          topics: data.topics?.length || 0,
           messages: data.messages?.length || 0,
           studyPlans: data.studyPlans?.length || 0,
           groups: data.mentorGroups?.length || 0,
           achievements: data.achievements?.length || 0,
+          supportTickets: data.supportTickets?.length || 0,
+          accessLogs: data.accessLogs?.length || 0,
         },
       };
     } catch (error) {
