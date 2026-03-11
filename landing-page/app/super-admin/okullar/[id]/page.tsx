@@ -97,12 +97,12 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
         name: formData.name,
         code: formData.code,
         appShortName: formData.appShortName,
-        subdomainAlias: formData.subdomainAlias || null,
-        domain: formData.domain || null,
-        logoUrl: formData.logoUrl || null,
-        address: formData.address || null,
-        phone: formData.phone || null,
-        website: formData.website || null,
+        subdomainAlias: formData.subdomainAlias || undefined,
+        domain: formData.domain || undefined,
+        logoUrl: formData.logoUrl || undefined,
+        address: formData.address || undefined,
+        phone: formData.phone || undefined,
+        website: formData.website || undefined,
       });
       router.push("/super-admin/okullar");
     } catch (err: any) {
