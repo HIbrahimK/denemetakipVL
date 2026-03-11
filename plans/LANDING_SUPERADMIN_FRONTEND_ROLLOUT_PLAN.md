@@ -51,7 +51,7 @@ Bu plan, `Denemetakip landingpage geliştirmeleri.md` içindeki tüm maddeleri r
 
 ## 3) Teknik İş Listesi (Adım Adım)
 
-## Adım 1 - Keşif ve kapsam sabitleme (tamamlanacak)
+## Adım 1 - Keşif ve kapsam sabitleme (tamamlandı)
 
 - İlgili route ve modülleri çıkar:
   - `landing-page/app/*`
@@ -70,6 +70,12 @@ Bu plan, `Denemetakip landingpage geliştirmeleri.md` içindeki tüm maddeleri r
 - İlk tıklama hatalarının kök neden analizi (`removeChild`, eksik logo fallback)
 - Öğrenci denemeleri TYT/AYT filtre düzeltmesi
 - Tenant izolasyonu: okul logo/adı, rozet, çalışma planı
+
+Durum notu:
+- Tamamlandı: logout/login döngüsü, favicon/removeChild hatası, logo URL 404 akışı, okul düzenleme 400 payload sorunu
+- Tamamlandı: login + öğrenci sınav geçmişinde okul bazlı izolasyon güçlendirmeleri
+- Tamamlandı: öğrenci sonuç ekranında TYT/AYT/LGS/OZEL tiplerinin veri bazlı filtrelenmesi
+- Devam ediyor: rozet ve çalışma planı tarafında okul izolasyonu ek doğrulama
 
 Doğrulama:
 - Manuel senaryo testleri + mümkünse birim/e2e test
