@@ -22,6 +22,7 @@ import { AchievementsModule } from './achievements/achievements.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ContactModule } from './contact/contact.module';
 import { BlogModule } from './blog/blog.module';
+import { SupportModule } from './support/support.module';
 import { APP_GUARD } from '@nestjs/core';
 import { LicenseGuard } from './auth/guards/license.guard';
 
@@ -54,6 +55,7 @@ import { LicenseGuard } from './auth/guards/license.guard';
     NotificationsModule,
     ContactModule,
     BlogModule,
+    SupportModule,
   ],
   controllers: [HealthController],
   providers: [

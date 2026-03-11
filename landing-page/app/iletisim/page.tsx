@@ -14,6 +14,7 @@ export default function ContactPage() {
     lastName: "",
     email: "",
     subject: "Genel Bilgi",
+    department: "info@denemetakip.net",
     message: "",
   });
   const [loading, setLoading] = useState(false);
@@ -39,13 +40,30 @@ export default function ContactPage() {
     }
 
     try {
-      await api.submitContactForm(formData);
+      const categoryMap: Record<string, string> = {
+        "info@denemetakip.net": "GENERAL_INFO",
+        "kvkk@denemetakip.net": "KVKK_ALERT",
+        "admin@denemetakip.net": "SYSTEM_ADMIN",
+        "admin@2eh.net": "SYSTEM_ADMIN",
+      };
+
+      await api.submitContactForm({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+        targetInbox: formData.department,
+        category: categoryMap[formData.department] || "GENERAL_INFO",
+        sourcePage: "/iletisim",
+      });
       setSuccess(true);
       setFormData({
         firstName: "",
         lastName: "",
         email: "",
         subject: "Genel Bilgi",
+        department: "info@denemetakip.net",
         message: "",
       });
     } catch (err: any) {
@@ -160,6 +178,25 @@ export default function ContactPage() {
                         <option>İş Birliği</option>
                         <option>Diğer</option>
                       </select>
+                    </div>
+                    <div>
+                      <label htmlFor="department" className="text-sm font-medium">İlgili Adres *</label>
+                      <select
+                        id="department"
+                        name="department"
+                        className="w-full mt-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                        value={formData.department}
+                        onChange={handleChange}
+                        disabled={loading}
+                      >
+                        <option value="info@denemetakip.net">info@denemetakip.net</option>
+                        <option value="kvkk@denemetakip.net">kvkk@denemetakip.net</option>
+                        <option value="admin@denemetakip.net">admin@denemetakip.net</option>
+                        <option value="admin@2eh.net">admin@2eh.net</option>
+                      </select>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Seçilen adrese göre superadmin panelinde kategori otomatik etiketlenir.
+                      </p>
                     </div>
                     <div>
                       <label htmlFor="message" className="text-sm font-medium">Mesaj *</label>

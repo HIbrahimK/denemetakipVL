@@ -28,26 +28,35 @@ Bu plan, `Denemetakip landingpage geliştirmeleri.md` içindeki tüm maddeleri r
 ### P1 (İş akışı ve yönetim)
 
 5. Superadmin okul düzenleme ekranı logo yükleme 404/400 hatası
-6. Superadmin mail + lisans uyarıları sayfası
-7. Okul kullanıcı kullanım logları (IP, kullanıcı, erişilen alanlar)
-8. Yedekleme sisteminin okul bazlı ele alınması
+6. Superadmin mail merkezi + lisans uyarıları sayfası
+  - `info@`, `kvkk@`, `admin@2eh.net`, `admin@denemetakip.net` gibi hedeflere düşen kayıtların tek merkezden görüntülenmesi
+  - Gelen kaydın kaynağa göre kategorilenmesi (`KVKK Uyarısı`, `Genel Bilgi`, `Sistem Yönetimi`, `Demo`, `İletişim`)
+  - Mail/demo/talep kayıtlarının superadmin panelinde filtrelenmesi ve durum takibi
+7. Okul dashboard yardım ve destek merkezi
+  - Yalnız okul yöneticisinin ticket açabilmesi
+  - Ticket yanıtlarını görüntüleme, ticket kapatma/yeniden açma
+  - Superadmin ticket yanıt ekranı ile aynı veri kaynağının kullanılması
+8. Okul kullanıcı kullanım logları (IP, kullanıcı, erişilen alanlar)
+9. Yedekleme sisteminin okul bazlı ele alınması
 
 ### P2 (Landing page ve içerik/iletişim)
 
-9. Tanıtım videosu, canlı veri alanı görsel/video slider
-10. İletişim bilgileri ve mail akışlarının netleştirilmesi (`info@`, `kariyer@`, `kvkk@`)
-11. Demo/iletişim formu maillerinin hedefi ve superadmin panel görünürlüğü
-12. Özellikler/Fiyatlandırma eşleşmesi (admin panel verisi), buton okunurluğu
-13. Okullar sayfasının dinamik filtrelenmesi (sadece mevcut iller)
-14. Yardım/SSS/video içerikleri, ekran görüntüsü eklemeleri
-15. Hukuki metin revizyonu (`gizlilik`, `kosullar`, `kvkk`)
-16. Referans kullanıcı adlarının gerçek verilerle güncellenmesi
+10. Tanıtım videosu, canlı veri alanı görsel/video slider
+11. İletişim bilgileri ve mail akışlarının netleştirilmesi (`info@`, `kariyer@`, `kvkk@`)
+12. Demo/iletişim formu maillerinin hedefi ve superadmin panel görünürlüğü
+13. Özellikler/Fiyatlandırma eşleşmesi (admin panel verisi), buton okunurluğu
+14. Okullar sayfasının dinamik filtrelenmesi (sadece mevcut iller)
+15. Yardım/SSS/video içerikleri, ekran görüntüsü eklemeleri
+  - Landing yardım merkezi ile okul dashboard yardım sayfasının içerik ortaklaştırılması
+  - Yazılı anlatım + görüntülü/video anlatım bölümleri
+16. Hukuki metin revizyonu (`gizlilik`, `kosullar`, `kvkk`)
+17. Referans kullanıcı adlarının gerçek verilerle güncellenmesi
 
 ### P3 (UX iyileştirmeleri)
 
-17. Sidebar menü gruplamaları
-18. Giriş sayfası modernizasyonu
-19. Mobil görünüm düzeltmeleri
+18. Sidebar menü gruplamaları
+19. Giriş sayfası modernizasyonu
+20. Mobil görünüm düzeltmeleri
 
 ## 3) Teknik İş Listesi (Adım Adım)
 
@@ -87,13 +96,34 @@ Doğrulama:
 ## Adım 3 - Superadmin kritikleri
 
 - Okul logo yükleme API/servis düzeltmesi
-- Mail + lisans uyarı ekranı
+- Mail merkezi + lisans uyarı ekranı
+  - İletişim formu ve demo taleplerini tek listede toplama
+  - Kategori/kanal/hedef mail bazlı filtreleme
+  - `KVKK Uyarısı` gibi otomatik etiketleme kuralları
 - Kullanım logu altyapısı (günlük)
+
+Durum notu:
+- Başlıyor: superadmin mail merkezi, kategori kuralları ve lisans alarm ekranı
+- Tamamlandı: superadmin mail merkezi, hedef inbox bazlı kategori etiketleme ve lisans uyarı akışı eklendi
 
 Doğrulama:
 - Superadmin panel iş akışı testleri
 
-## Adım 4 - Landing page içerik ve entegrasyon
+## Adım 4 - Okul dashboard destek merkezi
+
+- Okul yöneticisi için destek/ticket oluşturma ekranı
+- Açık/kapalı ticket listesi, yanıt geçmişi, kapatma/yeniden açma
+- Superadmin ticket ekranının gerçek backend verisine bağlanması
+- Gerekirse ticket yanıtlarında okul ve kullanıcı bağlamı gösterimi
+
+Doğrulama:
+- Okul yöneticisi ticket açma/yanıtlama/kapatma senaryoları
+- Superadmin ticket cevaplama akışı
+
+Durum notu:
+- Tamamlandı: okul dashboard yardım ve destek merkezi, okul yöneticisi ticket açma/yanıtlama/kapatma akışı ve superadmin ticket yönetimi canlı veriye bağlandı
+
+## Adım 5 - Landing page içerik ve entegrasyon
 
 - Video, görsel slider, ekran görüntüleri
 - İletişim ve demo formu mail hedeflerinin netleştirilmesi
@@ -103,18 +133,19 @@ Doğrulama:
 Doğrulama:
 - Route bazlı smoke test (`/`, `/ozellikler`, `/fiyatlandirma`, `/okullar`, `/iletisim`)
 
-## Adım 5 - Hukuki ve yardım içerikleri
+## Adım 6 - Hukuki ve yardım içerikleri
 
 - `gizlilik`, `kosullar`, `kvkk`, `yardim` revizyonları
 - Video yardım + ekran görüntülü anlatımlar
+- Okul dashboard yardım ve destek sayfası için yazılı/görsel kullanım anlatımları
 
-## Adım 6 - UI/UX son rötuşlar
+## Adım 7 - UI/UX son rötuşlar
 
 - Sidebar gruplamaları
 - Giriş sayfası güncel tasarım
 - Mobil layout düzeltmeleri
 
-## Adım 7 - GitHub teslim
+## Adım 8 - GitHub teslim
 
 - Her mantıklı adım için ayrı commit
 - Branch push: `origin/feature/landing-superadmin-frontend-rollout`
@@ -130,6 +161,7 @@ Doğrulama:
 - `fix(superadmin): repair school logo upload and validation`
 - `feat(landing): add demo video and dynamic school city filters`
 - `feat(admin): add mail and license alert center`
+- `feat(support): add school dashboard help and ticket center`
 - `content(legal): revise privacy terms and kvkk pages`
 
 ## 5) Riskler

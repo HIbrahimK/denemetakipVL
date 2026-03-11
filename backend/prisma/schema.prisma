@@ -612,6 +612,7 @@ model School {
   notificationCampaigns     NotificationCampaign[]
   userNotificationSettings  UserNotificationSetting[]
   licenses                  SchoolLicense[]
+  supportTickets            SupportTicket[]
 }
 
 model Student {
@@ -959,6 +960,9 @@ model User {
   notificationsCreated NotificationCampaign[] @relation("NotificationCampaignCreatedBy")
   notificationDeliveries NotificationDelivery[]
   notificationSetting  UserNotificationSetting?
+  supportTicketsCreated SupportTicket[]       @relation("SupportTicketCreatedBy")
+  supportTicketsUpdated SupportTicket[]       @relation("SupportTicketUpdatedBy")
+  supportTicketReplies  SupportTicketReply[]
 }
 
 model PushSubscription {
@@ -1253,12 +1257,18 @@ model ContactMessage {
   email     String
   subject   String
   message   String
+  targetInbox String      @default("info@denemetakip.net")
+  category    String      @default("GENERAL_INFO")
+  sourceChannel String    @default("CONTACT_FORM")
+  sourcePage   String?
   status    ContactStatus @default(NEW)
   repliedAt DateTime?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   @@index([status])
+  @@index([targetInbox, createdAt])
+  @@index([category, createdAt])
   @@index([createdAt])
 }
 
@@ -1278,13 +1288,70 @@ model DemoRequest {
   studentCount String?
   city         String?
   notes        String?
+  targetInbox  String            @default("info@denemetakip.net")
+  category     String            @default("DEMO_REQUEST")
+  sourceChannel String           @default("DEMO_FORM")
+  sourcePage    String?
   status       DemoRequestStatus @default(PENDING)
   contactedAt  DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
 
   @@index([status])
+  @@index([targetInbox, createdAt])
+  @@index([category, createdAt])
   @@index([createdAt])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  ANSWERED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model SupportTicket {
+  id          String               @id @default(uuid())
+  schoolId    String
+  createdById String
+  updatedById String?
+  subject     String
+  description String
+  priority    SupportTicketPriority @default(MEDIUM)
+  status      SupportTicketStatus   @default(OPEN)
+  closedAt    DateTime?
+  lastReplyAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  school    School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdBy User                @relation("SupportTicketCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  updatedBy User?               @relation("SupportTicketUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  replies   SupportTicketReply[]
+
+  @@index([schoolId, status, updatedAt])
+  @@index([createdById, createdAt])
+}
+
+model SupportTicketReply {
+  id        String   @id @default(uuid())
+  ticketId  String
+  senderId  String
+  message   String
+  createdAt DateTime @default(now())
+
+  ticket  SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender  User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+  @@index([senderId, createdAt])
 }
 
 // ─── Blog System ───────────────────────────────────

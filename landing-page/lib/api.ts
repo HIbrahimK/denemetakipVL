@@ -83,6 +83,9 @@ export const api = {
     email: string;
     subject: string;
     message: string;
+    targetInbox?: string;
+    category?: string;
+    sourcePage?: string;
   }) =>
     request<{ success: boolean; message: string; id: string }>("/contact", {
       method: "POST",
@@ -98,6 +101,9 @@ export const api = {
     studentCount?: string;
     city?: string;
     notes?: string;
+    targetInbox?: string;
+    category?: string;
+    sourcePage?: string;
   }) =>
     request<{ success: boolean; message: string; id: string }>(
       "/demo-requests",
@@ -233,6 +239,46 @@ export const adminApi = {
 
   // Stats
   getContactStats: () => request("/admin/contact-stats"),
+
+  getMailCenter: (params?: {
+    page?: string;
+    limit?: string;
+    category?: string;
+    targetInbox?: string;
+    itemType?: string;
+  }) => request("/admin/mail-center", { params }),
+
+  getMailCenterStats: () => request("/admin/mail-center/stats"),
+
+  getAdminSupportTickets: (params?: { status?: string }) =>
+    request("/support/tickets/admin", { params }),
+
+  getSchoolSupportTickets: () => request("/support/tickets/my-school"),
+
+  createSupportTicket: (data: {
+    subject: string;
+    description: string;
+    priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  }) =>
+    request("/support/tickets", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  replySupportTicket: (id: string, message: string) =>
+    request(`/support/tickets/${id}/replies`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
+
+  updateSupportTicketStatus: (
+    id: string,
+    status: "OPEN" | "IN_PROGRESS" | "ANSWERED" | "CLOSED"
+  ) =>
+    request(`/support/tickets/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
 
   // License Plans
   getLicensePlans: () => request("/schools/resolve", { params: { host: "" } }),
