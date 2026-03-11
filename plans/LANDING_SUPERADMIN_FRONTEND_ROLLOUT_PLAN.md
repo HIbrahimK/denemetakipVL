@@ -132,6 +132,10 @@ Durum notu:
 - Fiyatlandırma verisinin admin panel planlarıyla eşlenmesi
 - Dinamik okullar/il filtresi
 
+Durum notu:
+- Tamamlandı: landing fiyatlandırma sayfası aktif lisans planlarını backend public endpoint üzerinden canlı okumaya başladı
+- Devam ediyor: okullar sayfası için okul verisinin şehir bazlı filtrelenebilmesi adına veri modelinin şehir alanı ile genişletilmesi gerekiyor
+
 Doğrulama:
 - Route bazlı smoke test (`/`, `/ozellikler`, `/fiyatlandirma`, `/okullar`, `/iletisim`)
 

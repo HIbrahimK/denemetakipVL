@@ -117,6 +117,21 @@ export const api = {
   resolveSchool: (host: string) =>
     request(`/schools/resolve`, { params: { host } }),
 
+  getLicensePlans: () =>
+    request<
+      Array<{
+        id: string;
+        name: string;
+        maxStudents: number;
+        maxUsers: number;
+        maxStorage: number;
+        monthlyPrice: number;
+        yearlyPrice: number;
+        features: string[];
+        popular: boolean;
+      }>
+    >("/schools/public-plans"),
+
   // Blog (public)
   getBlogPosts: (params?: { page?: string; limit?: string; category?: string }) =>
     request<{
@@ -293,7 +308,7 @@ export const adminApi = {
   getAccessLogStats: () => request("/admin/access-logs/stats"),
 
   // License Plans
-  getLicensePlans: () => request("/schools/resolve", { params: { host: "" } }),
+  getLicensePlans: () => request("/schools/public-plans"),
 
   // ── Blog ──────────────────────────────────
 

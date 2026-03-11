@@ -1,20 +1,32 @@
-"use client";
-
 import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 import { Check, Sparkles, Building2 } from "lucide-react";
 
-const plans = [
+type LicensePlan = {
+  id: string;
+  name: string;
+  maxStudents: number;
+  maxUsers: number;
+  maxStorage: number;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  features: string[];
+  popular: boolean;
+};
+
+const fallbackPlans: LicensePlan[] = [
   {
+    id: "starter",
     name: "Başlangıç",
-    description: "Küçük dershaneler ve bireysel öğretmenler için",
-    price: "499",
-    period: "aylık",
+    maxStudents: 100,
+    maxUsers: 10,
+    maxStorage: 1024,
+    monthlyPrice: 499,
+    yearlyPrice: 4990,
     features: [
-      "100 öğrenciye kadar",
-      "10 öğretmen",
       "TYT-AYT desteği",
       "Temel raporlama",
       "E-posta desteği",
@@ -22,18 +34,18 @@ const plans = [
       "SSL güvenlik",
       "Günlük yedekleme",
     ],
-    cta: "Başla",
     popular: false,
   },
   {
+    id: "professional",
     name: "Profesyonel",
-    description: "Orta ölçekli eğitim kurumları için",
-    price: "999",
-    period: "aylık",
+    maxStudents: 500,
+    maxUsers: 25,
+    maxStorage: 5120,
+    monthlyPrice: 999,
+    yearlyPrice: 9990,
     features: [
-      "500 öğrenciye kadar",
-      "25 öğretmen",
-      "Tüm sınav türleri (TYT, AYT, LGS, KPSS)",
+      "Tüm sınav türleri desteği",
       "Gelişmiş raporlama",
       "Öncelikli destek",
       "Mobil uygulama erişimi",
@@ -42,17 +54,17 @@ const plans = [
       "Veri analitiği",
       "Grup çalışma odaları",
     ],
-    cta: "Başla",
     popular: true,
   },
   {
+    id: "enterprise",
     name: "Kurumsal",
-    description: "Büyük eğitim zincirleri için özel çözüm",
-    price: "Özel",
-    period: "fiyatlandırma",
+    maxStudents: -1,
+    maxUsers: -1,
+    maxStorage: -1,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
     features: [
-      "Sınırsız öğrenci",
-      "Sınırsız öğretmen",
       "Tüm sınav türleri",
       "Özel geliştirmeler",
       "7/24 özel destek",
@@ -62,7 +74,6 @@ const plans = [
       "Eğitim ve danışmanlık",
       "Entegrasyon desteği",
     ],
-    cta: "İletişime Geç",
     popular: false,
   },
 ];
@@ -95,11 +106,57 @@ const faqs = [
   },
 ];
 
-export default function PricingPage() {
+function formatCapacity(value: number, label: string) {
+  if (value === -1) {
+    return `Sınırsız ${label}`;
+  }
+
+  return `${value} ${label}`;
+}
+
+function formatStorage(value: number) {
+  if (value === -1) {
+    return "Sınırsız depolama";
+  }
+
+  if (value >= 1024) {
+    return `${(value / 1024).toFixed(value % 1024 === 0 ? 0 : 1)} GB depolama`;
+  }
+
+  return `${value} MB depolama`;
+}
+
+function getPlanDescription(plan: LicensePlan) {
+  if (plan.maxStudents === -1 || plan.maxUsers === -1) {
+    return "Büyük eğitim kurumları ve çok kampüslü yapılar için esnek çözüm";
+  }
+
+  if (plan.maxStudents <= 150) {
+    return "Küçük ölçekli kurumlar ve hızlı başlangıç yapmak isteyen ekipler için";
+  }
+
+  if (plan.maxStudents <= 600) {
+    return "Büyüyen okullar için güçlü raporlama ve operasyon yönetimi";
+  }
+
+  return "Yüksek hacimli kurumlar için gelişmiş kapasite ve destek paketi";
+}
+
+async function getPlans() {
+  try {
+    const plans = await api.getLicensePlans();
+    return plans.length ? plans : fallbackPlans;
+  } catch {
+    return fallbackPlans;
+  }
+}
+
+export default async function PricingPage() {
+  const plans = await getPlans();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      {/* Hero */}
       <section className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -112,104 +169,115 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Pricing Cards */}
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl p-8 ${
-                  plan.popular
-                    ? "bg-primary text-primary-foreground shadow-xl scale-105"
-                    : "bg-card border shadow-sm"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-yellow-400 text-yellow-900 text-sm font-semibold px-4 py-1 rounded-full flex items-center gap-1">
-                      <Sparkles className="h-4 w-4" />
-                      En Popüler
-                    </span>
-                  </div>
-                )}
+            {plans.map((plan) => {
+              const isCustom = plan.monthlyPrice <= 0;
+              const features = [
+                formatCapacity(plan.maxStudents, "öğrenci"),
+                formatCapacity(plan.maxUsers, "kullanıcı"),
+                formatStorage(plan.maxStorage),
+                ...plan.features,
+              ];
 
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <p
-                    className={`text-sm ${
-                      plan.popular ? "opacity-90" : "text-muted-foreground"
-                    }`}
-                  >
-                    {plan.description}
-                  </p>
-                </div>
-
-                <div className="text-center mb-8">
-                  {plan.price === "Özel" ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Building2 className="h-8 w-8" />
-                      <span className="text-3xl font-bold">Özel Fiyat</span>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="text-5xl font-bold">₺{plan.price}</span>
-                      <span
-                        className={`block ${
-                          plan.popular ? "opacity-90" : "text-muted-foreground"
-                        }`}
-                      >
-                        /{plan.period}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <Check
-                        className={`h-5 w-5 flex-shrink-0 ${
-                          plan.popular ? "text-white" : "text-primary"
-                        }`}
-                      />
-                      <span
-                        className={
-                          plan.popular ? "text-white/90" : "text-foreground"
-                        }
-                      >
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  asChild
-                  className={`w-full ${
+              return (
+                <div
+                  key={plan.id}
+                  className={`relative rounded-2xl p-8 ${
                     plan.popular
-                      ? "bg-white text-primary hover:bg-white/90"
-                      : ""
+                      ? "bg-primary text-primary-foreground shadow-xl scale-105"
+                      : "bg-card border shadow-sm"
                   }`}
-                  variant={plan.popular ? "default" : "outline"}
                 >
-                  <Link
-                    href={
-                      plan.price === "Özel"
-                        ? "/iletisim"
-                        : "/demo"
-                    }
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <span className="bg-yellow-400 text-yellow-900 text-sm font-semibold px-4 py-1 rounded-full flex items-center gap-1">
+                        <Sparkles className="h-4 w-4" />
+                        En Popüler
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                    <p
+                      className={`text-sm ${
+                        plan.popular ? "opacity-90" : "text-muted-foreground"
+                      }`}
+                    >
+                      {getPlanDescription(plan)}
+                    </p>
+                  </div>
+
+                  <div className="text-center mb-8">
+                    {isCustom ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Building2 className="h-8 w-8" />
+                        <span className="text-3xl font-bold">Özel Fiyat</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-5xl font-bold">
+                          ₺{plan.monthlyPrice.toLocaleString("tr-TR")}
+                        </span>
+                        <span
+                          className={`block ${
+                            plan.popular ? "opacity-90" : "text-muted-foreground"
+                          }`}
+                        >
+                          /aylık
+                        </span>
+                        <p
+                          className={`mt-2 text-sm ${
+                            plan.popular ? "text-white/80" : "text-muted-foreground"
+                          }`}
+                        >
+                          Yıllık ödeme: ₺{plan.yearlyPrice.toLocaleString("tr-TR")}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {features.map((feature) => (
+                      <li key={`${plan.id}-${feature}`} className="flex items-start gap-3">
+                        <Check
+                          className={`h-5 w-5 flex-shrink-0 ${
+                            plan.popular ? "text-white" : "text-primary"
+                          }`}
+                        />
+                        <span
+                          className={
+                            plan.popular ? "text-white/90" : "text-foreground"
+                          }
+                        >
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    asChild
+                    className={`w-full ${
+                      plan.popular
+                        ? "bg-white text-primary hover:bg-white/90"
+                        : ""
+                    }`}
+                    variant={plan.popular ? "default" : "outline"}
                   >
-                    {plan.cta}
-                  </Link>
-                </Button>
-              </div>
-            ))}
+                    <Link href={isCustom ? "/iletisim" : "/demo"}>
+                      {isCustom ? "İletişime Geç" : "Başla"}
+                    </Link>
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
       <section className="py-20 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -230,7 +298,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Hala Kararsız mısınız?</h2>

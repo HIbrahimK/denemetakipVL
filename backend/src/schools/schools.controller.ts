@@ -59,6 +59,12 @@ export class SchoolsController {
     });
   }
 
+  // Public endpoint - active license plans for landing pricing page
+  @Get('public-plans')
+  async getPublicLicensePlans() {
+    return this.schoolsService.getPublicLicensePlans();
+  }
+
   // Public endpoint for getting default school (for non-logged-in users)
   @Get()
   async getDefaultSchool() {

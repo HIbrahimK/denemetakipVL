@@ -158,6 +158,27 @@ export class SchoolsService {
     };
   }
 
+  async getPublicLicensePlans() {
+    const plans = await this.prisma.licensePlan.findMany({
+      where: { isActive: true },
+      orderBy: [{ monthlyPrice: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    return plans.map((plan, index) => ({
+      id: plan.id,
+      name: plan.name,
+      maxStudents: plan.maxStudents,
+      maxUsers: plan.maxUsers,
+      maxStorage: plan.maxStorage,
+      monthlyPrice: plan.monthlyPrice,
+      yearlyPrice: plan.yearlyPrice,
+      features: Array.isArray(plan.features)
+        ? plan.features
+        : Object.values((plan.features as Record<string, string>) || {}),
+      popular: index === 1,
+    }));
+  }
+
   // ─── Super Admin: Create new school with admin + license ──────
   async createSchool(dto: CreateSchoolDto) {
     // Check unique constraints
