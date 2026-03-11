@@ -65,6 +65,12 @@ export class SchoolsController {
     return this.schoolsService.getPublicLicensePlans();
   }
 
+  // Public endpoint - school list with city for landing schools page
+  @Get('public-list')
+  async getPublicSchoolList() {
+    return this.schoolsService.getPublicSchoolList();
+  }
+
   // Public endpoint for getting default school (for non-logged-in users)
   @Get()
   async getDefaultSchool() {

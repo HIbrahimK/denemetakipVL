@@ -134,6 +134,7 @@ export class SchoolsService {
       subdomainAlias: s.subdomainAlias,
       domain: s.domain,
       logoUrl: s.logoUrl,
+      city: s.city,
       createdAt: s.createdAt,
       studentCount: s._count.students,
       userCount: s._count.users,
@@ -177,6 +178,72 @@ export class SchoolsService {
         : Object.values((plan.features as Record<string, string>) || {}),
       popular: index === 1,
     }));
+  }
+
+  async getPublicLicensePlans() {
+    const plans = await this.prisma.licensePlan.findMany({
+      where: { isActive: true },
+      orderBy: [{ monthlyPrice: 'asc' }, { createdAt: 'asc' }],
+    });
+
+    return plans.map((plan, index) => ({
+      id: plan.id,
+      name: plan.name,
+      maxStudents: plan.maxStudents,
+      maxUsers: plan.maxUsers,
+      maxStorage: plan.maxStorage,
+      monthlyPrice: plan.monthlyPrice,
+      yearlyPrice: plan.yearlyPrice,
+      features: Array.isArray(plan.features)
+        ? plan.features
+        : Object.values((plan.features as Record<string, string>) || {}),
+      popular: index === 1,
+    }));
+  }
+
+  async getPublicSchoolList() {
+    const schools = await this.prisma.school.findMany({
+      select: {
+        id: true,
+        name: true,
+        appShortName: true,
+        city: true,
+        logoUrl: true,
+        subdomainAlias: true,
+        website: true,
+        licenses: {
+          where: { status: 'ACTIVE' },
+          take: 1,
+          select: {
+            plan: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    const uniqueCities = [
+      ...new Set(
+        schools
+          .map((s) => s.city)
+          .filter((c): c is string => Boolean(c))
+          .sort(),
+      ),
+    ];
+
+    return {
+      schools: schools.map((s) => ({
+        id: s.id,
+        name: s.name,
+        appShortName: s.appShortName,
+        city: s.city ?? null,
+        logoUrl: s.logoUrl ?? null,
+        subdomainAlias: s.subdomainAlias ?? null,
+        website: s.website ?? null,
+        planName: s.licenses[0]?.plan?.name ?? null,
+      })),
+      uniqueCities,
+    };
   }
 
   // ─── Super Admin: Create new school with admin + license ──────
@@ -336,6 +403,7 @@ export class SchoolsService {
       subdomainAlias: school.subdomainAlias,
       domain: school.domain,
       logoUrl: school.logoUrl,
+      city: school.city,
       createdAt: school.createdAt,
       stats: {
         studentCount: school._count.students,

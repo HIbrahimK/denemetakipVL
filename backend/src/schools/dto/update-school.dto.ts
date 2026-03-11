@@ -38,6 +38,10 @@ export class UpdateSchoolDto {
 
   @IsString()
   @IsOptional()
+  city?: string;
+
+  @IsString()
+  @IsOptional()
   phone?: string;
 
   @IsBoolean()

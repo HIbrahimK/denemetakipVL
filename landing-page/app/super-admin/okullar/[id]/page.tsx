@@ -56,6 +56,7 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
     subdomainAlias: "",
     domain: "",
     logoUrl: "",
+    city: "",
     address: "",
     phone: "",
     website: "",
@@ -78,8 +79,9 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
         subdomainAlias: data.subdomainAlias || "",
         domain: data.domain || "",
         logoUrl: data.logoUrl || "",
-        address: data.address || "",
-        phone: data.phone || "",
+        city: (data as any).city || "",
+        address: (data as any).address || "",
+        phone: (data as any).phone || "",
         website: data.website || "",
       });
     } catch (err: any) {
@@ -100,6 +102,7 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
         subdomainAlias: formData.subdomainAlias || undefined,
         domain: formData.domain || undefined,
         logoUrl: formData.logoUrl || undefined,
+        city: formData.city || undefined,
         address: formData.address || undefined,
         phone: formData.phone || undefined,
         website: formData.website || undefined,
@@ -294,6 +297,16 @@ export default function EditSchoolPage({ params }: { params: Promise<{ id: strin
             <CardTitle>İletişim Bilgileri</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Şehir</label>
+              <input
+                type="text"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                placeholder="Örn: Ankara"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              />
+            </div>
             <div>
               <label className="text-sm font-medium">Adres</label>
               <input

@@ -132,6 +132,21 @@ export const api = {
       }>
     >("/schools/public-plans"),
 
+  getPublicSchoolList: () =>
+    request<{
+      schools: Array<{
+        id: string;
+        name: string;
+        appShortName: string;
+        city: string | null;
+        logoUrl: string | null;
+        subdomainAlias: string | null;
+        website: string | null;
+        planName: string | null;
+      }>;
+      uniqueCities: string[];
+    }>("/schools/public-list"),
+
   // Blog (public)
   getBlogPosts: (params?: { page?: string; limit?: string; category?: string }) =>
     request<{

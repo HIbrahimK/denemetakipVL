@@ -46,6 +46,7 @@ export default function NewSchoolWizardPage() {
   const [formData, setFormData] = useState({
     schoolName: "",
     schoolCode: "",
+    city: "",
     subdomain: "",
     customDomain: "",
     adminFirstName: "",
@@ -221,6 +222,7 @@ export default function NewSchoolWizardPage() {
       const result = await adminApi.createSchool({
         name: formData.schoolName,
         code: formData.schoolCode,
+        city: formData.city || undefined,
         subdomainAlias: domainMode === "subdomain" ? formData.subdomain : undefined,
         domain: domainMode === "custom" ? formData.customDomain : undefined,
         adminEmail: formData.adminEmail,
@@ -380,6 +382,7 @@ export default function NewSchoolWizardPage() {
                     plan: "profesyonel",
                     licenseStartDate: new Date().toISOString().split("T")[0],
                     licenseEndDate: "",
+                    city: "",
                   });
                   removeLogo();
                 }}
@@ -467,6 +470,21 @@ export default function NewSchoolWizardPage() {
                   className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="AAL"
                   value={formData.schoolCode}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label htmlFor="city" className="text-sm font-medium">
+                  Şehir
+                </label>
+                <input
+                  id="city"
+                  name="city"
+                  type="text"
+                  className="w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Örn: Ankara"
+                  value={formData.city}
                   onChange={handleChange}
                   disabled={loading}
                 />

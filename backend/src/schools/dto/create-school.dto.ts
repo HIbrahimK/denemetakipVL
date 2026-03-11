@@ -46,6 +46,10 @@ export class CreateSchoolDto {
 
   @IsString()
   @IsOptional()
+  city?: string;
+
+  @IsString()
+  @IsOptional()
   phone?: string;
 
   @IsString()
