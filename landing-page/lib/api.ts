@@ -280,6 +280,18 @@ export const adminApi = {
       body: JSON.stringify({ status }),
     }),
 
+  getAccessLogs: (params?: {
+    page?: string;
+    limit?: string;
+    schoolId?: string;
+    userId?: string;
+    search?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => request("/admin/access-logs", { params }),
+
+  getAccessLogStats: () => request("/admin/access-logs/stats"),
+
   // License Plans
   getLicensePlans: () => request("/schools/resolve", { params: { host: "" } }),
 

@@ -613,6 +613,7 @@ model School {
   userNotificationSettings  UserNotificationSetting[]
   licenses                  SchoolLicense[]
   supportTickets            SupportTicket[]
+  accessLogs                UserAccessLog[]
 }
 
 model Student {
@@ -963,6 +964,7 @@ model User {
   supportTicketsCreated SupportTicket[]       @relation("SupportTicketCreatedBy")
   supportTicketsUpdated SupportTicket[]       @relation("SupportTicketUpdatedBy")
   supportTicketReplies  SupportTicketReply[]
+  accessLogs            UserAccessLog[]
 }
 
 model PushSubscription {
@@ -1352,6 +1354,28 @@ model SupportTicketReply {
 
   @@index([ticketId, createdAt])
   @@index([senderId, createdAt])
+}
+
+model UserAccessLog {
+  id          String   @id @default(uuid())
+  schoolId    String
+  userId      String
+  method      String
+  path        String
+  route       String?
+  area        String?
+  ipAddress   String?
+  userAgent   String?
+  statusCode  Int
+  createdAt   DateTime @default(now())
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, createdAt])
+  @@index([userId, createdAt])
+  @@index([path, createdAt])
+  @@index([createdAt])
 }
 
 // ─── Blog System ───────────────────────────────────

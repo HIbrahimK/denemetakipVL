@@ -105,6 +105,8 @@ Doğrulama:
 Durum notu:
 - Başlıyor: superadmin mail merkezi, kategori kuralları ve lisans alarm ekranı
 - Tamamlandı: superadmin mail merkezi, hedef inbox bazlı kategori etiketleme ve lisans uyarı akışı eklendi
+- Tamamlandı: okul kullanıcı kullanım logları için global interceptor, superadmin filtreleme ekranı ve günlük istatistikler eklendi
+- Tamamlandı: okul bazlı yedek kapsamı school-scoped ders/konu kataloğu, destek ticketları ve erişim loglarını içerecek şekilde genişletildi
 
 Doğrulama:
 - Superadmin panel iş akışı testleri
