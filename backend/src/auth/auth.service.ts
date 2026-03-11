@@ -70,7 +70,10 @@ export class AuthService {
   // Student login with studentNumber
   async loginStudent(loginDto: StudentLoginDto) {
     const student = await this.prisma.student.findFirst({
-      where: { studentNumber: loginDto.studentNumber },
+      where: {
+        studentNumber: loginDto.studentNumber,
+        ...(loginDto.schoolId ? { schoolId: loginDto.schoolId } : {}),
+      },
       include: {
         user: {
           include: {
@@ -87,6 +90,10 @@ export class AuthService {
 
     if (!student || student.user.role !== 'STUDENT') {
       throw new UnauthorizedException('Geçersiz kimlik bilgileri');
+    }
+
+    if (loginDto.schoolId && student.user.schoolId !== loginDto.schoolId) {
+      throw new UnauthorizedException('Bu okula erişim yetkiniz yok');
     }
 
     const isPasswordValid = await this.comparePassword(
@@ -117,7 +124,10 @@ export class AuthService {
   async loginParent(loginDto: StudentLoginDto) {
     // Find student by student number first
     const student = await this.prisma.student.findFirst({
-      where: { studentNumber: loginDto.studentNumber },
+      where: {
+        studentNumber: loginDto.studentNumber,
+        ...(loginDto.schoolId ? { schoolId: loginDto.schoolId } : {}),
+      },
       include: {
         parent: {
           include: {
@@ -131,6 +141,10 @@ export class AuthService {
 
     if (!student || !student.parent || student.parent.user.role !== 'PARENT') {
       throw new UnauthorizedException('Geçersiz kimlik bilgileri');
+    }
+
+    if (loginDto.schoolId && student.parent.user.schoolId !== loginDto.schoolId) {
+      throw new UnauthorizedException('Bu okula erişim yetkiniz yok');
     }
 
     const user = student.parent.user;

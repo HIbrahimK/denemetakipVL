@@ -527,8 +527,11 @@ export class StudentsService {
     }
 
     // Get student with class info to determine grade level
-    const student = await this.prisma.student.findUnique({
-      where: { id: studentId },
+    const student = await this.prisma.student.findFirst({
+      where: {
+        id: studentId,
+        schoolId,
+      },
       include: {
         user: true,
         class: {
