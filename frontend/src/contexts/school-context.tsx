@@ -60,7 +60,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
         const user = JSON.parse(userStr);
         
         // If school data is in user object, use it
-        if (user.school) {
+        // Only use cached school data if it belongs to the current user's school
+        if (user.school && user.school.id === user.schoolId) {
           setSchoolData({
             name: user.school.name || "DenemeTakip.net",
             appShortName: user.school.appShortName || "Deneme Takip Sistemi",
@@ -87,8 +88,8 @@ export function SchoolProvider({ children }: { children: ReactNode }) {
             
             setSchoolData(newSchoolData);
             
-            // Update localStorage with school data
-            user.school = newSchoolData;
+            // Update localStorage with school data (include id for cache validation)
+            user.school = { id: user.schoolId, ...newSchoolData };
             localStorage.setItem('user', JSON.stringify(user));
           }
         }
