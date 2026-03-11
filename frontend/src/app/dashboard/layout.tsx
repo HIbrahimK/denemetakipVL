@@ -220,9 +220,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.firstName || 'User'}`;
     };
 
-    const handleLogout = () => {
-        clearUserData();
-        window.location.href = '/';
+    const handleLogout = async () => {
+        await clearUserData();
+        window.location.replace('/login/school');
     };
 
     return (

@@ -16,19 +16,27 @@ export function setUserData(user: any) {
 /**
  * Clear all user data from localStorage and cookies
  */
-export function clearUserData() {
+export async function clearUserData() {
     if (typeof window !== 'undefined') {
-        fetch(`${API_BASE_URL}/auth/logout`, {
-            method: 'POST',
-            credentials: 'include',
-        });
+        try {
+            await fetch(`${API_BASE_URL}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                keepalive: true,
+                cache: 'no-store',
+            });
+        } catch {
+            // Continue local cleanup even if network logout fails.
+        }
     }
 
     localStorage.removeItem('user');
     localStorage.removeItem('auth');
     
-    // Clear cookies
+    // Clear cookies (best-effort for non-httpOnly cookies)
     document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
 
 /**
