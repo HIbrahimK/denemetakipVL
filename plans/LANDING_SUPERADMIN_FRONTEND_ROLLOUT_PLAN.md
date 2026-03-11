@@ -75,7 +75,8 @@ Durum notu:
 - Tamamlandı: logout/login döngüsü, favicon/removeChild hatası, logo URL 404 akışı, okul düzenleme 400 payload sorunu
 - Tamamlandı: login + öğrenci sınav geçmişinde okul bazlı izolasyon güçlendirmeleri
 - Tamamlandı: öğrenci sonuç ekranında TYT/AYT/LGS/OZEL tiplerinin veri bazlı filtrelenmesi
-- Devam ediyor: rozet ve çalışma planı tarafında okul izolasyonu ek doğrulama
+- Tamamlandı: ders/konu katalogu için okul bazlı subject/topic izolasyonu ve global katalogdan okul kopyası senkronizasyonu
+- Devam ediyor: rozet tarafında okul izolasyonu ek doğrulama
 
 Doğrulama:
 - Manuel senaryo testleri + mümkünse birim/e2e test

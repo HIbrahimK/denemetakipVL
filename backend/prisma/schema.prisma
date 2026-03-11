@@ -600,6 +600,8 @@ model School {
   studyRecommendations      StudyRecommendation[]
   studySessions             StudySession[]
   studyTasks                StudyTask[]
+  subjects                  Subject[]
+  topics                    Topic[]
   users                     User[]
   achievements              Achievement[]
   studentAchievements       StudentAchievement[]
@@ -851,6 +853,7 @@ model StudyTask {
 
 model Subject {
   id          String   @id @default(uuid())
+  schoolId    String?
   name        String
   examType    String
   gradeLevels Int[]
@@ -860,7 +863,9 @@ model Subject {
   createdAt   DateTime @default(now())
   updatedAt          DateTime             @updatedAt
   topics      Topic[]
+  school      School?  @relation(fields: [schoolId], references: [id])
 
+  @@index([schoolId])
   @@index([examType])
   @@index([isActive])
 }
@@ -881,6 +886,7 @@ model TemplateRating {
 
 model Topic {
   id                  String                @id @default(uuid())
+  schoolId            String?
   name                String
   parentTopicId       String?
   order               Int                   @default(0)
@@ -893,9 +899,11 @@ model Topic {
   parentTopic         Topic?                @relation("TopicToTopic", fields: [parentTopicId], references: [id])
   childTopics         Topic[]               @relation("TopicToTopic")
   subject             Subject?              @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school              School?               @relation(fields: [schoolId], references: [id])
   topicResources      TopicResource[]
 
   @@index([parentTopicId])
+  @@index([schoolId])
   @@index([subjectId])
 }
 
