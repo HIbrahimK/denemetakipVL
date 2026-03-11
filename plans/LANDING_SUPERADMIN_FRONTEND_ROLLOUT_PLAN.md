@@ -76,7 +76,10 @@ Durum notu:
 - Tamamlandı: login + öğrenci sınav geçmişinde okul bazlı izolasyon güçlendirmeleri
 - Tamamlandı: öğrenci sonuç ekranında TYT/AYT/LGS/OZEL tiplerinin veri bazlı filtrelenmesi
 - Tamamlandı: ders/konu katalogu için okul bazlı subject/topic izolasyonu ve global katalogdan okul kopyası senkronizasyonu
-- Devam ediyor: rozet tarafında okul izolasyonu ek doğrulama
+- Tamamlandı: rozet öğrenci erişimi okul/kullanıcı bazında sıkılaştırıldı
+- Tamamlandı: öğrenci grup üyeliği yeniden-aktivasyon ve grup listeleme scope düzeltmeleri
+- Tamamlandı: çalışma planı öğrenci atama görünürlüğü school/group/class/grade bazında sıkılaştırıldı
+- Tamamlandı: onaylı/toplu mesajlarda alıcı hedeflerinin kalıcı saklanması ve öğrenci bildirim akışı düzeltildi
 
 Doğrulama:
 - Manuel senaryo testleri + mümkünse birim/e2e test

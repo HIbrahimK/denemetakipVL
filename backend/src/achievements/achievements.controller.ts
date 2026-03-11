@@ -54,8 +54,13 @@ export class AchievementsController {
   }
 
   @Get('student/:studentId')
-  async findStudentAchievements(@Param('studentId') studentId: string) {
-    return this.achievementsService.findStudentAchievements(studentId);
+  async findStudentAchievements(@Param('studentId') studentId: string, @Request() req) {
+    return this.achievementsService.findStudentAchievements(
+      studentId,
+      req.user.schoolId,
+      req.user.id,
+      req.user.role,
+    );
   }
 
   @Get(':id')
@@ -140,10 +145,16 @@ export class AchievementsController {
   @Post('check-unlock')
   async checkUnlock(
     @Body() data: { studentId: string; achievementType: string },
+    @Request() req,
   ) {
     return this.achievementsService.checkAndUnlock(
       data.studentId,
       data.achievementType,
+      {
+        schoolId: req.user.schoolId,
+        userId: req.user.id,
+        role: req.user.role,
+      },
     );
   }
 }

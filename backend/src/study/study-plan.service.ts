@@ -41,6 +41,61 @@ export class StudyPlanService {
     private notificationsService: NotificationsService,
   ) {}
 
+  private async getStudentAssignmentClauses(
+    studentId: string,
+    classId: string | null,
+    schoolId: string,
+  ) {
+    const memberships = await this.prisma.groupMembership.findMany({
+      where: {
+        studentId,
+        schoolId,
+        leftAt: null,
+      },
+      select: { groupId: true },
+    });
+
+    const studentClass = classId
+      ? await this.prisma.class.findFirst({
+          where: {
+            id: classId,
+            schoolId,
+          },
+          select: { gradeId: true },
+        })
+      : null;
+
+    const clauses: Prisma.StudyPlanAssignmentWhereInput[] = [
+      {
+        targetType: AssignmentTargetType.STUDENT,
+        targetId: studentId,
+      },
+    ];
+
+    if (memberships.length > 0) {
+      clauses.push({
+        targetType: AssignmentTargetType.GROUP,
+        targetId: { in: memberships.map((membership) => membership.groupId) },
+      });
+    }
+
+    if (classId) {
+      clauses.push({
+        targetType: AssignmentTargetType.CLASS,
+        targetId: classId,
+      });
+    }
+
+    if (studentClass?.gradeId) {
+      clauses.push({
+        targetType: AssignmentTargetType.GRADE,
+        targetId: studentClass.gradeId,
+      });
+    }
+
+    return clauses;
+  }
+
   async create(dto: CreateStudyPlanDto, teacherId: string, schoolId: string) {
     console.log('[StudyPlanService] Creating study plan:', {
       dto,
@@ -138,48 +193,33 @@ export class StudyPlanService {
       ];
     } else if (userRole === 'STUDENT') {
       // Öğrenci sadece kendisine atanan planları görür
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        include: { student: true },
+      const student = await this.prisma.student.findFirst({
+        where: {
+          userId,
+          schoolId,
+        },
+        select: {
+          id: true,
+          classId: true,
+        },
       });
 
-      if (!user?.student) {
+      if (!student) {
         return [];
       }
+
+      const assignmentClauses = await this.getStudentAssignmentClauses(
+        student.id,
+        student.classId,
+        schoolId,
+      );
 
       // Öğrenciye atanan planları bul
       const assignments = await this.prisma.studyPlanAssignment.findMany({
         where: {
-          OR: [
-            { targetType: 'STUDENT', targetId: user.student.id },
-            // Grup atamaları için
-            {
-              targetType: 'GROUP',
-              targetId: {
-                in: (
-                  await this.prisma.groupMembership.findMany({
-                    where: { studentId: user.student.id, leftAt: null },
-                    select: { groupId: true },
-                  })
-                ).map((m) => m.groupId),
-              },
-            },
-            // Sınıf atamaları için
-            { targetType: 'CLASS', targetId: user.student.classId ?? '' },
-            // Sınıf seviyesi atamaları için
-            {
-              targetType: 'GRADE',
-              targetId: user.student.classId
-                ? ((
-                    await this.prisma.class.findUnique({
-                      where: { id: user.student.classId },
-                      select: { gradeId: true },
-                    })
-                  )?.gradeId ?? '')
-                : '',
-            },
-          ],
-          status: { in: ['ACTIVE', 'COMPLETED'] },
+          schoolId,
+          OR: assignmentClauses,
+          status: { in: ['ACTIVE', 'ASSIGNED', 'COMPLETED'] },
         },
         select: { planId: true },
       });
@@ -280,6 +320,42 @@ export class StudyPlanService {
       // Paylaşılan planları da görüntüleyebilir
       if (!(plan as any).isShared && !(plan as any).isPublic) {
         throw new ForbiddenException('You can only view your own plans');
+      }
+    }
+
+    if (userRole === 'STUDENT') {
+      const student = await this.prisma.student.findFirst({
+        where: {
+          userId,
+          schoolId,
+        },
+        select: {
+          id: true,
+          classId: true,
+        },
+      });
+
+      if (!student) {
+        throw new ForbiddenException('Access denied');
+      }
+
+      const assignmentClauses = await this.getStudentAssignmentClauses(
+        student.id,
+        student.classId,
+        schoolId,
+      );
+
+      const assignmentCount = await this.prisma.studyPlanAssignment.count({
+        where: {
+          schoolId,
+          planId: id,
+          OR: assignmentClauses,
+          status: { in: ['ACTIVE', 'ASSIGNED', 'COMPLETED'] },
+        },
+      });
+
+      if (assignmentCount === 0 && !(plan as any).isPublic) {
+        throw new ForbiddenException('Access denied');
       }
     }
 
@@ -982,7 +1058,14 @@ export class StudyPlanService {
       case AssignmentTargetType.GROUP: {
         // Mentor grubu �yeleri
         const memberships = await this.prisma.groupMembership.findMany({
-          where: { groupId: targetId, leftAt: null },
+          where: {
+            groupId: targetId,
+            schoolId,
+            leftAt: null,
+            student: {
+              schoolId,
+            },
+          },
           select: { studentId: true },
         });
         return memberships.map((m) => m.studentId);
@@ -1000,7 +1083,7 @@ export class StudyPlanService {
       case AssignmentTargetType.GRADE: {
         // S�n�f seviyesindeki t�m ��renciler (�rn: t�m 8. s�n�flar)
         const classes = await this.prisma.class.findMany({
-          where: { gradeId: targetId },
+          where: { gradeId: targetId, schoolId },
           select: { id: true },
         });
         const gradeStudents = await this.prisma.student.findMany({

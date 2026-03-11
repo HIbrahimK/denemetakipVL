@@ -5,7 +5,7 @@
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { GroupPostType, NotificationType } from '@prisma/client';
+import { GroupMemberRole, GroupPostType, NotificationType } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { basename, join } from 'path';
 import { existsSync, unlinkSync } from 'fs';
@@ -23,6 +23,70 @@ export class GroupsService {
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
   ) {}
+
+  private async restoreOrCreateMembership(
+    groupId: string,
+    studentId: string,
+    schoolId: string,
+    role: GroupMemberRole = GroupMemberRole.MEMBER,
+  ) {
+    const previousMembership = await this.prisma.groupMembership.findFirst({
+      where: {
+        groupId,
+        studentId,
+      },
+      orderBy: { joinedAt: 'desc' },
+    });
+
+    if (previousMembership) {
+      return this.prisma.groupMembership.update({
+        where: { id: previousMembership.id },
+        data: {
+          leftAt: null,
+          joinedAt: new Date(),
+          role,
+          schoolId,
+        },
+        include: {
+          student: {
+            select: {
+              id: true,
+              userId: true,
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    return this.prisma.groupMembership.create({
+      data: {
+        groupId,
+        studentId,
+        role,
+        schoolId,
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            userId: true,
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 
   private isAdmin(role: string) {
     return role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN';
@@ -287,14 +351,12 @@ export class GroupsService {
             break;
           }
 
-          await this.prisma.groupMembership.create({
-            data: {
-              groupId: group.id,
-              studentId,
-              schoolId,
-              role: 'MEMBER',
-            },
-          });
+          await this.restoreOrCreateMembership(
+            group.id,
+            studentId,
+            schoolId,
+            'MEMBER',
+          );
 
           currentCount += 1;
         }
@@ -332,6 +394,7 @@ export class GroupsService {
       where.memberships = {
         some: {
           studentId: user.student.id,
+          schoolId,
           leftAt: null,
         },
       };
@@ -618,28 +681,12 @@ export class GroupsService {
       throw new ForbiddenException('Grup kapasitesi dolu');
     }
 
-    return this.prisma.groupMembership.create({
-      data: {
-        groupId,
-        studentId: dto.studentId,
-        role: dto.role,
-        schoolId,
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            userId: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    return this.restoreOrCreateMembership(
+      groupId,
+      dto.studentId,
+      schoolId,
+      dto.role,
+    );
   }
 
   async transferMember(
@@ -688,28 +735,12 @@ export class GroupsService {
       throw new ForbiddenException('Grup kapasitesi dolu');
     }
 
-    return this.prisma.groupMembership.create({
-      data: {
-        groupId,
-        studentId,
-        role: 'MEMBER',
-        schoolId,
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            userId: true,
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    return this.restoreOrCreateMembership(
+      groupId,
+      studentId,
+      schoolId,
+      'MEMBER',
+    );
   }
 
   async removeMember(
@@ -1376,28 +1407,12 @@ export class GroupsService {
           continue;
         }
 
-        const membership = await this.prisma.groupMembership.create({
-          data: {
-            groupId,
-            studentId,
-            role: 'MEMBER',
-            schoolId,
-          },
-          include: {
-            student: {
-              select: {
-                id: true,
-                userId: true,
-                user: {
-                  select: {
-                    firstName: true,
-                    lastName: true,
-                  },
-                },
-              },
-            },
-          },
-        });
+        const membership = await this.restoreOrCreateMembership(
+          groupId,
+          studentId,
+          schoolId,
+          'MEMBER',
+        );
 
         results.push(membership);
         currentCount += 1;

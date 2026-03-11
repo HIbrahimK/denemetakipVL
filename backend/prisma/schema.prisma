@@ -394,9 +394,11 @@ model Message {
   type              MessageType         @default(DIRECT)
   category          MessageCategory     @default(GENERAL)
   status            MessageStatus       @default(SENT)
+  recipientIds      Json?
   targetRoles       Json?
   targetGradeId     String?
   targetClassId     String?
+  targetClassIds    Json?
   scheduledFor      DateTime?
   sentAt            DateTime?
   requiresApproval  Boolean             @default(false)
