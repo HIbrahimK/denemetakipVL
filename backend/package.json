@@ -10,10 +10,10 @@
     "npm": "10.x"
   },
   "scripts": {
-    "prebuild": "prisma generate && prisma db push --skip-generate",
+    "prebuild": "prisma generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/src/main",
+    "start": "npx prisma db push --skip-generate && node dist/src/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
