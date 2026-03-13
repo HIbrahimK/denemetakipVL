@@ -121,6 +121,13 @@ export default function SchoolLoginPage() {
                 </div>
 
                 <div className="w-full max-w-md space-y-6">
+                    <div className="lg:hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4">
+                        <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Yonetici Paneli</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300">
+                            Okul operasyonlarini tek panelden yonetin, raporlarinizi hizla goruntuleyin.
+                        </p>
+                    </div>
+
                     {/* School Logo and Name */}
                     <div className="flex flex-col items-center text-center pb-4">
                         <SchoolLogo className="h-20 w-20" showName={true} nameClassName="text-2xl font-bold text-slate-900 dark:text-white mt-4" />
@@ -206,6 +213,21 @@ export default function SchoolLoginPage() {
                         <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
                             Bize Ulaşın
                         </a>
+                    </div>
+
+                    <div className="pt-1">
+                        <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500 text-center mb-2">Hizli Kisa Yollar</p>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                            <Link href="/login/student" className="text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                Ogrenci Girisi
+                            </Link>
+                            <Link href="/login/parent" className="text-xs px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300">
+                                Veli Girisi
+                            </Link>
+                            <Link href="/" className="text-xs px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200">
+                                Ana Sayfa
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

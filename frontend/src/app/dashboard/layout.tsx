@@ -185,6 +185,90 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const menuItems = getMenuItems();
 
+    const getMenuSections = () => {
+        if (!user) return [] as { title: string; items: typeof menuItems }[];
+
+        const { role } = user;
+
+        if (role === "STUDENT") {
+            return [
+                {
+                    title: "Akademik",
+                    items: menuItems.filter((item) =>
+                        ["/dashboard/student/results", "/dashboard/student-calendar", "/dashboard/my-tasks", "/dashboard/achievements", "/dashboard/groups"].includes(item.href)
+                    ),
+                },
+                {
+                    title: "Hesap",
+                    items: menuItems.filter((item) =>
+                        ["/dashboard/messages", "/dashboard/support", "/dashboard/profile"].includes(item.href)
+                    ),
+                },
+            ];
+        }
+
+        if (role === "PARENT") {
+            return [
+                {
+                    title: "Takip",
+                    items: menuItems.filter((item) =>
+                        ["/dashboard/parent/results", "/dashboard/messages"].includes(item.href)
+                    ),
+                },
+                {
+                    title: "Hesap",
+                    items: menuItems.filter((item) =>
+                        ["/dashboard/support", "/dashboard/profile"].includes(item.href)
+                    ),
+                },
+            ];
+        }
+
+        if (role === "TEACHER") {
+            return [
+                {
+                    title: "Operasyon",
+                    items: menuItems.filter((item) =>
+                        ["/dashboard", "/dashboard/exams", "/dashboard/exams/calendar", "/dashboard/students", "/dashboard/study-plans", "/dashboard/groups"].includes(item.href)
+                    ),
+                },
+                {
+                    title: "İletişim ve Rapor",
+                    items: menuItems.filter((item) =>
+                        ["/dashboard/reports", "/dashboard/messages", "/dashboard/support"].includes(item.href)
+                    ),
+                },
+                {
+                    title: "Hesap",
+                    items: menuItems.filter((item) => item.href === "/dashboard/profile"),
+                },
+            ];
+        }
+
+        return [
+            {
+                title: "Operasyon",
+                items: menuItems.filter((item) =>
+                    ["/dashboard", "/dashboard/exams", "/dashboard/exams/calendar", "/dashboard/students", "/dashboard/classes", "/dashboard/study-plans", "/dashboard/groups", "/dashboard/admin/achievements"].includes(item.href)
+                ),
+            },
+            {
+                title: "Analiz ve İletişim",
+                items: menuItems.filter((item) =>
+                    ["/dashboard/reports", "/dashboard/messages", "/dashboard/notifications", "/dashboard/support"].includes(item.href)
+                ),
+            },
+            {
+                title: "Yönetim",
+                items: menuItems.filter((item) =>
+                    ["/dashboard/users", "/dashboard/settings"].includes(item.href)
+                ),
+            },
+        ];
+    };
+
+    const menuSections = getMenuSections();
+
     const activeMenuHref = useMemo(() => {
         if (!pathname) return "";
 
@@ -227,7 +311,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const handleLogout = async () => {
         await clearUserData();
-        window.location.replace('/login/school');
+        window.location.replace('/');
     };
 
     return (
@@ -243,7 +327,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Sidebar */}
             <aside
-                className={`no-print fixed lg:static top-0 left-0 z-50 h-full w-72 bg-[#1e1e2d] flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                className={`no-print fixed lg:static top-0 left-0 z-50 h-full w-[88vw] max-w-72 bg-[#1e1e2d] flex flex-col transition-transform duration-300 ease-in-out lg:w-72 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     }`}
             >
                 {/* Logo Area - Borderless and Clean */}
@@ -289,24 +373,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
 
                 {/* Navigation */}
-                <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-                    {menuItems.map((item) => {
-                        const isActive = activeMenuHref === item.href;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${isActive
-                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
-                                    : "text-slate-400 hover:text-white hover:bg-white/5"
-                                    }`}
-                                onClick={() => setSidebarOpen(false)}
-                            >
-                                <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'}`} />
-                                {item.name}
-                            </Link>
-                        );
-                    })}
+                <nav className="flex-1 px-4 pb-4 space-y-6 overflow-y-auto">
+                    {menuSections.map((section) => (
+                        <div key={section.title}>
+                            <h4 className="px-4 mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                {section.title}
+                            </h4>
+                            <div className="space-y-1">
+                                {section.items.map((item) => {
+                                    const isActive = activeMenuHref === item.href;
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 ${isActive
+                                                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/20"
+                                                : "text-slate-400 hover:text-white hover:bg-white/5"
+                                                }`}
+                                            onClick={() => setSidebarOpen(false)}
+                                        >
+                                            <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-slate-500"}`} />
+                                            {item.name}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </nav>
 
                 {/* Bottom Actions */}
@@ -326,8 +419,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="flex-1 bg-[#F3F4F6] dark:bg-slate-950 text-slate-900 dark:text-slate-50 lg:rounded-[2.5rem] flex flex-col overflow-hidden shadow-2xl relative">
 
                     {/* Topbar */}
-                    <header className="no-print h-20 px-8 flex items-center justify-between flex-shrink-0 bg-transparent">
-                        <div className="flex items-center gap-4">
+                    <header className="no-print h-20 px-4 sm:px-6 lg:px-8 flex items-center justify-between flex-shrink-0 bg-transparent">
+                        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                             <Button variant="ghost" size="icon" className="lg:hidden text-slate-500" onClick={() => setSidebarOpen(true)}>
                                 <Menu className="h-6 w-6" />
                             </Button>
@@ -338,7 +431,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                         </div>
 
-                        <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-2 sm:gap-4 text-slate-500 dark:text-slate-400">
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -357,7 +450,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </header>
 
                     {/* Scrollable Page Content */}
-                    <main className="flex-1 overflow-y-auto px-8 pb-8 pt-2 scrollbar-hide">
+                    <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 pt-2 scrollbar-hide">
                         {children}
                     </main>
 

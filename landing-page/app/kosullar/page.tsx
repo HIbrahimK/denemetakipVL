@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 
 export const metadata = {
   title: "Kullanım Koşulları - Deneme Takip Sistemi",
-  description: "Deneme Takip Sistemi kullanım koşulları ve hizmet şartları.",
+  description: "Deneme Takip Sistemi kullanim kosullari, hizmet sartlari ve taraf yukumlulukleri.",
 };
 
 export default function TermsPage() {
@@ -32,7 +32,8 @@ export default function TermsPage() {
               <p className="text-muted-foreground leading-relaxed">
                 Platform, eğitim kurumlarına deneme sınavı yönetimi, öğrenci
                 performans takibi, raporlama ve analiz hizmetleri
-                sunmaktadır. Hizmetler, seçilen lisans planına göre sağlanır.
+                sunmaktadır. Hizmetler, secilen lisans planina gore saglanir ve
+                web tabanli panel ile mobil uyumlu arayuzler uzerinden kullanilir.
               </p>
             </section>
 
@@ -102,7 +103,20 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">9. Fesih</h2>
+              <h2 className="text-2xl font-semibold mb-4">9. Destek ve Bildirim Kanalları</h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Teknik destek ve yasal bildirimler asagidaki resmi kanallar
+                uzerinden alinir:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>Genel bilgi ve iletisim: info@denemetakip.net</li>
+                <li>Kariyer ve insan kaynaklari: kariyer@denemetakip.net</li>
+                <li>KVKK ve veri sahibi basvurulari: kvkk@denemetakip.net</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">10. Fesih</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Her iki taraf da 30 gün önceden yazılı bildirim ile hizmeti
                 feshedebilir. Koşulların ihlali halinde şirket, bildirimsiz
@@ -111,7 +125,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">10. Uygulanacak Hukuk</h2>
+              <h2 className="text-2xl font-semibold mb-4">11. Uygulanacak Hukuk</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir.
                 Uyuşmazlıklarda İstanbul mahkemeleri yetkilidir.
@@ -119,7 +133,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">11. İletişim</h2>
+              <h2 className="text-2xl font-semibold mb-4">12. İletişim</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Kullanım koşulları hakkında sorularınız için{" "}
                 <a

@@ -22,6 +22,7 @@ type NotificationType =
   | "STUDY_PLAN_ASSIGNED"
   | "CUSTOM";
 type NotificationTargetType = "ALL" | "ROLE" | "USERS" | "GRADE" | "CLASS" | "GROUP";
+type HomepageSection = "NONE" | "ANNOUNCEMENT" | "UPDATE";
 
 const TYPE_OPTIONS: Array<{ value: NotificationType; label: string }> = [
   { value: "CUSTOM", label: "Ozel Bildirim" },
@@ -46,6 +47,12 @@ const ROLE_OPTIONS = [
   { value: "TEACHER", label: "Ogretmen" },
   { value: "STUDENT", label: "Ogrenci" },
   { value: "PARENT", label: "Veli" },
+];
+
+const HOMEPAGE_SECTION_OPTIONS: Array<{ value: HomepageSection; label: string }> = [
+  { value: "NONE", label: "Ana Sayfada Gosterme" },
+  { value: "ANNOUNCEMENT", label: "Okul Duyurusu" },
+  { value: "UPDATE", label: "Son Guncelleme" },
 ];
 
 function base64ToUint8Array(base64String: string) {
@@ -90,6 +97,8 @@ export default function NotificationsPage() {
     targetRoles: [] as string[],
     targetIdsText: "",
     deeplink: "/dashboard/notifications",
+    homepageSection: "NONE" as HomepageSection,
+    homepagePublishAt: "",
     scheduledFor: "",
     sendNow: false,
   });
@@ -278,6 +287,8 @@ export default function NotificationsPage() {
       targetRoles: [],
       targetIdsText: "",
       deeplink: "/dashboard/notifications",
+      homepageSection: "NONE",
+      homepagePublishAt: "",
       scheduledFor: "",
       sendNow: false,
     });
@@ -302,6 +313,10 @@ export default function NotificationsPage() {
         title: formState.title.trim(),
         body: formState.body.trim(),
         deeplink: formState.deeplink.trim() || undefined,
+        homepageSection: formState.homepageSection,
+        homepagePublishAt: formState.homepagePublishAt
+          ? new Date(formState.homepagePublishAt).toISOString()
+          : undefined,
         scheduledFor: formState.scheduledFor
           ? new Date(formState.scheduledFor).toISOString()
           : undefined,
@@ -340,6 +355,10 @@ export default function NotificationsPage() {
       targetRoles: campaign.targetRoles || [],
       targetIdsText: (campaign.targetIds || []).join(", "),
       deeplink: campaign.deeplink || "/dashboard/notifications",
+      homepageSection: campaign.metadata?.homepage?.section || "NONE",
+      homepagePublishAt: campaign.metadata?.homepage?.publishAt
+        ? new Date(campaign.metadata.homepage.publishAt).toISOString().slice(0, 16)
+        : "",
       scheduledFor: campaign.scheduledFor
         ? new Date(campaign.scheduledFor).toISOString().slice(0, 16)
         : "",
@@ -501,6 +520,35 @@ export default function NotificationsPage() {
                   <Input value={formState.deeplink} onChange={(e) => setFormState((prev) => ({ ...prev, deeplink: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
+                  <Label>Ana Sayfa Icerik Tipi</Label>
+                  <Select
+                    value={formState.homepageSection}
+                    onValueChange={(value: HomepageSection) =>
+                      setFormState((prev) => ({ ...prev, homepageSection: value }))
+                    }
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {HOMEPAGE_SECTION_OPTIONS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Ana Sayfa Yayina Giris</Label>
+                  <Input
+                    type="datetime-local"
+                    value={formState.homepagePublishAt}
+                    onChange={(e) =>
+                      setFormState((prev) => ({ ...prev, homepagePublishAt: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
                   <Label>Zamanla</Label>
                   <Input type="datetime-local" value={formState.scheduledFor} onChange={(e) => setFormState((prev) => ({ ...prev, scheduledFor: e.target.value }))} />
                 </div>
@@ -537,6 +585,9 @@ export default function NotificationsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{campaign.title}</h3>
                       <Badge variant="outline">{campaign.status}</Badge>
+                      {campaign.metadata?.homepage?.section && campaign.metadata.homepage.section !== "NONE" && (
+                        <Badge>{campaign.metadata.homepage.section === "ANNOUNCEMENT" ? "Okul Duyurusu" : "Son Guncelleme"}</Badge>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{campaign.body}</p>
                     <div className="mt-2 flex flex-wrap gap-2">

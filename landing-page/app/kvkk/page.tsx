@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/footer";
 export const metadata = {
   title: "KVKK Aydınlatma Metni - Deneme Takip Sistemi",
   description:
-    "6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında aydınlatma metni.",
+    "6698 sayili Kisisel Verilerin Korunmasi Kanunu kapsaminda aydinlatma metni ve basvuru sureci.",
 };
 
 export default function KVKKPage() {
@@ -219,7 +219,7 @@ export default function KVKKPage() {
               <h2 className="text-2xl font-semibold mb-4">
                 8. Başvuru Yöntemi
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-4">
                 Yukarıda belirtilen haklarınızı kullanmak için{" "}
                 <a
                   href="mailto:kvkk@denemetakip.net"
@@ -231,6 +231,11 @@ export default function KVKKPage() {
                 tarafından belirlenen diğer yöntemlerle başvurabilirsiniz.
                 Başvurularınız en geç 30 gün içinde yanıtlanacaktır.
               </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>Basvuru konusu acik ve dogrulanabilir olmalidir.</li>
+                <li>Okul yoneticileri, kendi kurumlarina ait talepleri kurumsal e-posta ile iletmelidir.</li>
+                <li>Genel destek talepleri icin info@denemetakip.net adresi kullanilmalidir.</li>
+              </ul>
             </section>
           </div>
         </div>

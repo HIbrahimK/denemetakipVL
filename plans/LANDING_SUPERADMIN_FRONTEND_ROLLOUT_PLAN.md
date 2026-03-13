@@ -145,11 +145,20 @@ Doğrulama:
 - Video yardım + ekran görüntülü anlatımlar
 - Okul dashboard yardım ve destek sayfası için yazılı/görsel kullanım anlatımları
 
+Durum notu:
+- Tamamlandı: landing `gizlilik`, `kosullar` ve `kvkk` metinleri revize edildi; iletişim ve KVKK başvuru kanalları netleştirildi
+- Tamamlandı: landing `yardim` içeriği güncellendi, destek akışı ve yazılı/görsel anlatım yapısı güçlendirildi
+
 ## Adım 7 - UI/UX son rötuşlar
 
 - Sidebar gruplamaları
 - Giriş sayfası güncel tasarım
 - Mobil layout düzeltmeleri
+
+Durum notu:
+- Tamamlandı: dashboard sidebar rol bazlı grup başlıklarıyla yeniden düzenlendi
+- Tamamlandı: giriş ekranı modern tasarım yapısı güncellendi ve tutarlı hale getirildi
+- Tamamlandı: dashboard ana yerleşiminde mobil padding/yan panel davranışları iyileştirildi
 
 ## Adım 8 - GitHub teslim
 

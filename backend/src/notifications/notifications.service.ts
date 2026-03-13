@@ -22,6 +22,20 @@ import { SubscribePushDto } from './dto/subscribe-push.dto';
 import { UnsubscribePushDto } from './dto/unsubscribe-push.dto';
 import { UpdateNotificationCampaignDto } from './dto/update-notification-campaign.dto';
 import { UpdateUserNotificationSettingsDto } from './dto/update-user-notification-settings.dto';
+import {
+  HomepageSection,
+  HOMEPAGE_SECTION_VALUES,
+} from './dto/create-notification-campaign.dto';
+
+type HomepageFeedItem = {
+  id: string;
+  title: string;
+  body: string;
+  deeplink: string | null;
+  createdAt: Date;
+  publishAt: Date;
+  section: Exclude<HomepageSection, 'NONE'>;
+};
 
 type SystemNotificationInput = {
   schoolId: string;
@@ -74,6 +88,157 @@ export class NotificationsService {
     }
 
     return { publicKey: this.vapidPublicKey };
+  }
+
+  private normalizeHomepageSection(value?: string | null): HomepageSection {
+    if (!value || !HOMEPAGE_SECTION_VALUES.includes(value as HomepageSection)) {
+      return 'NONE';
+    }
+    return value as HomepageSection;
+  }
+
+  private normalizeHomepagePublishAt(value?: string): Date | null {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.valueOf())) {
+      throw new BadRequestException('Gecersiz ana sayfa yayin tarihi');
+    }
+    return parsed;
+  }
+
+  private buildHomepageMetadata(
+    existing: any,
+    section: HomepageSection,
+    publishAt: Date | null,
+  ) {
+    const previous =
+      existing && typeof existing === 'object' && !Array.isArray(existing)
+        ? existing
+        : {};
+
+    const homepage = {
+      ...(previous.homepage && typeof previous.homepage === 'object'
+        ? previous.homepage
+        : {}),
+      section,
+      publishAt: publishAt ? publishAt.toISOString() : null,
+    };
+
+    return {
+      ...previous,
+      homepage,
+    };
+  }
+
+  private async resolveSchoolByHost(host: string) {
+    const rootDomain = process.env.ROOT_DOMAIN || '2eh.net';
+    const cleanHost = host.split(':')[0];
+
+    let school: { id: string; name: string; appShortName: string | null } | null =
+      null;
+
+    if (cleanHost.endsWith(`.${rootDomain}`)) {
+      const subdomain = cleanHost.replace(`.${rootDomain}`, '').trim();
+      if (subdomain && subdomain !== 'www') {
+        school = await this.prisma.school.findUnique({
+          where: { subdomainAlias: subdomain },
+          select: { id: true, name: true, appShortName: true },
+        });
+      }
+    }
+
+    if (!school) {
+      school = await this.prisma.school.findUnique({
+        where: { domain: cleanHost },
+        select: { id: true, name: true, appShortName: true },
+      });
+    }
+
+    return school;
+  }
+
+  async getHomepageFeedByHost(host: string, limit = 4) {
+    if (!host) {
+      throw new BadRequestException('host parametresi gerekli');
+    }
+
+    const school = await this.resolveSchoolByHost(host);
+    if (!school) {
+      throw new NotFoundException('Okul bulunamadi');
+    }
+
+    const now = new Date();
+    const campaigns = await this.prisma.notificationCampaign.findMany({
+      where: {
+        schoolId: school.id,
+        status: NotificationStatus.SENT,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 80,
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        deeplink: true,
+        metadata: true,
+        createdAt: true,
+      },
+    });
+
+    const mapped = campaigns
+      .map((campaign) => {
+        const metadata =
+          campaign.metadata &&
+          typeof campaign.metadata === 'object' &&
+          !Array.isArray(campaign.metadata)
+            ? (campaign.metadata as any)
+            : {};
+        const homepage =
+          metadata.homepage &&
+          typeof metadata.homepage === 'object' &&
+          !Array.isArray(metadata.homepage)
+            ? metadata.homepage
+            : {};
+
+        const section = this.normalizeHomepageSection(homepage.section);
+        if (section === 'NONE') {
+          return null;
+        }
+
+        const publishAt = homepage.publishAt
+          ? new Date(homepage.publishAt)
+          : campaign.createdAt;
+        if (Number.isNaN(publishAt.valueOf()) || publishAt > now) {
+          return null;
+        }
+
+        return {
+          id: campaign.id,
+          title: campaign.title,
+          body: campaign.body,
+          deeplink: campaign.deeplink ?? null,
+          createdAt: campaign.createdAt,
+          publishAt,
+          section,
+        };
+      })
+      .filter((item): item is HomepageFeedItem => item !== null);
+
+    const sorted = mapped.sort(
+      (a, b) => b.publishAt.getTime() - a.publishAt.getTime(),
+    );
+
+    return {
+      school: {
+        id: school.id,
+        name: school.name,
+        appShortName: school.appShortName,
+      },
+      announcements: sorted
+        .filter((item) => item.section === 'ANNOUNCEMENT')
+        .slice(0, limit),
+      updates: sorted.filter((item) => item.section === 'UPDATE').slice(0, limit),
+    };
   }
 
   async subscribe(userId: string, schoolId: string, dto: SubscribePushDto) {
@@ -236,6 +401,9 @@ export class NotificationsService {
       throw new BadRequestException('Gecersiz zamanlama tarihi');
     }
 
+    const homepageSection = this.normalizeHomepageSection(dto.homepageSection);
+    const homepagePublishAt = this.normalizeHomepagePublishAt(dto.homepagePublishAt);
+
     let status: NotificationStatus = NotificationStatus.DRAFT;
     if (dto.sendNow) {
       status = NotificationStatus.SENT;
@@ -254,6 +422,7 @@ export class NotificationsService {
         title: dto.title,
         body: dto.body,
         deeplink: dto.deeplink,
+        metadata: this.buildHomepageMetadata({}, homepageSection, homepagePublishAt),
         status,
         scheduledFor: normalizedScheduledFor,
       },
@@ -299,6 +468,28 @@ export class NotificationsService {
       updateData.status = dto.scheduledFor
         ? NotificationStatus.SCHEDULED
         : NotificationStatus.DRAFT;
+    }
+
+    if (dto.homepageSection !== undefined || dto.homepagePublishAt !== undefined) {
+      const existingMetadata =
+        existing.metadata && typeof existing.metadata === 'object' && !Array.isArray(existing.metadata)
+          ? (existing.metadata as any)
+          : {};
+      const nextSection = this.normalizeHomepageSection(
+        dto.homepageSection ?? existingMetadata?.homepage?.section,
+      );
+      const nextPublishAt = dto.homepagePublishAt
+        ? this.normalizeHomepagePublishAt(dto.homepagePublishAt)
+        : dto.homepagePublishAt === undefined
+          ? existingMetadata?.homepage?.publishAt
+            ? new Date(existingMetadata.homepage.publishAt)
+            : null
+          : null;
+      updateData.metadata = this.buildHomepageMetadata(
+        existingMetadata,
+        nextSection,
+        nextPublishAt && !Number.isNaN(nextPublishAt.valueOf()) ? nextPublishAt : null,
+      );
     }
 
     const updated = await this.prisma.notificationCampaign.update({

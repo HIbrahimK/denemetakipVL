@@ -1,20 +1,10 @@
 ﻿import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { CSSProperties } from "react";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import DynamicFavicon from "@/components/dynamic-favicon";
 import PWARegister from "@/components/pwa-register";
 import { FetchCredentialsProvider } from "@/components/fetch-credentials-provider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Deneme Takip Sistemi",
@@ -66,7 +56,13 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased"
+        style={
+          {
+            "--font-geist-sans": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+            "--font-geist-mono": "Consolas, 'Courier New', monospace",
+          } as CSSProperties
+        }
       >
         <SchoolProvider>
           <DynamicFavicon />

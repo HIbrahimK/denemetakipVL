@@ -3,11 +3,15 @@ import {
   IsBoolean,
   IsDateString,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
 import { NotificationTargetType, NotificationType, Role } from '@prisma/client';
+
+export const HOMEPAGE_SECTION_VALUES = ['NONE', 'ANNOUNCEMENT', 'UPDATE'] as const;
+export type HomepageSection = (typeof HOMEPAGE_SECTION_VALUES)[number];
 
 export class CreateNotificationCampaignDto {
   @IsEnum(NotificationType)
@@ -43,6 +47,14 @@ export class CreateNotificationCampaignDto {
   @IsDateString()
   @IsOptional()
   scheduledFor?: string;
+
+  @IsIn(HOMEPAGE_SECTION_VALUES)
+  @IsOptional()
+  homepageSection?: HomepageSection;
+
+  @IsDateString()
+  @IsOptional()
+  homepagePublishAt?: string;
 
   @IsBoolean()
   @IsOptional()

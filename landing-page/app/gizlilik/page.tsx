@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 
 export const metadata = {
   title: "Gizlilik Politikası - Deneme Takip Sistemi",
-  description: "Deneme Takip Sistemi gizlilik politikası ve veri koruma ilkeleri.",
+  description: "Deneme Takip Sistemi gizlilik politikasi, veri saklama ve hak kullanimi esaslari.",
 };
 
 export default function PrivacyPage() {
@@ -24,7 +24,9 @@ export default function PrivacyPage() {
                 Deneme Takip Sistemi (&quot;biz&quot;, &quot;bizim&quot;, &quot;şirket&quot;) olarak
                 kişisel verilerinizin korunmasına büyük önem veriyoruz. Bu
                 Gizlilik Politikası, hizmetlerimizi kullanırken topladığımız,
-                kullandığımız ve koruduğumuz bilgileri açıklamaktadır.
+                kullandığımız ve koruduğumuz bilgileri açıklamaktadır. Bu metin,
+                landing sayfaları, okul yönetim paneli, veli/ogrenci girisleri ve
+                iletisim formlarini kapsar.
               </p>
             </section>
 
@@ -63,6 +65,8 @@ export default function PrivacyPage() {
                 uyguluyoruz: SSL/TLS şifreleme, güvenli sunucu altyapısı,
                 düzenli güvenlik denetimleri, erişim kontrolü ve günlük
                 yedekleme. Veriler Türkiye'deki sunucularda barındırılmaktadır.
+                Okul bazli veri izolasyonu uygulanir; bir okula ait kayitlar baska
+                okul hesaplarinda goruntulenemez.
               </p>
             </section>
 
@@ -87,7 +91,17 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">7. Haklarınız</h2>
+              <h2 className="text-2xl font-semibold mb-4">7. Veri Saklama ve Silme</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Veriler, ilgili mevzuat ve hizmet sozlesmesi kapsaminda gerekli olan
+                sure boyunca saklanir. Hesap kapatma, sozlesme sonlandirma veya acik
+                silme talebi durumunda yasal zorunluluklar sakli kalmak kaydiyla
+                veriler silinir, yok edilir veya anonimlestirilir.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">8. Haklarınız</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 KVKK kapsamında aşağıdaki haklara sahipsiniz:
               </p>
@@ -101,7 +115,7 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-4">8. İletişim</h2>
+              <h2 className="text-2xl font-semibold mb-4">9. İletişim</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Gizlilik politikamız hakkında sorularınız için{" "}
                 <a
@@ -110,7 +124,14 @@ export default function PrivacyPage() {
                 >
                   info@denemetakip.net
                 </a>{" "}
-                adresinden bize ulaşabilirsiniz.
+                adresinden, KVKK kapsamindaki talepleriniz icin ise{" "}
+                <a
+                  href="mailto:kvkk@denemetakip.net"
+                  className="text-primary hover:underline"
+                >
+                  kvkk@denemetakip.net
+                </a>{" "}
+                adresinden bize ulasabilirsiniz.
               </p>
             </section>
           </div>

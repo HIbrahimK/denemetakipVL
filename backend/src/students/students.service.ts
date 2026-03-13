@@ -552,7 +552,9 @@ export class StudentsService {
         },
         examAttempts: {
           where: {
-            schoolId: effectiveSchoolId,
+            exam: {
+              schoolId: effectiveSchoolId,
+            },
           },
           include: {
             exam: {

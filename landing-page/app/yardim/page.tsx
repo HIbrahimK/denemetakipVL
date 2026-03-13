@@ -3,9 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import Link from "next/link";
 import {
   HelpCircle,
-  Search,
   ChevronDown,
-  FileText,
   Users,
   BarChart3,
   CreditCard,
@@ -34,7 +32,7 @@ const faqCategories = [
       },
       {
         q: "Sistemi kullanmak için teknik bilgi gerekiyor mu?",
-        a: "Hayır, kullanıcı dostu arayüzümüz sayesinde temel bilgisayar bilgisi yeterlidir. Ayrıca detaylı kullanım kılavuzları ve video eğitimler sunuyoruz.",
+        a: "Hayır, kullanıcı dostu arayüzümüz sayesinde temel bilgisayar bilgisi yeterlidir. Yardım merkezinde yazılı anlatım, ekran görüntülü adımlar ve video içerikler sunuyoruz.",
       },
     ],
   },
@@ -90,7 +88,7 @@ const faqCategories = [
       },
       {
         q: "KVKK'ya uyumlu musunuz?",
-        a: "Evet, 6698 sayılı Kişisel Verilerin Korunması Kanunu'na tam uyumluyuz. Detaylar için KVKK sayfamızı inceleyebilirsiniz.",
+        a: "Evet, 6698 sayılı Kişisel Verilerin Korunması Kanunu'na uyumluyuz. KVKK başvuruları kvkk@denemetakip.net adresinden alınır.",
       },
     ],
   },
@@ -162,6 +160,36 @@ export default function HelpPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="py-8">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+            <div className="rounded-2xl border bg-card p-6 sm:p-8">
+              <h2 className="text-2xl font-bold mb-3">Destek Süreci Nasıl İşliyor?</h2>
+              <p className="text-muted-foreground mb-6">
+                Hizli cozum icin talepler once kategoriye ayrilir, ardindan ilgili ekibe yonlendirilir.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl bg-primary/5 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">1. Talep</p>
+                  <p className="font-medium">Iletisim veya destek talebi olusturun</p>
+                </div>
+                <div className="rounded-xl bg-primary/5 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">2. Siniflandirma</p>
+                  <p className="font-medium">Talep, konuya gore ilgili ekipte siraya alinir</p>
+                </div>
+                <div className="rounded-xl bg-primary/5 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">3. Yanit</p>
+                  <p className="font-medium">Durum takibi ile adim adim geri donus saglanir</p>
+                </div>
+              </div>
+              <div className="mt-6 text-sm text-muted-foreground space-y-1">
+                <p>Genel iletisim: info@denemetakip.net</p>
+                <p>Kariyer: kariyer@denemetakip.net</p>
+                <p>KVKK: kvkk@denemetakip.net</p>
+              </div>
+            </div>
           </div>
         </section>
 

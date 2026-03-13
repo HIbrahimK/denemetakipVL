@@ -3,10 +3,11 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
+import { NotificationsPublicController } from './notifications.public.controller';
 
 @Module({
   imports: [PrismaModule, ConfigModule],
-  controllers: [NotificationsController],
+  controllers: [NotificationsController, NotificationsPublicController],
   providers: [NotificationsService],
   exports: [NotificationsService],
 })
